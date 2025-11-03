@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="23504" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES">
+    <device id="retina6_12" orientation="portrait" appearance="light"/>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="23506"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="System colors in document resources" minToolsVersion="11.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="NotiView" customModule="SooskyBabyTracker" customModuleProvider="target">
+            <connections>
+                <outlet property="contentView" destination="iN0-l3-epB" id="b1L-5P-Pvf"/>
+                <outlet property="desLabel" destination="LAr-P3-Qzh" id="T6Y-r7-UV0"/>
+                <outlet property="timeLabel" destination="0Ro-ge-lcD" id="8yJ-jN-Pf6"/>
+            </connections>
+        </placeholder>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view contentMode="scaleToFill" id="iN0-l3-epB">
+            <rect key="frame" x="0.0" y="0.0" width="350" height="68"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="qyf-OM-zhX">
+                    <rect key="frame" x="0.0" y="0.0" width="350" height="68"/>
+                    <subviews>
+                        <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="icClock" translatesAutoresizingMaskIntoConstraints="NO" id="MaQ-qz-vds">
+                            <rect key="frame" x="20" y="12" width="44" height="44"/>
+                            <constraints>
+                                <constraint firstAttribute="width" constant="44" id="5bg-M6-wNy"/>
+                                <constraint firstAttribute="width" secondItem="MaQ-qz-vds" secondAttribute="height" id="Ksu-MZ-NbL"/>
+                            </constraints>
+                        </imageView>
+                        <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" alignment="top" spacing="8" translatesAutoresizingMaskIntoConstraints="NO" id="gRE-bA-cnb">
+                            <rect key="frame" x="76" y="9.6666666666666679" width="216" height="48.666666666666657"/>
+                            <subviews>
+                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="04:00 am" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="0Ro-ge-lcD">
+                                    <rect key="frame" x="0.0" y="0.0" width="73.666666666666671" height="20.333333333333332"/>
+                                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                    <nil key="textColor"/>
+                                    <nil key="highlightedColor"/>
+                                </label>
+                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="It's time for weaning" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="LAr-P3-Qzh">
+                                    <rect key="frame" x="0.0" y="28.333333333333336" width="153.66666666666666" height="20.333333333333336"/>
+                                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                    <nil key="textColor"/>
+                                    <nil key="highlightedColor"/>
+                                </label>
+                            </subviews>
+                        </stackView>
+                        <imageView clipsSubviews="YES" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="icCloseNoti" translatesAutoresizingMaskIntoConstraints="NO" id="8BA-eu-Tlj">
+                            <rect key="frame" x="302" y="20" width="28" height="28"/>
+                            <gestureRecognizers/>
+                            <constraints>
+                                <constraint firstAttribute="width" constant="28" id="lN8-qE-fmK"/>
+                                <constraint firstAttribute="width" secondItem="8BA-eu-Tlj" secondAttribute="height" id="r3v-6X-1fb"/>
+                            </constraints>
+                            <connections>
+                                <outletCollection property="gestureRecognizers" destination="LWm-jT-muF" appends="YES" id="5NR-UP-ptV"/>
+                            </connections>
+                        </imageView>
+                    </subviews>
+                    <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                    <constraints>
+                        <constraint firstAttribute="trailing" secondItem="8BA-eu-Tlj" secondAttribute="trailing" constant="20" id="0RM-TT-gnQ"/>
+                        <constraint firstItem="gRE-bA-cnb" firstAttribute="leading" secondItem="MaQ-qz-vds" secondAttribute="trailing" constant="12" id="0yi-CB-dLM"/>
+                        <constraint firstItem="8BA-eu-Tlj" firstAttribute="leading" secondItem="gRE-bA-cnb" secondAttribute="trailing" constant="10" id="BLO-PR-yTq"/>
+                        <constraint firstItem="MaQ-qz-vds" firstAttribute="leading" secondItem="qyf-OM-zhX" secondAttribute="leading" constant="20" id="Cla-8h-QoV"/>
+                        <constraint firstItem="MaQ-qz-vds" firstAttribute="centerY" secondItem="qyf-OM-zhX" secondAttribute="centerY" id="qpI-a0-wxR"/>
+                        <constraint firstItem="8BA-eu-Tlj" firstAttribute="centerY" secondItem="qyf-OM-zhX" secondAttribute="centerY" id="udz-Lh-lCv"/>
+                        <constraint firstItem="gRE-bA-cnb" firstAttribute="centerY" secondItem="qyf-OM-zhX" secondAttribute="centerY" id="z4H-bB-UtK"/>
+                    </constraints>
+                    <userDefinedRuntimeAttributes>
+                        <userDefinedRuntimeAttribute type="number" keyPath="cornerRadius">
+                            <real key="value" value="12"/>
+                        </userDefinedRuntimeAttribute>
+                    </userDefinedRuntimeAttributes>
+                </view>
+            </subviews>
+            <viewLayoutGuide key="safeArea" id="vUN-kp-3ea"/>
+            <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+            <constraints>
+                <constraint firstItem="qyf-OM-zhX" firstAttribute="top" secondItem="iN0-l3-epB" secondAttribute="top" id="IXg-Pj-cJl"/>
+                <constraint firstItem="qyf-OM-zhX" firstAttribute="leading" secondItem="vUN-kp-3ea" secondAttribute="leading" id="Pnc-CL-3hm"/>
+                <constraint firstItem="vUN-kp-3ea" firstAttribute="trailing" secondItem="qyf-OM-zhX" secondAttribute="trailing" id="TcK-Bc-ESR"/>
+                <constraint firstAttribute="bottom" secondItem="qyf-OM-zhX" secondAttribute="bottom" id="qcx-iX-KVp"/>
+            </constraints>
+            <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
+            <point key="canvasLocation" x="-57" y="-11"/>
+        </view>
+        <tapGestureRecognizer id="LWm-jT-muF">
+            <connections>
+                <action selector="onTapClose:" destination="-1" id="pKF-Yr-IgE"/>
+            </connections>
+        </tapGestureRecognizer>
+    </objects>
+    <resources>
+        <image name="icClock" width="44" height="44"/>
+        <image name="icCloseNoti" width="28" height="28"/>
+        <systemColor name="systemBackgroundColor">
+            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
+    </resources>
+</document>
