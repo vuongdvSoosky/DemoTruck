@@ -1,0 +1,605 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 70;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0AD7BC842EB8634E00ADADDB /* FSPagerView in Frameworks */ = {isa = PBXBuildFile; productRef = 0AD7BC832EB8634E00ADADDB /* FSPagerView */; };
+		0AD7BC872EB8638B00ADADDB /* Realm in Frameworks */ = {isa = PBXBuildFile; productRef = 0AD7BC862EB8638B00ADADDB /* Realm */; };
+		0AD7BC892EB8638B00ADADDB /* RealmSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 0AD7BC882EB8638B00ADADDB /* RealmSwift */; };
+		0AD7BC8C2EB8642300ADADDB /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 0AD7BC8B2EB8642300ADADDB /* FirebaseAnalytics */; };
+		0AD7BC8E2EB8642300ADADDB /* FirebaseAnalyticsCore in Frameworks */ = {isa = PBXBuildFile; productRef = 0AD7BC8D2EB8642300ADADDB /* FirebaseAnalyticsCore */; };
+		0AD7BC902EB8642300ADADDB /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 0AD7BC8F2EB8642300ADADDB /* FirebaseCore */; };
+		0AD7BC922EB8642300ADADDB /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 0AD7BC912EB8642300ADADDB /* FirebaseCrashlytics */; };
+		0AD7BC942EB8642300ADADDB /* FirebaseDatabase in Frameworks */ = {isa = PBXBuildFile; productRef = 0AD7BC932EB8642300ADADDB /* FirebaseDatabase */; };
+		0AD7BC962EB8642300ADADDB /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 0AD7BC952EB8642300ADADDB /* FirebaseFirestore */; };
+		0AD7BC982EB8642300ADADDB /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 0AD7BC972EB8642300ADADDB /* FirebaseStorage */; };
+		0AD7BC9B2EB8647A00ADADDB /* FSCalendar in Frameworks */ = {isa = PBXBuildFile; productRef = 0AD7BC9A2EB8647A00ADADDB /* FSCalendar */; };
+		0AD7BC9E2EB864B200ADADDB /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = 0AD7BC9D2EB864B200ADADDB /* Lottie */; };
+		0AD7BCA12EB864E300ADADDB /* SkeletonView in Frameworks */ = {isa = PBXBuildFile; productRef = 0AD7BCA02EB864E300ADADDB /* SkeletonView */; };
+		0AD7BCA42EB8651A00ADADDB /* NVActivityIndicatorView in Frameworks */ = {isa = PBXBuildFile; productRef = 0AD7BCA32EB8651A00ADADDB /* NVActivityIndicatorView */; };
+		0AD7BCA72EB8657100ADADDB /* SDWebImage in Frameworks */ = {isa = PBXBuildFile; productRef = 0AD7BCA62EB8657100ADADDB /* SDWebImage */; };
+		0AD7BCAA2EB865A100ADADDB /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = 0AD7BCA92EB865A100ADADDB /* SnapKit */; };
+		0AD7BCAD2EB865FD00ADADDB /* Toast in Frameworks */ = {isa = PBXBuildFile; productRef = 0AD7BCAC2EB865FD00ADADDB /* Toast */; };
+		0AD7BCB02EB8665F00ADADDB /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = 0AD7BCAF2EB8665F00ADADDB /* GoogleMobileAds */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		0A9A7A702EB85C8E00295B2A /* SooskyTruckGPS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SooskyTruckGPS.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		0A9A7A822EB85C8F00295B2A /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 0A9A7A6F2EB85C8E00295B2A /* SooskyTruckGPS */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		0A9A7A722EB85C8E00295B2A /* SooskyTruckGPS */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (0A9A7A822EB85C8F00295B2A /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = SooskyTruckGPS; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		0A9A7A6D2EB85C8E00295B2A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0AD7BC892EB8638B00ADADDB /* RealmSwift in Frameworks */,
+				0AD7BCAA2EB865A100ADADDB /* SnapKit in Frameworks */,
+				0AD7BC872EB8638B00ADADDB /* Realm in Frameworks */,
+				0AD7BCA42EB8651A00ADADDB /* NVActivityIndicatorView in Frameworks */,
+				0AD7BC8E2EB8642300ADADDB /* FirebaseAnalyticsCore in Frameworks */,
+				0AD7BC982EB8642300ADADDB /* FirebaseStorage in Frameworks */,
+				0AD7BC922EB8642300ADADDB /* FirebaseCrashlytics in Frameworks */,
+				0AD7BC8C2EB8642300ADADDB /* FirebaseAnalytics in Frameworks */,
+				0AD7BC962EB8642300ADADDB /* FirebaseFirestore in Frameworks */,
+				0AD7BCA12EB864E300ADADDB /* SkeletonView in Frameworks */,
+				0AD7BCA72EB8657100ADADDB /* SDWebImage in Frameworks */,
+				0AD7BC902EB8642300ADADDB /* FirebaseCore in Frameworks */,
+				0AD7BCB02EB8665F00ADADDB /* GoogleMobileAds in Frameworks */,
+				0AD7BCAD2EB865FD00ADADDB /* Toast in Frameworks */,
+				0AD7BC942EB8642300ADADDB /* FirebaseDatabase in Frameworks */,
+				0AD7BC842EB8634E00ADADDB /* FSPagerView in Frameworks */,
+				0AD7BC9B2EB8647A00ADADDB /* FSCalendar in Frameworks */,
+				0AD7BC9E2EB864B200ADADDB /* Lottie in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		0A9A7A672EB85C8E00295B2A = {
+			isa = PBXGroup;
+			children = (
+				0A9A7A722EB85C8E00295B2A /* SooskyTruckGPS */,
+				0A9A7A712EB85C8E00295B2A /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		0A9A7A712EB85C8E00295B2A /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				0A9A7A702EB85C8E00295B2A /* SooskyTruckGPS.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		0A9A7A6F2EB85C8E00295B2A /* SooskyTruckGPS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0A9A7A832EB85C8F00295B2A /* Build configuration list for PBXNativeTarget "SooskyTruckGPS" */;
+			buildPhases = (
+				0A9A7A6C2EB85C8E00295B2A /* Sources */,
+				0A9A7A6D2EB85C8E00295B2A /* Frameworks */,
+				0A9A7A6E2EB85C8E00295B2A /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				0A9A7A722EB85C8E00295B2A /* SooskyTruckGPS */,
+			);
+			name = SooskyTruckGPS;
+			packageProductDependencies = (
+				0AD7BC832EB8634E00ADADDB /* FSPagerView */,
+				0AD7BC862EB8638B00ADADDB /* Realm */,
+				0AD7BC882EB8638B00ADADDB /* RealmSwift */,
+				0AD7BC8B2EB8642300ADADDB /* FirebaseAnalytics */,
+				0AD7BC8D2EB8642300ADADDB /* FirebaseAnalyticsCore */,
+				0AD7BC8F2EB8642300ADADDB /* FirebaseCore */,
+				0AD7BC912EB8642300ADADDB /* FirebaseCrashlytics */,
+				0AD7BC932EB8642300ADADDB /* FirebaseDatabase */,
+				0AD7BC952EB8642300ADADDB /* FirebaseFirestore */,
+				0AD7BC972EB8642300ADADDB /* FirebaseStorage */,
+				0AD7BC9A2EB8647A00ADADDB /* FSCalendar */,
+				0AD7BC9D2EB864B200ADADDB /* Lottie */,
+				0AD7BCA02EB864E300ADADDB /* SkeletonView */,
+				0AD7BCA32EB8651A00ADADDB /* NVActivityIndicatorView */,
+				0AD7BCA62EB8657100ADADDB /* SDWebImage */,
+				0AD7BCA92EB865A100ADADDB /* SnapKit */,
+				0AD7BCAC2EB865FD00ADADDB /* Toast */,
+				0AD7BCAF2EB8665F00ADADDB /* GoogleMobileAds */,
+			);
+			productName = SooskyTruckGPS;
+			productReference = 0A9A7A702EB85C8E00295B2A /* SooskyTruckGPS.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		0A9A7A682EB85C8E00295B2A /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1620;
+				LastUpgradeCheck = 1620;
+				TargetAttributes = {
+					0A9A7A6F2EB85C8E00295B2A = {
+						CreatedOnToolsVersion = 16.2;
+					};
+				};
+			};
+			buildConfigurationList = 0A9A7A6B2EB85C8E00295B2A /* Build configuration list for PBXProject "SooskyTruckGPS" */;
+			compatibilityVersion = "Xcode 15.3";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 0A9A7A672EB85C8E00295B2A;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				0AD7BC822EB8634E00ADADDB /* XCRemoteSwiftPackageReference "FSPagerView" */,
+				0AD7BC852EB8638B00ADADDB /* XCRemoteSwiftPackageReference "realm-swift" */,
+				0AD7BC8A2EB8642300ADADDB /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				0AD7BC992EB8647A00ADADDB /* XCRemoteSwiftPackageReference "FSCalendar" */,
+				0AD7BC9C2EB864B200ADADDB /* XCRemoteSwiftPackageReference "lottie-ios" */,
+				0AD7BC9F2EB864E300ADADDB /* XCRemoteSwiftPackageReference "SkeletonView" */,
+				0AD7BCA22EB8651A00ADADDB /* XCRemoteSwiftPackageReference "NVActivityIndicatorView" */,
+				0AD7BCA52EB8657100ADADDB /* XCRemoteSwiftPackageReference "SDWebImage" */,
+				0AD7BCA82EB865A100ADADDB /* XCRemoteSwiftPackageReference "SnapKit" */,
+				0AD7BCAB2EB865FD00ADADDB /* XCRemoteSwiftPackageReference "Toast-Swift" */,
+				0AD7BCAE2EB8665F00ADADDB /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */,
+			);
+			productRefGroup = 0A9A7A712EB85C8E00295B2A /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				0A9A7A6F2EB85C8E00295B2A /* SooskyTruckGPS */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		0A9A7A6E2EB85C8E00295B2A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		0A9A7A6C2EB85C8E00295B2A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		0A9A7A842EB85C8F00295B2A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 2GR4J2GH38;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SooskyTruckGPS/Info.plist;
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "This app requires location access to track your trips. Please enable location permissions in settings to proceed";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "This app requires location access to track your trips. Please enable location permissions in settings to proceed";
+				INFOPLIST_KEY_NSUserTrackingUsageDescription = "We use your Identifier for Advertisers (IDFA) to track activity across apps. This helps show you content and ads most relevant to your Horse Riding tracking journey.";
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				INFOPLIST_KEY_UIMainStoryboardFile = LaunchScreen;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = hn.SooskyTruckGPS;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		0A9A7A852EB85C8F00295B2A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 2GR4J2GH38;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SooskyTruckGPS/Info.plist;
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "This app requires location access to track your trips. Please enable location permissions in settings to proceed";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "This app requires location access to track your trips. Please enable location permissions in settings to proceed";
+				INFOPLIST_KEY_NSUserTrackingUsageDescription = "We use your Identifier for Advertisers (IDFA) to track activity across apps. This helps show you content and ads most relevant to your Horse Riding tracking journey.";
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				INFOPLIST_KEY_UIMainStoryboardFile = LaunchScreen;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = hn.SooskyTruckGPS;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		0A9A7A862EB85C8F00295B2A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		0A9A7A872EB85C8F00295B2A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		0A9A7A6B2EB85C8E00295B2A /* Build configuration list for PBXProject "SooskyTruckGPS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0A9A7A862EB85C8F00295B2A /* Debug */,
+				0A9A7A872EB85C8F00295B2A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		0A9A7A832EB85C8F00295B2A /* Build configuration list for PBXNativeTarget "SooskyTruckGPS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0A9A7A842EB85C8F00295B2A /* Debug */,
+				0A9A7A852EB85C8F00295B2A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		0AD7BC822EB8634E00ADADDB /* XCRemoteSwiftPackageReference "FSPagerView" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/WenchaoD/FSPagerView";
+			requirement = {
+				branch = master;
+				kind = branch;
+			};
+		};
+		0AD7BC852EB8638B00ADADDB /* XCRemoteSwiftPackageReference "realm-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/realm/realm-swift";
+			requirement = {
+				kind = exactVersion;
+				version = 10.45.3;
+			};
+		};
+		0AD7BC8A2EB8642300ADADDB /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = exactVersion;
+				version = 12.3.0;
+			};
+		};
+		0AD7BC992EB8647A00ADADDB /* XCRemoteSwiftPackageReference "FSCalendar" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/WenchaoD/FSCalendar";
+			requirement = {
+				kind = exactVersion;
+				version = 2.8.4;
+			};
+		};
+		0AD7BC9C2EB864B200ADADDB /* XCRemoteSwiftPackageReference "lottie-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/airbnb/lottie-ios";
+			requirement = {
+				kind = exactVersion;
+				version = 4.5.2;
+			};
+		};
+		0AD7BC9F2EB864E300ADADDB /* XCRemoteSwiftPackageReference "SkeletonView" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Juanpe/SkeletonView";
+			requirement = {
+				kind = exactVersion;
+				version = 1.31.0;
+			};
+		};
+		0AD7BCA22EB8651A00ADADDB /* XCRemoteSwiftPackageReference "NVActivityIndicatorView" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/ninjaprox/NVActivityIndicatorView.git";
+			requirement = {
+				kind = exactVersion;
+				version = 5.2.0;
+			};
+		};
+		0AD7BCA52EB8657100ADADDB /* XCRemoteSwiftPackageReference "SDWebImage" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/SDWebImage/SDWebImage";
+			requirement = {
+				kind = exactVersion;
+				version = 5.21.3;
+			};
+		};
+		0AD7BCA82EB865A100ADADDB /* XCRemoteSwiftPackageReference "SnapKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/SnapKit/SnapKit.git";
+			requirement = {
+				kind = exactVersion;
+				version = 5.7.1;
+			};
+		};
+		0AD7BCAB2EB865FD00ADADDB /* XCRemoteSwiftPackageReference "Toast-Swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/scalessec/Toast-Swift";
+			requirement = {
+				kind = exactVersion;
+				version = 5.1.1;
+			};
+		};
+		0AD7BCAE2EB8665F00ADADDB /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/googleads/swift-package-manager-google-mobile-ads.git";
+			requirement = {
+				kind = exactVersion;
+				version = 12.11.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		0AD7BC832EB8634E00ADADDB /* FSPagerView */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0AD7BC822EB8634E00ADADDB /* XCRemoteSwiftPackageReference "FSPagerView" */;
+			productName = FSPagerView;
+		};
+		0AD7BC862EB8638B00ADADDB /* Realm */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0AD7BC852EB8638B00ADADDB /* XCRemoteSwiftPackageReference "realm-swift" */;
+			productName = Realm;
+		};
+		0AD7BC882EB8638B00ADADDB /* RealmSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0AD7BC852EB8638B00ADADDB /* XCRemoteSwiftPackageReference "realm-swift" */;
+			productName = RealmSwift;
+		};
+		0AD7BC8B2EB8642300ADADDB /* FirebaseAnalytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0AD7BC8A2EB8642300ADADDB /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalytics;
+		};
+		0AD7BC8D2EB8642300ADADDB /* FirebaseAnalyticsCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0AD7BC8A2EB8642300ADADDB /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalyticsCore;
+		};
+		0AD7BC8F2EB8642300ADADDB /* FirebaseCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0AD7BC8A2EB8642300ADADDB /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCore;
+		};
+		0AD7BC912EB8642300ADADDB /* FirebaseCrashlytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0AD7BC8A2EB8642300ADADDB /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCrashlytics;
+		};
+		0AD7BC932EB8642300ADADDB /* FirebaseDatabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0AD7BC8A2EB8642300ADADDB /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseDatabase;
+		};
+		0AD7BC952EB8642300ADADDB /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0AD7BC8A2EB8642300ADADDB /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestore;
+		};
+		0AD7BC972EB8642300ADADDB /* FirebaseStorage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0AD7BC8A2EB8642300ADADDB /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseStorage;
+		};
+		0AD7BC9A2EB8647A00ADADDB /* FSCalendar */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0AD7BC992EB8647A00ADADDB /* XCRemoteSwiftPackageReference "FSCalendar" */;
+			productName = FSCalendar;
+		};
+		0AD7BC9D2EB864B200ADADDB /* Lottie */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0AD7BC9C2EB864B200ADADDB /* XCRemoteSwiftPackageReference "lottie-ios" */;
+			productName = Lottie;
+		};
+		0AD7BCA02EB864E300ADADDB /* SkeletonView */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0AD7BC9F2EB864E300ADADDB /* XCRemoteSwiftPackageReference "SkeletonView" */;
+			productName = SkeletonView;
+		};
+		0AD7BCA32EB8651A00ADADDB /* NVActivityIndicatorView */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0AD7BCA22EB8651A00ADADDB /* XCRemoteSwiftPackageReference "NVActivityIndicatorView" */;
+			productName = NVActivityIndicatorView;
+		};
+		0AD7BCA62EB8657100ADADDB /* SDWebImage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0AD7BCA52EB8657100ADADDB /* XCRemoteSwiftPackageReference "SDWebImage" */;
+			productName = SDWebImage;
+		};
+		0AD7BCA92EB865A100ADADDB /* SnapKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0AD7BCA82EB865A100ADADDB /* XCRemoteSwiftPackageReference "SnapKit" */;
+			productName = SnapKit;
+		};
+		0AD7BCAC2EB865FD00ADADDB /* Toast */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0AD7BCAB2EB865FD00ADADDB /* XCRemoteSwiftPackageReference "Toast-Swift" */;
+			productName = Toast;
+		};
+		0AD7BCAF2EB8665F00ADADDB /* GoogleMobileAds */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0AD7BCAE2EB8665F00ADADDB /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */;
+			productName = GoogleMobileAds;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = 0A9A7A682EB85C8E00295B2A /* Project object */;
+}

@@ -7,8 +7,7 @@
 
 
 enum TabbarItem {
-  case horses
-  case track
-  case training
+  case truck
+  case diary
   case settings
 }

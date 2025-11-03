@@ -22,42 +22,42 @@ let screenHeightAds = UIScreen.main.bounds.height
 //    MARK: - Google-provided demo ad units
 public struct SampleAdUnitID {
   //    MARK: - Ads giả
-//  public static let adFormatFixedBannerID1       = "ca-app-pub-3940256099942544/2934735716"
-//  public static let adFormatFixedBannerID2       = "ca-app-pub-3940256099942544/2934735716"
-//  
-//  public static let adFormatInterstitialID1      = "ca-app-pub-3940256099942544/1033173712"
-//  
-//  public static let adFormatNativeAdvanced1       = "ca-app-pub-3940256099942544/3986624511"
-//  public static let adFormatNativeAdvanced2       = "ca-app-pub-3940256099942544/3986624511"
-//  public static let adFormatNativeAdvanced3       = "ca-app-pub-3940256099942544/3986624511"
-//  public static let adFormatNativeAdvanced4       = "ca-app-pub-3940256099942544/3986624511"
-//  
-//  public static let adFormatRewardedID1          = "ca-app-pub-3940256099942544/1712485313"
-//  
-//  public static let adFormatOpenAds             = [
-//    "ca-app-pub-3940256099942544/5575463023",
-//    "ca-app-pub-3940256099942544/5575463023",
-//    "ca-app-pub-3940256099942544/5575463023",
-//  ]
+  public static let adFormatFixedBannerID1       = "ca-app-pub-3940256099942544/2934735716"
+  public static let adFormatFixedBannerID2       = "ca-app-pub-3940256099942544/2934735716"
+  
+  public static let adFormatInterstitialID1      = "ca-app-pub-3940256099942544/1033173712"
+  
+  public static let adFormatNativeAdvanced1       = "ca-app-pub-3940256099942544/3986624511"
+  public static let adFormatNativeAdvanced2       = "ca-app-pub-3940256099942544/3986624511"
+  public static let adFormatNativeAdvanced3       = "ca-app-pub-3940256099942544/3986624511"
+  public static let adFormatNativeAdvanced4       = "ca-app-pub-3940256099942544/3986624511"
+  
+  public static let adFormatRewardedID1          = "ca-app-pub-3940256099942544/1712485313"
+  
+  public static let adFormatOpenAds             = [
+    "ca-app-pub-3940256099942544/5575463023",
+    "ca-app-pub-3940256099942544/5575463023",
+    "ca-app-pub-3940256099942544/5575463023",
+  ]
   // MARK: - Ads thật
   
-    public static let adFormatFixedBannerID1       = "ca-app-pub-4608855745095547/5551430958"
-    public static let adFormatFixedBannerID2       = "ca-app-pub-4608855745095547/5411830150"
-  
-    public static let adFormatInterstitialID1      = "ca-app-pub-4608855745095547/9366359364"
-  
-    public static let adFormatNativeAdvanced1      = "ca-app-pub-4608855745095547/1803757632"
-    public static let adFormatNativeAdvanced2      = "ca-app-pub-4608855745095547/6775407936"
-    public static let adFormatNativeAdvanced3      = "ca-app-pub-4608855745095547/9490675963"
-    public static let adFormatNativeAdvanced4      = "ca-app-pub-4608855745095547/4805325497"
-  
-    public static let adFormatRewardedID1          = "ca-app-pub-4608855745095547/5108577826"
-  
-    public static let adFormatOpenAds             = [
-      "ca-app-pub-4608855745095547/3116839306",
-      "ca-app-pub-4608855745095547/6931767715",
-      "ca-app-pub-4608855745095547/8720519770",
-    ]
+//    public static let adFormatFixedBannerID1       = "ca-app-pub-4608855745095547/5551430958"
+//    public static let adFormatFixedBannerID2       = "ca-app-pub-4608855745095547/5411830150"
+//  
+//    public static let adFormatInterstitialID1      = "ca-app-pub-4608855745095547/9366359364"
+//  
+//    public static let adFormatNativeAdvanced1      = "ca-app-pub-4608855745095547/1803757632"
+//    public static let adFormatNativeAdvanced2      = "ca-app-pub-4608855745095547/6775407936"
+//    public static let adFormatNativeAdvanced3      = "ca-app-pub-4608855745095547/9490675963"
+//    public static let adFormatNativeAdvanced4      = "ca-app-pub-4608855745095547/4805325497"
+//  
+//    public static let adFormatRewardedID1          = "ca-app-pub-4608855745095547/5108577826"
+//  
+//    public static let adFormatOpenAds             = [
+//      "ca-app-pub-4608855745095547/3116839306",
+//      "ca-app-pub-4608855745095547/6931767715",
+//      "ca-app-pub-4608855745095547/8720519770",
+//    ]
 
 }
 

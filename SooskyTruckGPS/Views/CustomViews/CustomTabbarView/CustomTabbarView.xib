@@ -16,21 +16,18 @@
         </array>
     </customFonts>
     <objects>
-        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="CustomTabbarView" customModule="Horse_Riding_Tracker" customModuleProvider="target">
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="CustomTabbarView" customModule="SooskyTruckGPS" customModuleProvider="target">
             <connections>
                 <outlet property="contentView" destination="iN0-l3-epB" id="BDc-bv-Uyn"/>
-                <outlet property="horsesLabel" destination="qP4-Ku-rCx" id="6fV-Dw-8Kw"/>
-                <outlet property="icHorses" destination="Rjp-Y9-q5o" id="xGN-Cr-PRt"/>
+                <outlet property="icList" destination="qry-8d-mQA" id="svI-xD-HNA"/>
                 <outlet property="icSettings" destination="TtX-xP-sSt" id="8NU-wn-oMW"/>
-                <outlet property="icTrack" destination="qry-8d-mQA" id="svI-xD-HNA"/>
-                <outlet property="icTraining" destination="GqN-x7-fqK" id="7A4-xc-oL7"/>
+                <outlet property="icTruck" destination="Rjp-Y9-q5o" id="xGN-Cr-PRt"/>
+                <outlet property="listLabel" destination="Wy1-Pd-TpA" id="wo3-XA-sbh"/>
                 <outlet property="settingsLabel" destination="t7t-zF-MFh" id="tIh-Sl-vUm"/>
-                <outlet property="trackLabel" destination="Wy1-Pd-TpA" id="wo3-XA-sbh"/>
-                <outlet property="trainingLabel" destination="eOo-nw-MiC" id="qfQ-K3-pk7"/>
+                <outlet property="truckLabel" destination="qP4-Ku-rCx" id="6fV-Dw-8Kw"/>
                 <outletCollection property="stackView" destination="t1Y-QT-enm" collectionClass="NSMutableArray" id="R9I-ro-Shc"/>
                 <outletCollection property="containerView" destination="lgz-Xn-Akh" collectionClass="NSMutableArray" id="e9p-fh-XWe"/>
                 <outletCollection property="containerView" destination="akC-er-jXp" collectionClass="NSMutableArray" id="cCt-VM-wo4"/>
-                <outletCollection property="containerView" destination="QMD-fK-vWP" collectionClass="NSMutableArray" id="kyI-xR-LIh"/>
                 <outletCollection property="containerView" destination="VWn-OU-BOo" collectionClass="NSMutableArray" id="DLe-zJ-Y5K"/>
             </connections>
         </placeholder>
@@ -46,19 +43,19 @@
                             <rect key="frame" x="0.0" y="0.0" width="435" height="68"/>
                             <subviews>
                                 <view clipsSubviews="YES" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="lgz-Xn-Akh" userLabel="HomeView">
-                                    <rect key="frame" x="0.0" y="0.0" width="108.66666666666667" height="68"/>
+                                    <rect key="frame" x="0.0" y="0.0" width="145" height="68"/>
                                     <subviews>
-                                        <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="icHorseTabbarSelected" translatesAutoresizingMaskIntoConstraints="NO" id="Rjp-Y9-q5o">
-                                            <rect key="frame" x="40.333333333333336" y="10" width="28.000000000000007" height="28"/>
+                                        <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="icTruckSelected" translatesAutoresizingMaskIntoConstraints="NO" id="Rjp-Y9-q5o">
+                                            <rect key="frame" x="58.666666666666671" y="10" width="28" height="28"/>
                                             <constraints>
                                                 <constraint firstAttribute="width" constant="28" id="JvG-Tb-G8V"/>
                                                 <constraint firstAttribute="width" secondItem="Rjp-Y9-q5o" secondAttribute="height" id="y9G-l8-ljI"/>
                                             </constraints>
                                         </imageView>
-                                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Horses" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="qP4-Ku-rCx">
-                                            <rect key="frame" x="0.0" y="46" width="108.66666666666667" height="18"/>
+                                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Truck" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="qP4-Ku-rCx">
+                                            <rect key="frame" x="0.0" y="46" width="145" height="18"/>
                                             <fontDescription key="fontDescription" name="SFProDisplay-Bold" family="SF Pro Display" pointSize="13"/>
-                                            <color key="textColor" red="0.36078431372549019" green="0.19607843137254902" blue="0.094117647058823528" alpha="1" colorSpace="calibratedRGB"/>
+                                            <color key="textColor" red="0.20000000000000001" green="0.14901960784313725" blue="0.26666666666666666" alpha="1" colorSpace="calibratedRGB"/>
                                             <nil key="highlightedColor"/>
                                         </label>
                                     </subviews>
@@ -79,19 +76,19 @@
                                     </userDefinedRuntimeAttributes>
                                 </view>
                                 <view tag="1" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="akC-er-jXp" userLabel="BabyView">
-                                    <rect key="frame" x="108.66666666666669" y="0.0" width="109" height="68"/>
+                                    <rect key="frame" x="145" y="0.0" width="145" height="68"/>
                                     <subviews>
-                                        <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="icTrackTabbarUnSelected" translatesAutoresizingMaskIntoConstraints="NO" id="qry-8d-mQA">
-                                            <rect key="frame" x="40.333333333333329" y="10" width="28" height="28"/>
+                                        <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="icDirayUnSelected" translatesAutoresizingMaskIntoConstraints="NO" id="qry-8d-mQA">
+                                            <rect key="frame" x="58.666666666666657" y="10" width="28" height="28"/>
                                             <constraints>
                                                 <constraint firstAttribute="width" secondItem="qry-8d-mQA" secondAttribute="height" id="nlv-Jk-S6e"/>
                                                 <constraint firstAttribute="width" constant="28" id="yle-6E-ruD"/>
                                             </constraints>
                                         </imageView>
-                                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Track" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Wy1-Pd-TpA">
-                                            <rect key="frame" x="0.0" y="46" width="109" height="18"/>
+                                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="List" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Wy1-Pd-TpA">
+                                            <rect key="frame" x="0.0" y="46" width="145" height="18"/>
                                             <fontDescription key="fontDescription" name="SFProDisplay-Regular" family="SF Pro Display" pointSize="12"/>
-                                            <color key="textColor" red="0.52549019607843139" green="0.52549019607843139" blue="0.52549019607843139" alpha="1" colorSpace="calibratedRGB"/>
+                                            <color key="textColor" red="0.58823529411764708" green="0.58823529411764708" blue="0.58823529411764708" alpha="1" colorSpace="calibratedRGB"/>
                                             <nil key="highlightedColor"/>
                                         </label>
                                     </subviews>
@@ -110,53 +107,20 @@
                                         </userDefinedRuntimeAttribute>
                                     </userDefinedRuntimeAttributes>
                                 </view>
-                                <view tag="2" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="QMD-fK-vWP" userLabel="ReminderView">
-                                    <rect key="frame" x="217.66666666666666" y="0.0" width="108.66666666666666" height="68"/>
-                                    <subviews>
-                                        <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="icTrainingTabbarUnSelected" translatesAutoresizingMaskIntoConstraints="NO" id="GqN-x7-fqK">
-                                            <rect key="frame" x="40.333333333333343" y="10" width="28" height="28"/>
-                                            <constraints>
-                                                <constraint firstAttribute="width" constant="28" id="oo5-lT-akj"/>
-                                                <constraint firstAttribute="width" secondItem="GqN-x7-fqK" secondAttribute="height" id="ta7-3L-dHp"/>
-                                            </constraints>
-                                        </imageView>
-                                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Training" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="eOo-nw-MiC">
-                                            <rect key="frame" x="0.0" y="46" width="108.66666666666667" height="18"/>
-                                            <fontDescription key="fontDescription" name="SFProDisplay-Regular" family="SF Pro Display" pointSize="12"/>
-                                            <color key="textColor" red="0.52549019610000003" green="0.52549019610000003" blue="0.52549019610000003" alpha="1" colorSpace="calibratedRGB"/>
-                                            <nil key="highlightedColor"/>
-                                        </label>
-                                    </subviews>
-                                    <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                    <constraints>
-                                        <constraint firstItem="eOo-nw-MiC" firstAttribute="centerX" secondItem="QMD-fK-vWP" secondAttribute="centerX" id="B8q-25-Wkw"/>
-                                        <constraint firstItem="GqN-x7-fqK" firstAttribute="top" secondItem="QMD-fK-vWP" secondAttribute="top" constant="10" id="Cub-LP-hAn"/>
-                                        <constraint firstAttribute="trailing" secondItem="eOo-nw-MiC" secondAttribute="trailing" id="bH6-Qc-DVW"/>
-                                        <constraint firstAttribute="bottom" secondItem="eOo-nw-MiC" secondAttribute="bottom" constant="4" id="okm-Vi-FWg"/>
-                                        <constraint firstItem="GqN-x7-fqK" firstAttribute="centerX" secondItem="QMD-fK-vWP" secondAttribute="centerX" id="qoh-Lv-ZQV"/>
-                                        <constraint firstItem="eOo-nw-MiC" firstAttribute="leading" secondItem="QMD-fK-vWP" secondAttribute="leading" id="vKu-5v-Bxe"/>
-                                        <constraint firstItem="eOo-nw-MiC" firstAttribute="top" secondItem="GqN-x7-fqK" secondAttribute="bottom" constant="8" id="wgJ-2s-PRJ"/>
-                                    </constraints>
-                                    <userDefinedRuntimeAttributes>
-                                        <userDefinedRuntimeAttribute type="number" keyPath="cornerRadius">
-                                            <real key="value" value="12"/>
-                                        </userDefinedRuntimeAttribute>
-                                    </userDefinedRuntimeAttributes>
-                                </view>
                                 <view tag="3" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="VWn-OU-BOo" userLabel="ReminderView">
-                                    <rect key="frame" x="326.33333333333331" y="0.0" width="108.66666666666669" height="68"/>
+                                    <rect key="frame" x="290" y="0.0" width="145" height="68"/>
                                     <subviews>
                                         <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="icSettingTabbarUnSelected" translatesAutoresizingMaskIntoConstraints="NO" id="TtX-xP-sSt">
-                                            <rect key="frame" x="40.333333333333371" y="10" width="28" height="28"/>
+                                            <rect key="frame" x="58.666666666666686" y="10" width="28" height="28"/>
                                             <constraints>
                                                 <constraint firstAttribute="width" secondItem="TtX-xP-sSt" secondAttribute="height" id="O2J-XI-ENX"/>
                                                 <constraint firstAttribute="width" constant="28" id="RHl-4Y-7Qf"/>
                                             </constraints>
                                         </imageView>
                                         <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Settings" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="t7t-zF-MFh">
-                                            <rect key="frame" x="0.0" y="46" width="108.66666666666667" height="18"/>
+                                            <rect key="frame" x="0.0" y="46" width="145" height="18"/>
                                             <fontDescription key="fontDescription" name="SFProDisplay-Regular" family="SF Pro Display" pointSize="12"/>
-                                            <color key="textColor" red="0.52549019610000003" green="0.52549019610000003" blue="0.52549019610000003" alpha="1" colorSpace="calibratedRGB"/>
+                                            <color key="textColor" red="0.58823529411764708" green="0.58823529411764708" blue="0.58823529411764708" alpha="1" colorSpace="calibratedRGB"/>
                                             <nil key="highlightedColor"/>
                                         </label>
                                     </subviews>
@@ -207,9 +171,8 @@
         </tapGestureRecognizer>
     </objects>
     <resources>
-        <image name="icHorseTabbarSelected" width="28" height="28"/>
-        <image name="icSettingTabbarUnSelected" width="28" height="28"/>
-        <image name="icTrackTabbarUnSelected" width="28" height="28"/>
-        <image name="icTrainingTabbarUnSelected" width="28" height="28"/>
+        <image name="icDirayUnSelected" width="32" height="32"/>
+        <image name="icSettingTabbarUnSelected" width="32" height="32"/>
+        <image name="icTruckSelected" width="32" height="32"/>
     </resources>
 </document>

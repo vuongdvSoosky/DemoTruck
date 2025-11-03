@@ -14,7 +14,7 @@ class CustomTabbarViewModel: BaseViewModel {
   }
   
   let action = PassthroughSubject<Action, Never>()
-  let tabbarItem = CurrentValueSubject<TabbarItem, Never>(.horses)
+  let tabbarItem = CurrentValueSubject<TabbarItem, Never>(.truck)
   
   override init() {
     super.init()

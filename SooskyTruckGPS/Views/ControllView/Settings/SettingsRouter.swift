@@ -25,8 +25,9 @@ extension SettingsRouter {
         context.push(to: SubB0VC(), animated: true)
       }
     case .tutorial:
-      let tutorialVC = TutorialVC()
-      context.push(to: tutorialVC, animated: true)
+//      let tutorialVC = TutorialVC()
+//      context.push(to: tutorialVC, animated: true)
+      break
     }
   }
 }

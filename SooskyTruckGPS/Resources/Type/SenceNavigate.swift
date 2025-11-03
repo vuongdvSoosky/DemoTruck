@@ -6,8 +6,7 @@
 //
 
 enum SenceNavigate: Int, CaseIterable {
-  case horse = 0
-  case trackHorse = 1
-  case trainingHorse = 2
-  case settings = 3
+  case truck = 0
+  case diary = 1
+  case settings = 2
 }

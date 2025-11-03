@@ -28,7 +28,7 @@ class SettingsVC: BaseViewController {
   private lazy var icPremium: UIImageView = {
     let image = UIImageView()
     image.translatesAutoresizingMaskIntoConstraints = false
-    image.image = .icPremium
+//    image.image = .icPremium
     image.isUserInteractionEnabled = true
     image.isHidden = true
     return image

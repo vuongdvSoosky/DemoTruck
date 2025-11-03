@@ -11,7 +11,7 @@ import SnapKit
 
 class TabbarVC: UITabBarController, UITabBarControllerDelegate {
   
-  private lazy var listVC = [HorsesVC(), TrackHorseVC(), TrainingVC() ,SettingsVC()]
+  private lazy var listVC = [TruckVC(), DiaryVC() ,SettingsVC()]
   private let defaultHeightForPlayView: CGFloat = 0
   private var previousIndex: Int = 0
   var countAdsToShow = 0
@@ -63,12 +63,10 @@ extension TabbarVC {
   func setSelectIndex(navigate: SenceNavigate) {
     selectedIndex = navigate.rawValue
     switch navigate {
-    case .horse:
-      customItemTabbar.getItemFromTabbar(.horses)
-    case .trackHorse:
-      customItemTabbar.getItemFromTabbar(.track)
-    case .trainingHorse:
-      customItemTabbar.getItemFromTabbar(.training)
+    case .truck:
+      customItemTabbar.getItemFromTabbar(.truck)
+    case .diary:
+      customItemTabbar.getItemFromTabbar(.diary)
     default:
       customItemTabbar.getItemFromTabbar(.settings)
     }
@@ -125,9 +123,9 @@ extension TabbarVC: CustomTabbarViewDelagate {
   }
   
   private func showPopupTutorialView(_ index: Int) {
-    let view = PopupTutorialView()
-    view.setupData(TutorialType.allCases[index])
-    view.showSlideView(view: self.view)
+//    let view = PopupTutorialView()
+//    view.setupData(TutorialType.allCases[index])
+//    view.showSlideView(view: self.view)
   }
 }
 

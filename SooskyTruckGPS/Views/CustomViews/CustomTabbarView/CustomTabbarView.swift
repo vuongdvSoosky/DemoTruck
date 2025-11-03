@@ -19,13 +19,13 @@ class CustomTabbarView: BaseView {
   @IBOutlet var contentView: UIView!
   @IBOutlet var stackView: [UIStackView]!
   
-  @IBOutlet weak var icHorses: UIImageView!
-  @IBOutlet weak var icTrack: UIImageView!
+  @IBOutlet weak var icTruck: UIImageView!
+  @IBOutlet weak var icList: UIImageView!
   @IBOutlet weak var icSettings: UIImageView!
   @IBOutlet weak var icTraining: UIImageView!
   
-  @IBOutlet weak var horsesLabel: UILabel!
-  @IBOutlet weak var trackLabel: UILabel!
+  @IBOutlet weak var truckLabel: UILabel!
+  @IBOutlet weak var listLabel: UILabel!
   @IBOutlet weak var settingsLabel: UILabel!
   @IBOutlet weak var trainingLabel: UILabel!
   
@@ -60,7 +60,7 @@ class CustomTabbarView: BaseView {
       stackView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapTabbar(_:))))
     }
     
-    [horsesLabel, trackLabel, trainingLabel, settingsLabel].forEach { label in
+    [truckLabel, listLabel, trainingLabel, settingsLabel].forEach { label in
       label?.setContentHuggingPriority(.required, for: .horizontal)
       label?.setContentCompressionResistancePriority(.required, for: .horizontal)
     }
@@ -74,35 +74,24 @@ class CustomTabbarView: BaseView {
           return
         }
         switch tabbarItem {
-        case .horses:
-          setupStateIconHorese(with: .icHorseTabbarSelected,  texColor: UIColor(rgb: 0x5C3218), font: AppFont.font(.boldText, size: 14))
+        case .truck:
+          setupStateIconTruck(with: .icTruckSelected,  texColor: UIColor(rgb: 0x332644), font: AppFont.font(.boldText, size: 14))
           
           // UnSelected
-          setupStateIconTrack(with: .icTrackTabbarUnSelected, texColor: UIColor(rgb: 0xA2A2A2))
-          setupStateIconSettings(with: .icSettingTabbarUnSelected, texColor: UIColor(rgb: 0xA2A2A2))
-          setupStateIconTraining(with: .icTrainingTabbarUnSelected, texColor: UIColor(rgb: 0xA2A2A2))
-          
-        case .track:
-          setupStateIconTrack(with: .icTrackTabbarSelected,  texColor: UIColor(rgb: 0x5C3218), font: AppFont.font(.boldText, size: 14))
+          setupStateIconDiary(with: .icDirayUnSelected, texColor: UIColor(rgb: 0x969696))
+          setupStateIconSettings(with: .icSettingTabbarUnSelected, texColor: UIColor(rgb: 0x969696))
+        case .diary:
+          setupStateIconDiary(with: .icDiraySelected,  texColor: UIColor(rgb: 0x332644), font: AppFont.font(.boldText, size: 14))
           // UnSelected
-          setupStateIconSettings(with: .icSettingTabbarUnSelected, texColor: UIColor(rgb: 0xA2A2A2))
-          setupStateIconTraining(with: .icTrainingTabbarUnSelected, texColor: UIColor(rgb: 0xA2A2A2))
-          setupStateIconHorese(with: .icHorseTabbarUnSelected,  texColor: UIColor(rgb: 0xA2A2A2), font: AppFont.font(.boldText, size: 14))
+          setupStateIconSettings(with: .icSettingTabbarUnSelected, texColor: UIColor(rgb: 0x969696))
+          setupStateIconTruck(with: .icTruckUnSelected,  texColor: UIColor(rgb: 0x969696), font: AppFont.font(.boldText, size: 14))
           
-        case .training:
-          setupStateIconTraining(with: .icTrainingTabbarSelected,  texColor: UIColor(rgb: 0x5C3218), font: AppFont.font(.boldText, size: 14))
-          
-          // UnSelected
-          setupStateIconSettings(with: .icSettingTabbarUnSelected, texColor: UIColor(rgb: 0xA2A2A2))
-          setupStateIconTrack(with: .icTrackTabbarUnSelected, texColor: UIColor(rgb: 0xA2A2A2))
-          setupStateIconHorese(with: .icHorseTabbarUnSelected,  texColor: UIColor(rgb: 0xA2A2A2), font: AppFont.font(.boldText, size: 14))
         case .settings:
-          setupStateIconSettings(with: .icSettingTabbarSelected,  texColor: UIColor(rgb: 0x5C3218), font: AppFont.font(.boldText, size: 14))
+          setupStateIconSettings(with: .icSettingTabbarSelected,  texColor: UIColor(rgb: 0x332644), font: AppFont.font(.boldText, size: 14))
           
           // UnSelected
-          setupStateIconTraining(with: .icTrainingTabbarUnSelected, texColor: UIColor(rgb: 0xA2A2A2))
-          setupStateIconTrack(with: .icTrackTabbarUnSelected, texColor: UIColor(rgb: 0xA2A2A2))
-          setupStateIconHorese(with: .icHorseTabbarUnSelected,  texColor: UIColor(rgb: 0xA2A2A2))
+          setupStateIconDiary(with: .icDirayUnSelected, texColor: UIColor(rgb: 0x969696))
+          setupStateIconTruck(with: .icTruckUnSelected,  texColor: UIColor(rgb: 0x969696))
         }
       }.store(in: &subscriptions)
   }
@@ -113,14 +102,11 @@ extension CustomTabbarView {
   @objc private func onTapTabbar(_ sender: UITapGestureRecognizer) {
     switch sender.view?.tag {
     case 0:
-      viewModel.action.send(.chooseItem(tabbarItem: .horses))
+      viewModel.action.send(.chooseItem(tabbarItem: .truck))
       self.delegate?.didSelectedHorse(index: sender.view?.tag ?? 0)
     case 1:
-      viewModel.action.send(.chooseItem(tabbarItem: .track))
+      viewModel.action.send(.chooseItem(tabbarItem: .diary))
       self.delegate?.didSelectedTrack(index: sender.view?.tag ?? 0)
-    case 2:
-      viewModel.action.send(.chooseItem(tabbarItem: .training))
-      self.delegate?.didSelectedTraining(index: sender.view?.tag ?? 0)
     default:
       viewModel.action.send(.chooseItem(tabbarItem: .settings))
       self.delegate?.didSelectedSetting(index: sender.view?.tag ?? 0)
@@ -135,25 +121,18 @@ extension CustomTabbarView {
 }
 
 extension CustomTabbarView {
-  private func setupStateIconHorese(with icon: UIImage, texColor: UIColor,
-                                    font: UIFont = AppFont.font(.mediumText, size: 15)) {
-    icHorses.image = icon
-    horsesLabel.textColor = texColor
-    horsesLabel.font = font
-  }
-  
-  private func setupStateIconTrack(with icon: UIImage, texColor: UIColor,
+  private func setupStateIconTruck(with icon: UIImage, texColor: UIColor,
                                    font: UIFont = AppFont.font(.mediumText, size: 15)) {
-    icTrack.image = icon
-    trackLabel.textColor = texColor
-    trackLabel.font = font
+    icTruck.image = icon
+    truckLabel.textColor = texColor
+    truckLabel.font = font
   }
   
-  private func setupStateIconTraining(with icon: UIImage, texColor: UIColor,
-                                      font: UIFont = AppFont.font(.mediumText, size: 15)) {
-    icTraining.image = icon
-    trainingLabel.textColor = texColor
-    trainingLabel.font = font
+  private func setupStateIconDiary(with icon: UIImage, texColor: UIColor,
+                                   font: UIFont = AppFont.font(.mediumText, size: 15)) {
+    icList.image = icon
+    listLabel.textColor = texColor
+    listLabel.font = font
   }
   
   private func setupStateIconSettings(with icon: UIImage, texColor: UIColor,
