@@ -64,7 +64,7 @@ final class MapManager: NSObject {
       
       let annotation = CustomAnnotation(
         coordinate: location.coordinate,
-        type: type
+        type: type, titlePlace: address
       )
       
       DispatchQueue.main.async {
@@ -225,9 +225,11 @@ extension MapManager {
 class CustomAnnotation: NSObject, MKAnnotation {
   var coordinate: CLLocationCoordinate2D
   var type: String
+  var titlePlace: String
   
-  init(coordinate: CLLocationCoordinate2D, type: String) {
+  init(coordinate: CLLocationCoordinate2D, type: String, titlePlace: String) {
     self.coordinate = coordinate
     self.type = type
+    self.titlePlace = titlePlace
   }
 }

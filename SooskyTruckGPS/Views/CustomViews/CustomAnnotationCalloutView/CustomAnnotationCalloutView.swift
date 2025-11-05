@@ -6,12 +6,64 @@
 //
 
 import UIKit
+import SnapKit
 
-class CustomAnnotationCalloutView: UIView {
-  private let titleLabel = UILabel()
-  private let button = UIButton(type: .system)
+final class CustomAnnotationCalloutView: BaseView {
+  
+  // MARK: - UI Components
+  
+  private let titleLabel: UILabel = {
+    let label = UILabel()
+    label.font = UIFont.boldSystemFont(ofSize: 16)
+    label.textColor = .black
+    label.textAlignment = .center
+    label.numberOfLines = 2
+    return label
+  }()
+  
+  private let iconButton: UIImageView = {
+    let imageView = UIImageView()
+    imageView.image = .icPlus
+    imageView.contentMode = .scaleAspectFit
+    return imageView
+  }()
+  
+  private let titleButton: UILabel = {
+    let label = UILabel()
+    label.font = AppFont.font(.semiBoldText, size: 12)
+    label.textColor = UIColor(rgb: 0xF2F2F2)
+    label.text = "Add Stop"
+    label.textAlignment = .center
+    return label
+  }()
+  
+  private lazy var buttonView: UIView = {
+    let view = UIView()
+    view.translatesAutoresizingMaskIntoConstraints = false
+    view.backgroundColor = UIColor(rgb: 0xF26101)
+    view.cornerRadius = 12
+    
+    let stackView = UIStackView(arrangedSubviews: [iconButton, titleButton])
+    stackView.axis = .horizontal
+    stackView.spacing = 6
+    stackView.alignment = .center
+    stackView.distribution = .equalCentering
+    
+    view.addSubview(stackView)
+    stackView.snp.makeConstraints { make in
+      make.center.equalToSuperview()
+    }
+    
+    view.isUserInteractionEnabled = true
+    view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleButtonTap)))
+    return view
+  }()
+  
+  // MARK: - Properties
   
   var onButtonTapped: (() -> Void)?
+  
+  // MARK: - Init
   
   override init(frame: CGRect) {
     super.init(frame: frame)
@@ -23,6 +75,8 @@ class CustomAnnotationCalloutView: UIView {
     setupView()
   }
   
+  // MARK: - Setup
+  
   private func setupView() {
     backgroundColor = .white
     layer.cornerRadius = 16
@@ -30,41 +84,35 @@ class CustomAnnotationCalloutView: UIView {
     layer.shadowOpacity = 0.15
     layer.shadowOffset = CGSize(width: 0, height: 4)
     layer.shadowRadius = 8
-    self.tag = 999
+    tag = 999
     
-    titleLabel.font = UIFont.boldSystemFont(ofSize: 16)
-    titleLabel.textColor = UIColor.black
-    titleLabel.textAlignment = .center
+    addSubviews(titleLabel, buttonView)
     
-    button.setTitle("＋ Add Stop", for: .normal)
-    button.setTitleColor(.white, for: .normal)
-    button.backgroundColor = UIColor.orange
-    button.titleLabel?.font = UIFont.systemFont(ofSize: 15, weight: .semibold)
-    button.layer.cornerRadius = 18
-    button.addTarget(self, action: #selector(handleButtonTap), for: .touchUpInside)
+    titleLabel.snp.makeConstraints { make in
+      make.top.equalToSuperview().offset(12)
+      make.left.right.equalToSuperview().inset(16)
+    }
     
-    addSubview(titleLabel)
-    addSubview(button)
-    
-    titleLabel.translatesAutoresizingMaskIntoConstraints = false
-    button.translatesAutoresizingMaskIntoConstraints = false
-    
-    NSLayoutConstraint.activate([
-      titleLabel.topAnchor.constraint(equalTo: topAnchor, constant: 12),
-      titleLabel.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 16),
-      titleLabel.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -16),
-      
-      button.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 10),
-      button.centerXAnchor.constraint(equalTo: centerXAnchor),
-      button.widthAnchor.constraint(equalToConstant: 160),
-      button.heightAnchor.constraint(equalToConstant: 36),
-      button.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -12)
-    ])
+    buttonView.snp.makeConstraints { make in
+      make.top.equalTo(titleLabel.snp.bottom).offset(10)
+      make.centerX.equalToSuperview()
+      make.left.right.equalToSuperview().inset(16)
+      make.bottom.equalToSuperview().inset(23)
+    }
   }
+  
+  // MARK: - Configuration
   
   func configure(title: String) {
     titleLabel.text = title
   }
+  
+  func configureButton(title: String, icon: UIImage) {
+    titleButton.text = title
+    iconButton.image = icon
+  }
+  
+  // MARK: - Actions
   
   @objc private func handleButtonTap() {
     onButtonTapped?()
