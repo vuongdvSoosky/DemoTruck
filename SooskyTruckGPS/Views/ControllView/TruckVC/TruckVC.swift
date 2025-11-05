@@ -55,7 +55,15 @@ class TruckVC: BaseViewController {
   
   private var currentQuery = "fast food"
   private var searchDelayTimer: Timer?
-  private var currentCalloutView: CustomAnnotationCalloutView?
+  private var pendingAnnotation: MKAnnotation?
+  private var isProgrammaticRegionChange = false
+  
+  private lazy var currentCalloutView: CustomAnnotationCalloutView = {
+    let view = CustomAnnotationCalloutView()
+    view.translatesAutoresizingMaskIntoConstraints = false
+    view.isHidden = true
+    return view
+  }()
   
   override func viewDidLoad() {
     super.viewDidLoad()
@@ -65,6 +73,7 @@ class TruckVC: BaseViewController {
   override func setProperties() {
     searchTextField.delegate = self
     searchTextField.addTarget(self, action: #selector(textFieldDidChange(_:)), for: .editingChanged)
+    view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapCloseCalloutView)))
   }
   
   private func setupMap() {
@@ -85,7 +94,7 @@ class TruckVC: BaseViewController {
   }
   
   override func addComponents() {
-    self.view.addSubviews(mapView, searchView)
+    self.view.addSubviews(mapView, searchView, currentCalloutView)
   }
   
   override func setConstraints() {
@@ -98,6 +107,48 @@ class TruckVC: BaseViewController {
       make.height.equalTo(48)
       make.left.right.equalToSuperview().inset(20)
     }
+    
+    currentCalloutView.snp.makeConstraints { make in
+      make.centerX.equalToSuperview()
+      make.centerY.equalToSuperview().offset(-100)
+      make.width.equalTo(210)
+      make.height.equalTo(100)
+    }
+  }
+  
+  private func hideCalloutAnimated() {
+    guard !currentCalloutView.isHidden else { return }
+    
+    UIView.animate(withDuration: 0.25,
+                   delay: 0,
+                   options: .curveEaseIn,
+                   animations: {
+      self.currentCalloutView.alpha = 0
+      self.currentCalloutView.transform = CGAffineTransform(translationX: 0, y: 20)
+    }, completion: { _ in
+      self.currentCalloutView.isHidden = true
+      self.currentCalloutView.transform = .identity
+    })
+  }
+  
+  private func showCalloutAnimated() {
+    let adress = self.address.shortAddress
+    currentCalloutView.configure(title: adress)
+    //    currentCalloutView.isHidden = false
+    currentCalloutView.alpha = 0
+    currentCalloutView.transform = CGAffineTransform(translationX: 0, y: 20)
+    currentCalloutView.isHidden = false
+    
+    // Animation hiện lên
+    UIView.animate(withDuration: 0.5,
+                   delay: 0,
+                   usingSpringWithDamping: 0.8,
+                   initialSpringVelocity: 0.5,
+                   options: .curveEaseOut,
+                   animations: {
+      self.currentCalloutView.alpha = 1
+      self.currentCalloutView.transform = .identity
+    }, completion: nil)
   }
 }
 
@@ -105,22 +156,29 @@ class TruckVC: BaseViewController {
 extension TruckVC: MKMapViewDelegate {
   func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
     // debounce tránh spam search khi người dùng kéo bản đồ liên tục
-    //    searchDelayTimer?.invalidate()
-    //    searchDelayTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: false) { [weak self] _ in
-    //      // self?.searchNearby()
-    //    }
+    //        searchDelayTimer?.invalidate()
+    //        searchDelayTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: false) { [weak self] _ in
+    //          // self?.searchNearby()
+    //        }
     
-    guard let superview = mapView.superview else { return }
+    guard animated else { return }
     
-    superview.subviews
-      .filter { $0 is CustomAnnotationCalloutView }
-      .forEach { view in
-        UIView.animate(withDuration: 0.2, animations: {
-          view.alpha = 0
-        }) { _ in
-          view.removeFromSuperview()
-        }
-      }
+    if let annotation = pendingAnnotation {
+      pendingAnnotation = nil
+      isProgrammaticRegionChange = false // reset flag
+      
+      // Hiển thị callout sau khi map di chuyển xong
+      showCalloutAnimated()
+    } else {
+      // Nếu không có pendingAnnotation, reset flag để đề phòng
+      isProgrammaticRegionChange = false
+    }
+  }
+  
+  func mapView(_ mapView: MKMapView, regionWillChangeAnimated animated: Bool) {
+    if !isProgrammaticRegionChange {
+      hideCalloutAnimated()
+    }
   }
   
   func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
@@ -152,52 +210,9 @@ extension TruckVC: MKMapViewDelegate {
     }
     
     view?.centerOffset = CGPoint(x: 0, y: -15)
+    let tap = UITapGestureRecognizer(target: self, action: #selector(annotationTapped(_:)))
+    view?.addGestureRecognizer(tap)
     return view
-  }
-  
-  func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
-    guard let annotation = view.annotation else { return }
-    
-    // Xoá popup cũ
-    mapView.superview?.subviews
-      .filter { $0 is CustomAnnotationCalloutView }
-      .forEach { $0.removeFromSuperview() }
-    
-    // Tạo popup mới
-    let popup = CustomAnnotationCalloutView(frame: CGRect(x: 0, y: 0, width: 220, height: 100))
-    let address = self.address.shortAddress
-    popup.configure(title: address)
-    
-    popup.onButtonTapped = {
-      LogManager.show("Add Stop tapped cho \(address)")
-    }
-    
-    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
-      guard let self else {
-        return
-      }
-      let point = mapView.convert(annotation.coordinate, toPointTo: mapView.superview)
-      popup.center = CGPoint(x: point.x, y: point.y - view.frame.height - 60)
-      
-      mapView.superview?.addSubview(popup)
-      
-      popup.alpha = 1
-      popup.transform = CGAffineTransform(translationX: 0, y: 10)
-      UIView.animate(withDuration: 0.25) {
-        popup.alpha = 1
-        popup.transform = .identity
-      }
-    }
-  }
-  
-  func mapView(_ mapView: MKMapView, didDeselect view: MKAnnotationView) {
-    UIView.animate(withDuration: 0, animations: {
-      mapView.subviews.filter { $0 is CustomAnnotationCalloutView }.forEach {
-        $0.alpha = 0
-      }
-    }) { _ in
-      mapView.subviews.filter { $0 is CustomAnnotationCalloutView }.forEach { $0.removeFromSuperview() }
-    }
   }
 }
 
@@ -214,10 +229,46 @@ extension TruckVC: UITextFieldDelegate {
   
   func textFieldShouldReturn(_ textField: UITextField) -> Bool {
     textField.resignFirstResponder()
-    guard let text = textField.text else { return true }
+    guard let keyword = textField.text, !keyword.isEmpty else { return true }
     
-    
-    MapManager.shared.showPin(for: text, type: "parking")
+    let request = MKLocalSearch.Request()
+    request.naturalLanguageQuery = keyword
+    let search = MKLocalSearch(request: request)
+    request.region = mapView.region
+    search.start { [weak self] response, error in
+      guard let self = self,
+            let coordinate = response?.mapItems.first?.placemark.coordinate else { return }
+      
+      // Di chuyển map để location nằm ở trung tâm
+      DispatchQueue.main.async {
+        let region = MKCoordinateRegion(
+          center: coordinate,
+          latitudinalMeters: 200,
+          longitudinalMeters: 200
+        )
+        self.mapView.setRegion(region, animated: true)
+        MapManager.shared.showPin(for: keyword, type: "parking")
+        self.isProgrammaticRegionChange = true
+        self.showCalloutAnimated()
+      }
+    }
     return true
+  }
+}
+
+// MARK: - Action
+
+extension TruckVC {
+  @objc private func annotationTapped(_ sender: UITapGestureRecognizer) {
+    guard let annotationView = sender.view as? MKAnnotationView,
+          let annotation = annotationView.annotation else { return }
+    // xử lý hành vi khi bấm vào pin
+    isProgrammaticRegionChange = true
+    pendingAnnotation = annotation
+    mapView.setCenter(annotation.coordinate, animated: true)
+  }
+  
+  @objc private func onTapCloseCalloutView() {
+    hideCalloutAnimated()
   }
 }
