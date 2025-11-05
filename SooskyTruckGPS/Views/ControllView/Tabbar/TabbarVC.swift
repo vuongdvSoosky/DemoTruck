@@ -79,27 +79,28 @@ extension TabbarVC: CustomTabbarViewDelagate {
   }
   
   func didSelectedTrack(index: Int) {
-    showInterAds(didDismiss: {[weak self] in
-      guard let self else {
-        return
-      }
-      if UserDefaultsManager.shared.get(of: Bool.self, key: .showTutorialTrack) == false {
-        showPopupTutorialView(0)
-        UserDefaultsManager.shared.set(true, key: .showTutorialTrack)
-      }
-      
-      self.selectedIndex = index
-    }, didFaild: {[weak self] in
-      guard let self else {
-        return
-      }
-      if UserDefaultsManager.shared.get(of: Bool.self, key: .showTutorialTrack) == false {
-        showPopupTutorialView(0)
-        UserDefaultsManager.shared.set(true, key: .showTutorialTrack)
-      }
-      self.selectedIndex = index
-    }
-    )
+    self.selectedIndex = index
+//    showInterAds(didDismiss: {[weak self] in
+//      guard let self else {
+//        return
+//      }
+//      if UserDefaultsManager.shared.get(of: Bool.self, key: .showTutorialTrack) == false {
+//        showPopupTutorialView(0)
+//        UserDefaultsManager.shared.set(true, key: .showTutorialTrack)
+//      }
+//      
+//      self.selectedIndex = index
+//    }, didFaild: {[weak self] in
+//      guard let self else {
+//        return
+//      }
+//      if UserDefaultsManager.shared.get(of: Bool.self, key: .showTutorialTrack) == false {
+//        showPopupTutorialView(0)
+//        UserDefaultsManager.shared.set(true, key: .showTutorialTrack)
+//      }
+//      self.selectedIndex = index
+//    }
+//    )
   }
   
   func didSelectedTraining(index: Int) {

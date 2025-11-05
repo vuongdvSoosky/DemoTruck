@@ -84,3 +84,10 @@ extension String {
     return formatter.date(from: self)
   }
 }
+
+extension String {
+  /// Lấy phần địa chỉ trước dấu phẩy đầu tiên
+  var shortAddress: String {
+    return self.components(separatedBy: ",").first?.trimmingCharacters(in: .whitespacesAndNewlines) ?? self
+  }
+}

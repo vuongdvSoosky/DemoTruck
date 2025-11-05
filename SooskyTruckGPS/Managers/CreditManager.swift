@@ -19,22 +19,22 @@ class CreditManager {
 
 extension CreditManager {
   func fetchNumOfTurn() {
-    goTurn = UserDefaultsManager.shared.get(of: Int.self, key: .lockGo)
-    sessionTurn = UserDefaultsManager.shared.get(of: Int.self, key: .lockSession)
+//    goTurn = UserDefaultsManager.shared.get(of: Int.self, key: .lockGo)
+//    sessionTurn = UserDefaultsManager.shared.get(of: Int.self, key: .lockSession)
   }
 }
 
 extension CreditManager {
   func createCredit(for type: CreditType) {
-    switch type {
-    case .go:
-      goTurn += 1
-      UserDefaultsManager.shared.set(goTurn, key: .lockGo)
-   
-    case .session:
-      sessionTurn += 1
-      UserDefaultsManager.shared.set(sessionTurn, key: .lockSession)
-    }
+//    switch type {
+//    case .go:
+//      goTurn += 1
+//      UserDefaultsManager.shared.set(goTurn, key: .lockGo)
+//   
+//    case .session:
+//      sessionTurn += 1
+//      UserDefaultsManager.shared.set(sessionTurn, key: .lockSession)
+//    }
   }
   
   // MARK: - Check limit

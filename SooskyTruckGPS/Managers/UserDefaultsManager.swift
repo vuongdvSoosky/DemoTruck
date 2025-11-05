@@ -17,14 +17,6 @@ final class UserDefaultsManager {
     case didShowOnboard
     case showIAPForReportView
     case requestLocation
-    case showTutorialTrack
-    case showTutorialAICoach
-    case showTutorialHistory
-    case showTutorialAddHorse
-    case showRatingFinishRace
-    case showRatingCreateHorse
-    case lockGo
-    case lockSession
   }
   
   func set<T>(_ value: T?, key: KeyUserDefaults) {
