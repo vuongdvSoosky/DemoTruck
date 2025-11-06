@@ -8,7 +8,8 @@
 import CoreLocation
 
 struct Place: Equatable {
-  let name: String
+  let address: String
+  let fullAddres: String
   let coordinate: CLLocationCoordinate2D
   
   static func == (lhs: Place, rhs: Place) -> Bool {

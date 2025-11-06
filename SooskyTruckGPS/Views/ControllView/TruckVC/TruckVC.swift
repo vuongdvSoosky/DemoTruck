@@ -44,7 +44,7 @@ class TruckVC: BaseViewController {
     return view
   }()
   
-  private lazy var arrayLocation: [Place] = []
+  private lazy var arrayPlaces: [Place] = []
   private var currentPlace: Place?
   
   private lazy var searchTextField: UITextField = {
@@ -59,6 +59,7 @@ class TruckVC: BaseViewController {
     view.translatesAutoresizingMaskIntoConstraints = false
     view.cornerRadius = 24
     view.backgroundColor = UIColor(rgb: 0xFFFFFF)
+    view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapViewlist)))
     
     let label = UILabel()
     label.text = "View List"
@@ -88,16 +89,19 @@ class TruckVC: BaseViewController {
     view.onButtonTapped = { [weak self] in
       guard let self, let place = self.currentPlace else { return }
       
-      if !self.arrayLocation.contains(place) {
-        self.arrayLocation.append(place)
+      PlaceManager.shared.addLocationToArray(place)
+      
+      if PlaceManager.shared.isExistLocation(place) {
         view.configureButton(title: "Remove Stop", icon: .icTrash)
+        hideCalloutAnimated()
       } else {
-        self.arrayLocation.removeAll(where: {$0.name == place.name})
         view.configureButton(title: "Add Stop", icon: .icPlus)
       }
     }
     return view
   }()
+  
+  private let viewModel = TruckViewModel()
   
   override func viewDidLoad() {
     super.viewDidLoad()
@@ -119,6 +123,38 @@ class TruckVC: BaseViewController {
       MapManager.shared.centerMap(on: location, zoom: 0.05)
       // self.searchNearby()
     }
+  }
+  
+  override func binding() {
+    PlaceManager.shared.$places
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] places in
+        guard let self else {
+          return
+        }
+        self.arrayPlaces = places
+        if self.arrayPlaces.isEmpty {
+          hideCalloutAnimated()
+        }
+        self.updateAnnotations()
+      }.store(in: &subscriptions)
+  }
+  
+  private func updateAnnotations() {
+    // Xoá các annotation cũ trừ vị trí người dùng
+    let nonUserAnnotations = mapView.annotations.filter { !($0 is MKUserLocation) }
+    mapView.removeAnnotations(nonUserAnnotations)
+    
+    // Tạo annotation mới từ arrayPlaces
+    let annotations = arrayPlaces.map { place -> CustomAnnotation in
+      return CustomAnnotation(
+        coordinate: place.coordinate,
+        type: "parking", // hoặc tuỳ type bạn có trong Place
+        titlePlace: place.address
+      )
+    }
+    
+    mapView.addAnnotations(annotations)
   }
   
   private func searchNearby() {
@@ -188,7 +224,12 @@ class TruckVC: BaseViewController {
                    animations: {
       self.currentCalloutView.alpha = 1
       self.currentCalloutView.transform = .identity
-    }, completion: nil)
+    }, completion: { [weak self] _ in
+      guard let self else {
+        return
+      }
+      // isProgrammaticRegionChange = true
+    })
   }
 }
 
@@ -200,21 +241,10 @@ extension TruckVC: MKMapViewDelegate {
     //        searchDelayTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: false) { [weak self] _ in
     //          // self?.searchNearby()
     //        }
-    
-    guard animated else { return }
-    
-    if let annotation = pendingAnnotation {
-      pendingAnnotation = nil
-      isProgrammaticRegionChange = false
-      
-      showCalloutAnimated()
-    } else {
-      isProgrammaticRegionChange = false
-    }
   }
   
   func mapView(_ mapView: MKMapView, regionWillChangeAnimated animated: Bool) {
-    if !isProgrammaticRegionChange {
+    if isProgrammaticRegionChange {
       hideCalloutAnimated()
     }
   }
@@ -288,9 +318,9 @@ extension TruckVC: UITextFieldDelegate {
         
         let annotation = CustomAnnotation(coordinate: coordinate, type: "parking", titlePlace: keyword)
         self.mapView.addAnnotation(annotation)
-        self.currentPlace = Place(name: keyword, coordinate: coordinate)
+        self.pendingAnnotation = annotation
+        self.currentPlace = Place(address: keyword, fullAddres: keyword , coordinate: coordinate)
         self.currentCalloutView.configureButton(title: "Add Stop", icon: .icPlus)
-        self.isProgrammaticRegionChange = true
         self.showCalloutAnimated()
       }
     }
@@ -305,22 +335,27 @@ extension TruckVC {
     guard let annotationView = sender.view as? MKAnnotationView,
           let annotation = annotationView.annotation as? CustomAnnotation else { return }
     // xử lý hành vi khi bấm vào pin
-    isProgrammaticRegionChange = true
     pendingAnnotation = annotation
     mapView.setCenter(annotation.coordinate, animated: true)
     
-    if let matchedPlace = arrayLocation.first(where: { $0.name == annotation.titlePlace }) {
+    if let matchedPlace = arrayPlaces.first(where: { $0.address == annotation.titlePlace }) {
       self.currentPlace = matchedPlace
-      self.address = matchedPlace.name
+      self.address = matchedPlace.address
       self.currentCalloutView.configureButton(title: "Remove Stop", icon: .icTrash)
     } else {
       let adress = annotation.titlePlace.shortAddress
       self.currentCalloutView.configure(title: adress)
       self.currentCalloutView.configureButton(title: "Add Stop", icon: .icPlus)
     }
+    showCalloutAnimated()
   }
   
   @objc private func onTapCloseCalloutView() {
+    hideCalloutAnimated()
+  }
+  
+  @objc private func onTapViewlist() {
+    viewModel.action.send(.viewList)
     hideCalloutAnimated()
   }
 }
