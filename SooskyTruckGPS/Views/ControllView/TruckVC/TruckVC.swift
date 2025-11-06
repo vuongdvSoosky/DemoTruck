@@ -93,9 +93,9 @@ class TruckVC: BaseViewController {
       
       if PlaceManager.shared.isExistLocation(place) {
         view.configureButton(title: "Remove Stop", icon: .icTrash)
-        hideCalloutAnimated()
       } else {
         view.configureButton(title: "Add Stop", icon: .icPlus)
+        hideCalloutAnimated()
       }
     }
     return view
@@ -204,6 +204,7 @@ class TruckVC: BaseViewController {
       self.currentCalloutView.transform = CGAffineTransform(translationX: 0, y: 20)
     }, completion: { _ in
       self.currentCalloutView.isHidden = true
+      self.mapView.isUserInteractionEnabled = true
       self.currentCalloutView.transform = .identity
     })
   }
@@ -228,6 +229,7 @@ class TruckVC: BaseViewController {
       guard let self else {
         return
       }
+      mapView.isUserInteractionEnabled = false
       // isProgrammaticRegionChange = true
     })
   }
@@ -241,12 +243,13 @@ extension TruckVC: MKMapViewDelegate {
     //        searchDelayTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: false) { [weak self] _ in
     //          // self?.searchNearby()
     //        }
+   // isProgrammaticRegionChange = false
   }
   
   func mapView(_ mapView: MKMapView, regionWillChangeAnimated animated: Bool) {
-    if isProgrammaticRegionChange {
-      hideCalloutAnimated()
-    }
+//    if !isProgrammaticRegionChange {
+//      hideCalloutAnimated()
+//    }
   }
   
   func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
