@@ -10,6 +10,7 @@ import Combine
 class TruckViewModel: BaseViewModel {
   enum Action {
     case viewList
+    case caculatorRoute
   }
   
   let action = PassthroughSubject<Action, Never>()
@@ -31,6 +32,8 @@ extension TruckViewModel {
     switch action {
     case .viewList:
       router.route(to: .viewlist)
+    case .caculatorRoute:
+      router.route(to: .loadingVC)
     }
   }
 }

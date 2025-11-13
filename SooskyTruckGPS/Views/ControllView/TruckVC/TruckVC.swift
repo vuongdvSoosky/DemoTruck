@@ -44,6 +44,45 @@ class TruckVC: BaseViewController {
     return view
   }()
   
+  private lazy var caculatorRouteView: UIView = {
+    let view = UIView()
+    view.translatesAutoresizingMaskIntoConstraints = false
+    view.isHidden = false
+    view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapCaculatorRoute)))
+    
+    let icon = UIImageView()
+    icon.contentMode = .scaleAspectFit
+    icon.image = .icCaculatoRoute
+    
+    let label = UILabel()
+    label.text = "Calculate Best Route"
+    label.textColor = UIColor(rgb: 0xFFFFFF)
+    label.font = AppFont.font(.boldText, size: 20)
+    
+    let stackView = UIStackView()
+    stackView.axis = .horizontal
+    stackView.spacing = 4
+    
+    [icon, label].forEach({stackView.addArrangedSubview($0)})
+    
+    view.addSubviews(stackView)
+    
+    stackView.snp.makeConstraints { make in
+      make.center.equalToSuperview()
+    }
+    
+    return view
+  }()
+  
+  private lazy var routeStackView: UIStackView = {
+    let stackView = UIStackView()
+    stackView.translatesAutoresizingMaskIntoConstraints = false
+    stackView.addArrangedSubview(caculatorRouteView)
+    stackView.cornerRadius = 20
+    stackView.layer.masksToBounds = true
+    return stackView
+  }()
+  
   private lazy var arrayPlaces: [Place] = []
   private var currentPlace: Place?
   
@@ -136,6 +175,20 @@ class TruckVC: BaseViewController {
         if self.arrayPlaces.isEmpty {
           hideCalloutAnimated()
         }
+        
+        if self.arrayPlaces.count < 2 {
+          caculatorRouteView.isHidden = true
+        } else {
+          caculatorRouteView.isHidden = false
+          DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {[weak self] in
+            guard let self else {
+              return
+            }
+            routeStackView.layoutIfNeeded()
+            let colors = [UIColor(rgb: 0xF28E01), UIColor(rgb: 0xF26101)]
+            routeStackView.addArrayColorGradient(arrayColor: colors, startPoint: CGPoint(x: 0, y: 0.5), endPoint: CGPoint(x: 1, y: 0.5))
+          }
+        }
         self.updateAnnotations()
       }.store(in: &subscriptions)
   }
@@ -164,7 +217,7 @@ class TruckVC: BaseViewController {
   }
   
   override func addComponents() {
-    self.view.addSubviews(mapView, searchView, currentCalloutView, viewList)
+    self.view.addSubviews(mapView, searchView, currentCalloutView, viewList, routeStackView)
   }
   
   override func setConstraints() {
@@ -186,13 +239,22 @@ class TruckVC: BaseViewController {
     }
     
     viewList.snp.makeConstraints { make in
-      make.bottom.equalToSuperview().inset(110)
+      make.bottom.equalTo(routeStackView.snp.top).inset(-12)
       make.centerX.equalToSuperview()
       make.width.equalTo(111)
       make.height.equalTo(47)
     }
+    
+    routeStackView.snp.makeConstraints { make in
+      make.bottom.equalToSuperview().inset(110)
+      make.left.right.equalToSuperview().inset(20)
+    }
+    
+    caculatorRouteView.snp.makeConstraints { make in
+      make.height.equalTo(60)
+    }
   }
-  
+    
   private func hideCalloutAnimated() {
     guard !currentCalloutView.isHidden else { return }
     
@@ -360,5 +422,9 @@ extension TruckVC {
   @objc private func onTapViewlist() {
     viewModel.action.send(.viewList)
     hideCalloutAnimated()
+  }
+  
+  @objc private func onTapCaculatorRoute() {
+    viewModel.action.send(.caculatorRoute)
   }
 }

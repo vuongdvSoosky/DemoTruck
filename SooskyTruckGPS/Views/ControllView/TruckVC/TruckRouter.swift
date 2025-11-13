@@ -12,6 +12,7 @@ class TruckRouter: Router {
   
   enum Route: String {
     case viewlist
+    case loadingVC
   }
 }
 
@@ -23,6 +24,9 @@ extension TruckRouter {
     switch route {
     case .viewlist:
       showListLocation()
+    case .loadingVC:
+      let beforeGoing = BeforeGoingVC()
+      context.push(to: beforeGoing, animated: true)
     }
   }
 }
