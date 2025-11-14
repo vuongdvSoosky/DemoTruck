@@ -282,6 +282,11 @@ class BeforeGoingVC: BaseViewController {
     setupMap()
   }
   
+  override func viewDidLayoutSubviews() {
+    super.viewDidLayoutSubviews()
+    updateAnnotations()
+  }
+  
   private func setupMap() {
     MapManager.shared.attachMap(to: mapKitView)
     mapKitView.delegate = self
@@ -308,6 +313,63 @@ class BeforeGoingVC: BaseViewController {
         }
         scrollToPage(index: index)
       }.store(in: &subscriptions)
+    
+    PlaceManager.shared.$places
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] places in
+        guard let self else {
+          return
+        }
+        self.arrayPlaces = places
+        LogManager.show(places.count)
+        self.updateAnnotations()
+      }.store(in: &subscriptions)
+  }
+  
+  private func updateAnnotations() {
+    // Xoá các annotation cũ trừ vị trí người dùng
+    let nonUserAnnotations = mapKitView.annotations.filter { !($0 is MKUserLocation) }
+    mapKitView.removeAnnotations(nonUserAnnotations)
+    
+    // Tạo annotation mới từ arrayPlaces
+    let annotations = arrayPlaces.map { place -> CustomAnnotation in
+      return CustomAnnotation(
+        coordinate: place.coordinate,
+        type: "parking", // hoặc tuỳ type bạn có trong Place
+        titlePlace: place.address
+      )
+    }
+    
+    mapKitView.addAnnotations(annotations)
+    scrollToFirstPlace()
+    drawRoutePath()
+  }
+  
+  private func scrollToFirstPlace() {
+    guard let first = arrayPlaces.first else { return }
+    
+    let coordinate = first.coordinate
+    let region = MKCoordinateRegion(
+      center: coordinate,
+      latitudinalMeters: 800,
+      longitudinalMeters: 800
+    )
+    
+    mapKitView.setRegion(region, animated: true)
+  }
+  
+  private func drawRoutePath() {
+    // Xoá polyline cũ
+    let overlays = mapKitView.overlays
+    mapKitView.removeOverlays(overlays)
+    
+    // Lấy danh sách toạ độ từ places
+    let coords = arrayPlaces.map { $0.coordinate }
+    guard coords.count >= 2 else { return } // cần ít nhất 2 điểm để vẽ line
+    
+    // Tạo polyline
+    let polyline = MKPolyline(coordinates: coords, count: coords.count)
+    mapKitView.addOverlay(polyline)
   }
   
   func scrollToPage(index: Int, animated: Bool = true) {
@@ -339,7 +401,6 @@ class BeforeGoingVC: BaseViewController {
         return
       }
       mapView.isUserInteractionEnabled = false
-      // isProgrammaticRegionChange = true
     })
   }
   
@@ -413,10 +474,16 @@ extension BeforeGoingVC: MKMapViewDelegate {
     // isProgrammaticRegionChange = false
   }
   
-  func mapView(_ mapView: MKMapView, regionWillChangeAnimated animated: Bool) {
-    //    if !isProgrammaticRegionChange {
-    //      hideCalloutAnimated()
-    //    }
+  func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
+    if let polyline = overlay as? MKPolyline {
+      let renderer = MKPolylineRenderer(polyline: polyline)
+      renderer.strokeColor = UIColor(rgb: 0xFFC26D)
+      renderer.lineWidth = 5
+      renderer.lineJoin = .round
+      renderer.lineCap = .round
+      return renderer
+    }
+    return MKOverlayRenderer(overlay: overlay)
   }
   
   func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {

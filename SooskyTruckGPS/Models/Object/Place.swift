@@ -11,6 +11,8 @@ struct Place: Equatable {
   let address: String
   let fullAddres: String
   let coordinate: CLLocationCoordinate2D
+  let date = Date()
+  let nameRouter: String
   
   static func == (lhs: Place, rhs: Place) -> Bool {
     let epsilon = 1e-6

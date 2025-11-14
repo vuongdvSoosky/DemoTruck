@@ -33,6 +33,7 @@ final class MapManager: NSObject {
     self.mapView = mapView
     mapView.showsUserLocation = true
     mapView.userTrackingMode = .follow
+    mapView.mapType = .satelliteFlyover
   }
   
   // MARK: - Request Location

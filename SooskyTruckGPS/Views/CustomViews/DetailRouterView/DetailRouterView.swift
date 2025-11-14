@@ -19,6 +19,7 @@ class DetailRouterView: BaseView {
     let label = UILabel()
     label.text = "Highway Supply Chain Network"
     label.textColor = UIColor(rgb: 0x332644)
+    label.numberOfLines = 0
     label.font = AppFont.font(.boldText, size: 21)
     
     return label
@@ -53,11 +54,53 @@ class DetailRouterView: BaseView {
     return view
   }()
   
-  private lazy var timeEstimate: UIView = {
+  private lazy var timeEstimateView: UIView = {
     let view = UIView()
     view.translatesAutoresizingMaskIntoConstraints = false
     
+    let icon = UIImageView()
+    icon.image = .icTimeEstimate
+    icon.contentMode = .scaleAspectFit
+    
+    
+    view.addSubviews(icon, totalTimeValue, totalTimeTitle)
+    
+    icon.snp.makeConstraints { make in
+      make.centerY.equalToSuperview()
+      make.width.height.equalTo(28)
+      make.left.equalToSuperview()
+    }
+    
+    totalTimeValue.snp.makeConstraints { make in
+      make.top.equalToSuperview().offset(5)
+      make.left.equalTo(icon.snp.right).inset(-8)
+      make.right.equalToSuperview()
+    }
+    
+    totalTimeTitle.snp.makeConstraints { make in
+      make.top.equalTo(totalTimeValue.snp.bottom).inset(-2)
+      make.left.equalTo(icon.snp.right).inset(-8)
+      make.right.equalToSuperview()
+    }
+    
     return view
+  }()
+  
+  private lazy var totalTimeValue: UILabel = {
+    let label = UILabel()
+    label.translatesAutoresizingMaskIntoConstraints = false
+    label.text = "1h59m"
+    label.textColor = UIColor(rgb: 0xF26101)
+    label.font = AppFont.font(.boldText, size: 17)
+    return label
+  }()
+  
+  private lazy var totalTimeTitle: UILabel = {
+    let label = UILabel()
+    label.text = "Time Estimate"
+    label.textColor = UIColor(rgb: 0x909090)
+    label.font = AppFont.font(.regularText, size: 12)
+    return label
   }()
   
   // MARK: - UILabel
@@ -77,9 +120,22 @@ class DetailRouterView: BaseView {
     return label
   }()
   
+  // MARK: - UICollectionView
+  private lazy var collectionView: UICollectionView = {
+    let layout = UICollectionViewFlowLayout()
+    layout.scrollDirection = .vertical
+    layout.minimumInteritemSpacing = 8
+    layout.minimumLineSpacing = 8
+    
+    let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
+    collectionView.showsVerticalScrollIndicator = false
+    collectionView.isScrollEnabled = true
+    return collectionView
+  }()
+  
   override func addComponents() {
     self.addSubviews(containerView)
-    containerView.addSubviews(titleRoute, totalDistanceView)
+    containerView.addSubviews(titleRoute, totalDistanceView, timeEstimateView, collectionView)
   }
   
   override func setConstraints() {
@@ -94,8 +150,75 @@ class DetailRouterView: BaseView {
     
     totalDistanceView.snp.makeConstraints { make in
       make.top.equalTo(titleRoute.snp.bottom).inset(-20)
-      make.left.right.equalToSuperview().inset(32)
+      make.left.equalToSuperview().inset(32)
       make.height.equalTo(36)
+      make.width.equalTo(143)
+    }
+    
+    timeEstimateView.snp.makeConstraints { make in
+      make.top.equalTo(titleRoute.snp.bottom).inset(-20)
+      make.right.equalToSuperview().inset(32)
+      make.height.equalTo(37)
+      make.width.equalTo(117)
+    }
+    
+    collectionView.snp.makeConstraints { make in
+      make.top.equalTo(timeEstimateView.snp.bottom).inset(-20)
+      make.left.right.equalToSuperview().inset(20)
+      make.bottom.equalToSuperview().inset(132)
+    }
+  }
+  
+  override func setProperties() {
+    collectionView.delegate = self
+    collectionView.dataSource = self
+    collectionView.register(cell: DetailRouteCell.self)
+    collectionView.backgroundColor = .clear
+  }
+  
+  override func binding() {
+    PlaceManager.shared.$places
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] places in
+        guard let self else {
+          return
+        }
+        collectionView.reloadData()
+      }.store(in: &subscriptions)
+  }
+}
+
+extension DetailRouterView: UICollectionViewDelegate {
+  
+}
+
+extension DetailRouterView: UICollectionViewDataSource {
+  func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+    return PlaceManager.shared.places.count
+  }
+  
+  func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+    let cell = collectionView.dequeueReusableCell(DetailRouteCell.self, for: indexPath)
+    let item = PlaceManager.shared.places[indexPath.row]
+    let lastIndex = PlaceManager.shared.places.count - 1
+    cell.configData(item)
+    if indexPath.row == lastIndex {
+      cell.hideStackView()
+    } else {
+      cell.showLineView()
+    }
+    
+    return cell
+  }
+}
+
+extension DetailRouterView: UICollectionViewDelegateFlowLayout {
+  func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+    let lastIndex = PlaceManager.shared.places.count - 1
+    if indexPath.row == lastIndex {
+      return CGSize(width: self.collectionView.frame.width, height: 58)
+    } else {
+      return CGSize(width: self.collectionView.frame.width, height: 114)
     }
   }
 }
