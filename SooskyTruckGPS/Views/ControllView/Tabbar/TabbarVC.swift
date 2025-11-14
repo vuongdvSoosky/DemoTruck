@@ -11,7 +11,7 @@ import SnapKit
 
 class TabbarVC: UITabBarController, UITabBarControllerDelegate {
   
-  private lazy var listVC = [TruckVC(), DiaryVC() ,SettingsVC()]
+  private lazy var listVC = [TruckVC(), FleetManagementVC() ,SettingsVC()]
   private let defaultHeightForPlayView: CGFloat = 0
   private var previousIndex: Int = 0
   var countAdsToShow = 0
