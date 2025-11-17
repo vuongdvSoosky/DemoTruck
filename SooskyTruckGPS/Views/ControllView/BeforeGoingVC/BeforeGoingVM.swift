@@ -15,9 +15,7 @@ class BeforeGoingVM: BaseViewModel {
   
   let action = PassthroughSubject<Action, Never>()
   let indexForMainScrollView = CurrentValueSubject<Int, Never>(0)
-  var trackingState: TrackingState = .beginTracking
-  
-  
+
   override init() {
     super.init()
     action.sink(receiveValue: {[weak self] action in

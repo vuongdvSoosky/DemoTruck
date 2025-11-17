@@ -14,6 +14,7 @@ class BaseViewController: UIViewController, ViewProtocol {
   private var taskLoadingView = TaskLoadingView()
   var subscriptions = Set<AnyCancellable>()
   var diaperValidationSubscription: AnyCancellable?
+  private var didSetInitialRegion = false
   
   private lazy var notiView: NotiView = {
     let view = NotiView()
@@ -69,36 +70,71 @@ class BaseViewController: UIViewController, ViewProtocol {
     self.navigationItem.hidesBackButton = true
   }
   
+  //  func showCurrentLocation(_ mapView: MKMapView) {
+  //    LocationService.shared.checkAndRequestAuthorization { [weak self] status in
+  //      guard let self = self else { return }
+  //
+  //      switch status {
+  //      case .authorizedWhenInUse, .authorizedAlways:
+  //        LocationService.shared.requestCurrentLocation { location in
+  //          let coordinate = location.coordinate
+  //
+  //          DispatchQueue.main.async {
+  //            let region = MKCoordinateRegion(center: coordinate,
+  //                                            latitudinalMeters: 1000,
+  //                                            longitudinalMeters: 1000)
+  //
+  //            mapView.setRegion(region, animated: true)
+  //          }
+  //        }
+  //        UserDefaultsManager.shared.set(true, key: .requestLocation)
+  //
+  //      case .denied, .restricted:
+  //        DispatchQueue.main.async {
+  //          LocationService.shared.showSettingsAlert(from: self)
+  //        }
+  //        UserDefaultsManager.shared.set(false, key: .requestLocation)
+  //
+  //      case .notDetermined:
+  //        break
+  //
+  //      @unknown default:
+  //        break
+  //      }
+  //    }
+  //  }
+  
   func showCurrentLocation(_ mapView: MKMapView) {
     LocationService.shared.checkAndRequestAuthorization { [weak self] status in
-      guard let self = self else { return }
+      guard let self else { return }
       
       switch status {
       case .authorizedWhenInUse, .authorizedAlways:
-        LocationService.shared.requestCurrentLocation { location in
+        LocationService.shared.requestCurrentLocation { [weak self] location in
+          guard let self else { return }
           let coordinate = location.coordinate
           
           DispatchQueue.main.async {
-            let region = MKCoordinateRegion(center: coordinate,
-                                            latitudinalMeters: 1000,
-                                            longitudinalMeters: 1000)
-            
-            mapView.setRegion(region, animated: true)
+            if !self.didSetInitialRegion {
+              self.didSetInitialRegion = true
+              
+              let region = MKCoordinateRegion(center: coordinate,
+                                              latitudinalMeters: 1500,
+                                              longitudinalMeters: 1500)
+              mapView.setRegion(region, animated: true)
+              mapView.setUserTrackingMode(.follow, animated: true)
+            } else {
+              mapView.setCenter(coordinate, animated: true)
+            }
           }
         }
         UserDefaultsManager.shared.set(true, key: .requestLocation)
-        
       case .denied, .restricted:
-        DispatchQueue.main.async {
-          LocationService.shared.showSettingsAlert(from: self)
-        }
+        LocationService.shared.showSettingsAlert(from: self)
         UserDefaultsManager.shared.set(false, key: .requestLocation)
         
-      case .notDetermined:
-        break
-        
-      @unknown default:
-        break
+      case .notDetermined: break
+      @unknown default: break
       }
     }
   }
@@ -155,12 +191,12 @@ class BaseViewController: UIViewController, ViewProtocol {
     let alert = UIAlertController(title: "Delete This Session?",
                                   message: "Are you sure you would like delete this session?",
                                   preferredStyle: .alert)
-
+    
     alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
     alert.addAction(UIAlertAction(title: "Delete", style: .destructive) { _ in
       completionHandler?()
     })
-
+    
     present(alert, animated: true)
   }
 }

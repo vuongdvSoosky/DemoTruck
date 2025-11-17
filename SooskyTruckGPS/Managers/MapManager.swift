@@ -33,7 +33,7 @@ final class MapManager: NSObject {
     self.mapView = mapView
     mapView.showsUserLocation = true
     mapView.userTrackingMode = .follow
-    mapView.mapType = .satelliteFlyover
+    mapView.setUserTrackingMode(.followWithHeading, animated: true)
   }
   
   // MARK: - Request Location
@@ -75,7 +75,7 @@ final class MapManager: NSObject {
         mapView.setRegion(
           MKCoordinateRegion(
             center: annotation.coordinate,
-            span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+            span: MKCoordinateSpan(latitudeDelta: 500, longitudeDelta: 500)
           ),
           animated: true
         )
