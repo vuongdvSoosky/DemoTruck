@@ -24,7 +24,6 @@ class GoingDetailView: BaseView {
     view.clipsToBounds = true
     return view
   }()
-  
   private lazy var editView: UIView = {
     let view = UIView()
     view.translatesAutoresizingMaskIntoConstraints = false
@@ -44,6 +43,19 @@ class GoingDetailView: BaseView {
     return view
   }()
   
+  private lazy var totalDistanceView = RouteInfoItemView(
+    icon: .icTotalDistance,
+    value: "5000 mi",
+    title: "Total Distance"
+  )
+
+  private lazy var timeEstimateView = RouteInfoItemView(
+    icon: .icTimeEstimate,
+    value: "1h 59m",
+    title: "Time Estimate"
+  )
+  
+  // MARK: - UILabel
   private lazy var titleRoute: UILabel = {
     let label = UILabel()
     label.text = "Highway Supply Chain Network"
@@ -52,10 +64,26 @@ class GoingDetailView: BaseView {
     label.font = AppFont.font(.boldText, size: 21)
     return label
   }()
+  private lazy var stopLabel: UILabel = {
+    let label = UILabel()
+    label.translatesAutoresizingMaskIntoConstraints = false
+    label.text = "5 more waypoint"
+    label.textColor = UIColor(rgb: 0x909090)
+    label.font = AppFont.font(.mediumText, size: 15)
+    return label
+  }()
+  
+  // MARK: UIStackView
+  private lazy var stopStackView: UIStackView = {
+    let stackView = UIStackView()
+    stackView.translatesAutoresizingMaskIntoConstraints = false
+    stackView.addArrangedSubview(stopLabel)
+    return stackView
+  }()
   
   override func addComponents() {
     self.addSubview(containerView)
-    containerView.addSubviews(lineView, titleRoute, editView)
+    containerView.addSubviews(lineView, titleRoute, editView, stopStackView, totalDistanceView, timeEstimateView)
   }
   
   override func setConstraints() {
@@ -83,5 +111,48 @@ class GoingDetailView: BaseView {
       make.right.equalTo(editView.snp.left).inset(-10)
     }
     
+    stopStackView.snp.makeConstraints { make in
+      make.top.equalTo(titleRoute.snp.bottom).inset(-8)
+      make.left.right.equalToSuperview().inset(12)
+    }
+    
+    totalDistanceView.snp.makeConstraints { make in
+      make.top.equalTo(stopStackView.snp.bottom).inset(-16)
+      make.left.equalToSuperview().inset(12)
+      make.height.equalTo(36)
+      make.width.equalTo(143)
+    }
+    
+    timeEstimateView.snp.makeConstraints { make in
+      make.top.equalTo(stopStackView.snp.bottom).inset(-16)
+      make.right.equalToSuperview().inset(12)
+      make.height.equalTo(37)
+      make.width.equalTo(117)
+    }
+  }
+}
+
+extension GoingDetailView {
+  func hideStopLabel() {
+    stopLabel.isHidden = true
+    totalDistanceView.snp.updateConstraints { make in
+      make.top.equalTo(stopStackView.snp.bottom).inset(-8)
+    }
+    
+    timeEstimateView.snp.updateConstraints { make in
+      make.top.equalTo(stopStackView.snp.bottom).inset(-8)
+    }
+  }
+  
+  func showStopLabel() {
+    stopLabel.isHidden = false
+    
+    totalDistanceView.snp.updateConstraints { make in
+      make.top.equalTo(stopStackView.snp.bottom).inset(-16)
+    }
+    
+    timeEstimateView.snp.updateConstraints { make in
+      make.top.equalTo(stopStackView.snp.bottom).inset(-16)
+    }
   }
 }

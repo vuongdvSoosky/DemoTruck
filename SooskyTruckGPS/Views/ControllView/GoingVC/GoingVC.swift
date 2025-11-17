@@ -467,6 +467,8 @@ extension GoingVC {
         make.height.equalTo(514)
       }
       
+      goingDetailView.hideStopLabel()
+      
       UIView.animate(withDuration: 0.3,
                      delay: 0,
                      usingSpringWithDamping: 0.85,
@@ -479,6 +481,8 @@ extension GoingVC {
       goingDetailView.snp.updateConstraints { make in
         make.height.equalTo(188)
       }
+      
+      goingDetailView.showStopLabel()
       
       UIView.animate(withDuration: 0.3,
                      delay: 0,
