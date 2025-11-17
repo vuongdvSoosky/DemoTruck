@@ -123,6 +123,11 @@ class GoingVC: BaseViewController {
     
     return view
   }()
+  private lazy var goingDetailView: GoingDetailView = {
+    let view = GoingDetailView()
+    view.translatesAutoresizingMaskIntoConstraints = false
+    return view
+  }()
   
   // MARK: - UILabel
   private lazy var statusTrackingLabel: UILabel = {
@@ -194,11 +199,12 @@ class GoingVC: BaseViewController {
     collectionView.register(cell: ItemServiceCell.self)
     let goTapGesture = UITapGestureRecognizer(target: self, action: #selector(onTapGoView))
     goView.addGestureRecognizer(goTapGesture)
+    setupSwipeGoingDetailView()
   }
   
   override func addComponents() {
     self.view.addSubview(containerView)
-    self.containerView.addSubviews(mapView, inforView, collectionView, statusStackView)
+    self.containerView.addSubviews(mapView, inforView, collectionView, goingDetailView, statusStackView)
   }
   
   override func setConstraints() {
@@ -221,6 +227,12 @@ class GoingVC: BaseViewController {
       make.left.equalToSuperview().inset(16)
       make.right.equalToSuperview()
       make.height.equalTo(56)
+    }
+    
+    goingDetailView.snp.makeConstraints { make in
+      make.bottom.equalTo(statusStackView.snp.top).inset(-12)
+      make.left.right.equalToSuperview().inset(20)
+      make.height.equalTo(188)
     }
     
     statusStackView.snp.makeConstraints { make in
@@ -286,27 +298,27 @@ extension GoingVC: UICollectionViewDelegateFlowLayout {
 // MARK: - Tracking
 extension GoingVC {
   private func stateGo() {
-//    guard viewModel.itemHorse.value != nil else {
-//      if AppManager.shared.showAds {
-//        viewModel.action.send(.showPoupAddHorse)
-//      } else {
-//        viewModel.action.send(.addHorse)
-//      }
-//     
-//      return
-//    }
+    //    guard viewModel.itemHorse.value != nil else {
+    //      if AppManager.shared.showAds {
+    //        viewModel.action.send(.showPoupAddHorse)
+    //      } else {
+    //        viewModel.action.send(.addHorse)
+    //      }
+    //
+    //      return
+    //    }
     
-//    if viewModel.trainingType.value == nil {
-//      trainingTypeView.setValue("General-Riding",valueTextColor: UIColor(rgb: 0x000000), titleTextColor: UIColor(rgb: 0xA2A2A2)
-//      )
-//    }
+    //    if viewModel.trainingType.value == nil {
+    //      trainingTypeView.setValue("General-Riding",valueTextColor: UIColor(rgb: 0x000000), titleTextColor: UIColor(rgb: 0xA2A2A2)
+    //      )
+    //    }
     
     switch viewModel.trackingState {
     case .beginTracking:
       // Bắt đầu tracking lần đầu
       BlockQueueManager.shared.startFllow()
       let startAt = ISO8601DateFormatter().string(from: Date())
-    //  viewModel.action.send(.getStartAt(date: startAt))
+      //  viewModel.action.send(.getStartAt(date: startAt))
       
       // Bắt đầu tracking
       distanceCalculator.startTracking()
@@ -402,7 +414,7 @@ extension GoingVC {
             return
           }
           stateGo()
-         
+          
           UserDefaultsManager.shared.set(true, key: .requestLocation)
           showCurrentLocation(mapView)
         }
@@ -417,16 +429,67 @@ extension GoingVC {
 
 extension GoingVC {
   @objc private func onTapGoView() {
-//    if AppManager.shared.hasSub {
-//      startStateTracking()
-//    } else {
-//      if viewModel.trackingState == .beginTracking && CreditManager.shared.isCreditExceeded(for: .go) {
-//        viewModel.action.send(.subB2)
-//      } else {
-//        startStateTracking()
-//      }
-//    }
+    //    if AppManager.shared.hasSub {
+    //      startStateTracking()
+    //    } else {
+    //      if viewModel.trackingState == .beginTracking && CreditManager.shared.isCreditExceeded(for: .go) {
+    //        viewModel.action.send(.subB2)
+    //      } else {
+    //        startStateTracking()
+    //      }
+    //    }
     
     startStateTracking()
+  }
+}
+
+// MARK: - GoingDetaiView
+extension GoingVC {
+  private func setupSwipeGoingDetailView() {
+    // Vuốt lên
+    let swipeUp = UISwipeGestureRecognizer(target: self, action: #selector(swipeCustomPropertiesField(_:)))
+    swipeUp.direction = .up
+    goingDetailView.addGestureRecognizer(swipeUp)
+    
+    // Vuốt xuống
+    let swipeDown = UISwipeGestureRecognizer(target: self, action: #selector(swipeCustomPropertiesField(_:)))
+    swipeDown.direction = .down
+    goingDetailView.addGestureRecognizer(swipeDown)
+    
+    // Cho phép view nhận gesture
+    goingDetailView.isUserInteractionEnabled = true
+  }
+  
+  @objc private func swipeCustomPropertiesField(_ gesture: UISwipeGestureRecognizer) {
+    switch gesture.direction {
+    case .up:
+      goingDetailView.snp.updateConstraints { make in
+        make.height.equalTo(514)
+      }
+      
+      UIView.animate(withDuration: 0.3,
+                     delay: 0,
+                     usingSpringWithDamping: 0.85,
+                     initialSpringVelocity: 0.5,
+                     options: .curveEaseInOut) {
+        self.view.layoutIfNeeded()
+      }
+      
+    case .down:
+      goingDetailView.snp.updateConstraints { make in
+        make.height.equalTo(188)
+      }
+      
+      UIView.animate(withDuration: 0.3,
+                     delay: 0,
+                     usingSpringWithDamping: 0.85,
+                     initialSpringVelocity: 0.5,
+                     options: .curveEaseInOut) {
+        self.view.layoutIfNeeded()
+      }
+      
+    default:
+      break
+    }
   }
 }
