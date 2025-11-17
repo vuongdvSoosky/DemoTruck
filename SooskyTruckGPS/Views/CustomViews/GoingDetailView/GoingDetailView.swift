@@ -48,7 +48,7 @@ class GoingDetailView: BaseView {
     value: "5000 mi",
     title: "Total Distance"
   )
-
+  
   private lazy var timeEstimateView = RouteInfoItemView(
     icon: .icTimeEstimate,
     value: "1h 59m",
@@ -81,9 +81,29 @@ class GoingDetailView: BaseView {
     return stackView
   }()
   
+  private lazy var stackCollectionView: UIStackView = {
+    let stackView = UIStackView()
+    stackView.translatesAutoresizingMaskIntoConstraints = false
+    stackView.addArrangedSubview(collectionView)
+    return stackView
+  }()
+  
+  // MARK: - UICollectionView
+  private lazy var collectionView: UICollectionView = {
+    let layout = UICollectionViewFlowLayout()
+    layout.scrollDirection = .vertical
+    layout.minimumInteritemSpacing = 8
+    layout.minimumLineSpacing = 8
+    
+    let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
+    collectionView.showsVerticalScrollIndicator = false
+    collectionView.isScrollEnabled = true
+    return collectionView
+  }()
+  
   override func addComponents() {
     self.addSubview(containerView)
-    containerView.addSubviews(lineView, titleRoute, editView, stopStackView, totalDistanceView, timeEstimateView)
+    containerView.addSubviews(lineView, titleRoute, editView, stopStackView, totalDistanceView, timeEstimateView, stackCollectionView)
   }
   
   override func setConstraints() {
@@ -130,29 +150,78 @@ class GoingDetailView: BaseView {
       make.width.equalTo(117)
     }
   }
+  
+  override func setProperties() {
+    collectionView.delegate = self
+    collectionView.dataSource = self
+    collectionView.register(cell: DetailRouteCell.self)
+    collectionView.backgroundColor = .clear
+    collectionView.isHidden = true
+  }
 }
 
 extension GoingDetailView {
   func hideStopLabel() {
     stopLabel.isHidden = true
+    collectionView.isHidden = false
+    
     totalDistanceView.snp.updateConstraints { make in
       make.top.equalTo(stopStackView.snp.bottom).inset(-8)
     }
     
     timeEstimateView.snp.updateConstraints { make in
       make.top.equalTo(stopStackView.snp.bottom).inset(-8)
+    }
+    
+    stackCollectionView.snp.makeConstraints { make in
+      make.top.equalTo(timeEstimateView.snp.bottom).inset(-20)
+      make.left.right.equalToSuperview().inset(12)
+      make.bottom.equalToSuperview().inset(32)
     }
   }
   
   func showStopLabel() {
     stopLabel.isHidden = false
-    
+    collectionView.isHidden = true
+    stackCollectionView.snp.removeConstraints()
+        
     totalDistanceView.snp.updateConstraints { make in
       make.top.equalTo(stopStackView.snp.bottom).inset(-16)
     }
     
     timeEstimateView.snp.updateConstraints { make in
       make.top.equalTo(stopStackView.snp.bottom).inset(-16)
+    }
+  }
+}
+
+extension GoingDetailView: UICollectionViewDataSource {
+  func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+    return 2
+  }
+  
+  func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+    let cell = collectionView.dequeueReusableCell(DetailRouteCell.self, for: indexPath)
+    // let item = PlaceManager.shared.places[indexPath.row]
+    // let lastIndex = PlaceManager.shared.places.count - 1
+    //    cell.configData(item)
+    //    if indexPath.row == lastIndex {
+    //      cell.hideStackView()
+    //    } else {
+    //      cell.showLineView()
+    //    }
+    
+    return cell
+  }
+}
+
+extension GoingDetailView: UICollectionViewDelegateFlowLayout {
+  func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+    let lastIndex = PlaceManager.shared.places.count - 1
+    if indexPath.row == lastIndex {
+      return CGSize(width: self.collectionView.frame.width, height: 58)
+    } else {
+      return CGSize(width: self.collectionView.frame.width, height: 114)
     }
   }
 }
