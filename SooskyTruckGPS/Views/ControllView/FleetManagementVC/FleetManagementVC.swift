@@ -248,12 +248,12 @@ extension FleetManagementVC: UICollectionViewDelegate {
 
 extension FleetManagementVC: UICollectionViewDataSource {
   func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-    //    return PlaceManager.shared.places.count
-    return 10
+    return PlaceManager.shared.places.count
   }
   
   func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
     let cell = collectionView.dequeueReusableCell(ItemFleetCell.self, for: indexPath)
+    let item = PlaceManager.shared.places[indexPath.row]
     return cell
   }
 }

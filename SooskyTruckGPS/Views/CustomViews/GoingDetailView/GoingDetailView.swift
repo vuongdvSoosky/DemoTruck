@@ -8,6 +8,10 @@
 import UIKit
 import SnapKit
 
+protocol GoingDetailViewDelegate: AnyObject {
+  func didChooseItem(item: Place)
+}
+
 class GoingDetailView: BaseView {
   // MARK: -UIView
   private lazy var containerView: UIView = {
@@ -92,14 +96,16 @@ class GoingDetailView: BaseView {
   private lazy var collectionView: UICollectionView = {
     let layout = UICollectionViewFlowLayout()
     layout.scrollDirection = .vertical
-    layout.minimumInteritemSpacing = 8
-    layout.minimumLineSpacing = 8
-    
+    layout.estimatedItemSize = .zero
+    layout.minimumLineSpacing = 16
+    layout.estimatedItemSize = UICollectionViewFlowLayout.automaticSize
     let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
     collectionView.showsVerticalScrollIndicator = false
     collectionView.isScrollEnabled = true
     return collectionView
   }()
+  
+  weak var delegate: GoingDetailViewDelegate?
   
   override func addComponents() {
     self.addSubview(containerView)
@@ -158,6 +164,18 @@ class GoingDetailView: BaseView {
     collectionView.backgroundColor = .clear
     collectionView.isHidden = true
   }
+  
+  override func binding() {
+    PlaceManager.shared.$places
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] place in
+        guard let self else {
+          return
+        }
+        stopLabel.text = "\(place.count) more waypoint"
+        collectionView.reloadData()
+      }.store(in: &subscriptions)
+  }
 }
 
 extension GoingDetailView {
@@ -184,7 +202,7 @@ extension GoingDetailView {
     stopLabel.isHidden = false
     collectionView.isHidden = true
     stackCollectionView.snp.removeConstraints()
-        
+    
     totalDistanceView.snp.updateConstraints { make in
       make.top.equalTo(stopStackView.snp.bottom).inset(-16)
     }
@@ -197,31 +215,48 @@ extension GoingDetailView {
 
 extension GoingDetailView: UICollectionViewDataSource {
   func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-    return 2
+    return PlaceManager.shared.places.count
   }
   
   func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
     let cell = collectionView.dequeueReusableCell(DetailRouteCell.self, for: indexPath)
-    // let item = PlaceManager.shared.places[indexPath.row]
-    // let lastIndex = PlaceManager.shared.places.count - 1
-    //    cell.configData(item)
-    //    if indexPath.row == lastIndex {
-    //      cell.hideStackView()
-    //    } else {
-    //      cell.showLineView()
-    //    }
+    let item = PlaceManager.shared.places[indexPath.row]
+    let lastIndex = PlaceManager.shared.places.count - 1
+    cell.configData(item)
+    cell.onChooseItemPlace = {[weak self] place in
+      self?.delegate?.didChooseItem(item: place)
+    }
     
+    if indexPath.row == lastIndex {
+      cell.hideStackView()
+    } else {
+      cell.showLineView()
+    }
+    if item.state != nil {
+      cell.showStateView()
+    } else {
+      cell.hideStateView()
+    }
     return cell
   }
 }
 
 extension GoingDetailView: UICollectionViewDelegateFlowLayout {
-  func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-    let lastIndex = PlaceManager.shared.places.count - 1
-    if indexPath.row == lastIndex {
-      return CGSize(width: self.collectionView.frame.width, height: 58)
-    } else {
-      return CGSize(width: self.collectionView.frame.width, height: 114)
-    }
+  func collectionView(_ collectionView: UICollectionView,
+                      layout collectionViewLayout: UICollectionViewLayout,
+                      sizeForItemAt indexPath: IndexPath) -> CGSize {
+    let width = collectionView.frame.width
+    let item = PlaceManager.shared.places[indexPath.row]
+    return CGSize(width: width, height: item.state != nil ? 86 : 64)
+  }
+  
+  func collectionView(_ collectionView: UICollectionView,
+                      layout collectionViewLayout: UICollectionViewLayout,
+                      minimumLineSpacingForSectionAt section: Int) -> CGFloat {
+    return 16
+  }
+  
+  func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {
+    return UIEdgeInsets(top: 16, left: 0, bottom: 0, right: 16)
   }
 }

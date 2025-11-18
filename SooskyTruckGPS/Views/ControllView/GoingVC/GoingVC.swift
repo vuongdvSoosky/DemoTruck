@@ -126,6 +126,7 @@ class GoingVC: BaseViewController {
   private lazy var goingDetailView: GoingDetailView = {
     let view = GoingDetailView()
     view.translatesAutoresizingMaskIntoConstraints = false
+    view.delegate = self
     return view
   }()
   
@@ -495,5 +496,11 @@ extension GoingVC {
     default:
       break
     }
+  }
+}
+
+extension GoingVC: GoingDetailViewDelegate {
+  func didChooseItem(item: Place) {
+    viewModel.action.send(.getItem(item: item))
   }
 }

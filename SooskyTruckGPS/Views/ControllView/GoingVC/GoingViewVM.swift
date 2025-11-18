@@ -12,11 +12,14 @@ class GoingViewVM: BaseViewModel {
   enum Action {
     case getIndex(int: Int)
     case getTrackingState(state: TrackingState)
+    case getItem(item: Place)
   }
   
   let action = PassthroughSubject<Action, Never>()
   let index = CurrentValueSubject<Int?, Never>(nil)
   var trackingState: TrackingState = .beginTracking
+  
+  private let router = GoingRouter()
   
   override init() {
     super.init()
@@ -39,6 +42,8 @@ extension GoingViewVM {
       self.index.send(index)
     case .getTrackingState(state: let state):
       trackingState = state
+    case .getItem(item: let item):
+      router.route(to: .arrievedView, parameters: ["Place": item])
     }
   }
 }

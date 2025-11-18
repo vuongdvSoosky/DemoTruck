@@ -8,11 +8,12 @@
 import CoreLocation
 
 struct Place: Equatable {
-  let address: String
-  let fullAddres: String
-  let coordinate: CLLocationCoordinate2D
-  let date = Date()
-  let nameRouter: String
+  var address: String
+  var fullAddres: String
+  var coordinate: CLLocationCoordinate2D
+  var date = Date()
+  var nameRouter: String
+  var state: Bool?
   
   static func == (lhs: Place, rhs: Place) -> Bool {
     let epsilon = 1e-6
