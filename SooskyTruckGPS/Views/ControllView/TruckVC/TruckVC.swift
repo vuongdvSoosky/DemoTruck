@@ -269,7 +269,6 @@ class TruckVC: BaseViewController {
       make.centerX.equalToSuperview()
       make.centerY.equalToSuperview().offset(-100)
       make.width.equalTo(320)
-//      make.height.greaterThanOrEqualTo(150)
     }
     
     viewList.snp.makeConstraints { make in
@@ -346,15 +345,8 @@ extension TruckVC: MKMapViewDelegate {
     searchDelayTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: false) { [weak self] _ in
       // self?.searchNearby()
     }
-    // isProgrammaticRegionChange = false
   }
-  
-  func mapView(_ mapView: MKMapView, regionWillChangeAnimated animated: Bool) {
-    //    if !isProgrammaticRegionChange {
-    //      hideCalloutAnimated()
-    //    }
-  }
-  
+    
   func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
     if annotation is MKUserLocation { return nil }
     
@@ -391,7 +383,6 @@ extension TruckVC: MKMapViewDelegate {
 }
 
 // MARK: UITextFieldDelegate
-
 extension TruckVC: UITextFieldDelegate {
   @objc private func textFieldDidChange(_ textField: UITextField) {
     guard let text = textField.text else {
