@@ -11,11 +11,15 @@ class BeforeGoingVM: BaseViewModel {
   enum Action {
     case back
     case getIndexToScroll(index: Int)
+    case save
+    case go
   }
   
   let action = PassthroughSubject<Action, Never>()
   let indexForMainScrollView = CurrentValueSubject<Int, Never>(0)
-
+  let placeRouter = CurrentValueSubject<RouteResponse?, Never>(nil)
+  private let router = BeforeGoingRouter()
+  
   override init() {
     super.init()
     action.sink(receiveValue: {[weak self] action in
@@ -31,10 +35,13 @@ extension BeforeGoingVM {
   private func progressAction(_ action: Action) {
     switch action {
     case .back:
-      break
-      
+      router.route(to: .back)
     case .getIndexToScroll(let index):
       indexForMainScrollView.value = index
+    case .save:
+      saveToRealm()
+    case .go:
+      router.route(to: .go)
     }
   }
 }
@@ -42,5 +49,14 @@ extension BeforeGoingVM {
 extension BeforeGoingVM {
   private func showRewardView(with rpe: Int) {
     
+  }
+  
+  private func saveToRealm() {
+    guard let router = PlaceManager.shared.placesRouter else {
+      return
+    }
+    let routeRealm = RouteResponseRealm(from: router)
+    routeRealm.addPlaces(PlaceManager.shared.places)
+    RealmService.shared.add(routeRealm)
   }
 }

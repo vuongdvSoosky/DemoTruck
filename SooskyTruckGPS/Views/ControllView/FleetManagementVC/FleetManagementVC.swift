@@ -134,12 +134,47 @@ class FleetManagementVC: BaseViewController {
     return collectionView
   }()
   
+  private lazy var historyCollectionView: UICollectionView = {
+    let layout = UICollectionViewFlowLayout()
+    layout.scrollDirection = .vertical
+    layout.minimumInteritemSpacing = 12
+    layout.minimumLineSpacing = 12
+    
+    let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
+    collectionView.showsVerticalScrollIndicator = false
+    collectionView.isScrollEnabled = true
+    return collectionView
+  }()
+  
+  //  MARK: - MainScrollView
+  
+  private lazy var mainScrollView: UIScrollView = {
+    let scrollView = UIScrollView()
+    scrollView.translatesAutoresizingMaskIntoConstraints = false
+    scrollView.showsVerticalScrollIndicator = false
+    scrollView.showsHorizontalScrollIndicator = false
+    scrollView.isPagingEnabled = true
+    scrollView.isScrollEnabled = false
+    scrollView.contentInsetAdjustmentBehavior = .never
+    scrollView.backgroundColor = .clear
+    return scrollView
+  }()
+  
+  private lazy var contentView: UIView = {
+    let view = UIView()
+    view.translatesAutoresizingMaskIntoConstraints = false
+    return view
+  }()
   
   private var selectedTab: Int = 0
   private var gradientLayers: [CAGradientLayer] = []
   
+  private let viewModel = FleetManagementVM()
+  
   override func addComponents() {
-    self.view.addSubviews(titleVC, tabView, calenderView, collectionView)
+    self.view.addSubviews(titleVC, tabView, calenderView, mainScrollView)
+    mainScrollView.addSubviews(contentView)
+    contentView.addSubviews(collectionView, historyCollectionView)
   }
   
   override func setConstraints() {
@@ -161,10 +196,27 @@ class FleetManagementVC: BaseViewController {
       make.height.equalTo(49)
     }
     
-    collectionView.snp.makeConstraints { make in
+    mainScrollView.snp.makeConstraints { make in
       make.top.equalTo(calenderView.snp.bottom).inset(-16)
       make.left.right.equalToSuperview().inset(20)
       make.bottom.equalToSuperview().inset(110)
+    }
+    
+    contentView.snp.makeConstraints { make in
+      make.edges.equalTo(mainScrollView.contentLayoutGuide)
+      make.height.equalTo(mainScrollView.frameLayoutGuide)
+      make.width.equalTo(mainScrollView.frameLayoutGuide).multipliedBy(2)
+    }
+    
+    collectionView.snp.makeConstraints { make in
+      make.top.bottom.left.equalToSuperview()
+      make.width.equalTo(mainScrollView.snp.width)
+    }
+    
+    historyCollectionView.snp.makeConstraints { make in
+      make.top.bottom.right.equalToSuperview()
+      make.left.equalTo(collectionView.snp.right)
+      make.width.equalTo(mainScrollView.snp.width)
     }
   }
   
@@ -186,10 +238,15 @@ class FleetManagementVC: BaseViewController {
     collectionView.dataSource = self
     collectionView.register(cell: ItemFleetCell.self)
     collectionView.backgroundColor = .clear
+    
+    historyCollectionView.delegate = self
+    historyCollectionView.dataSource = self
+    historyCollectionView.register(cell: HistoryCell.self)
+    historyCollectionView.backgroundColor = .clear
   }
   
   override func binding() {
-    PlaceManager.shared.$places
+    viewModel.items
       .receive(on: DispatchQueue.main)
       .sink { [weak self] places in
         guard let self else {
@@ -197,15 +254,35 @@ class FleetManagementVC: BaseViewController {
         }
         collectionView.reloadData()
       }.store(in: &subscriptions)
+    
+    viewModel.indexForMainScrollView
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] index in
+        guard let self else {
+          return
+        }
+        scrollToPage(index: index)
+      }.store(in: &subscriptions)
+    
+    viewModel.itemHistory
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] itemHistory in
+        guard let self else {
+          return
+        }
+        historyCollectionView.reloadData()
+      }.store(in: &subscriptions)
   }
   
   // Action
   @objc private func onTapSaveRouteView() {
     setSelectedTab(0)
+    viewModel.action.send(.getIndexToScroll(index: 0))
   }
   
   @objc private func onTapHistory() {
     setSelectedTab(1)
+    viewModel.action.send(.getIndexToScroll(index: 1))
   }
 }
 
@@ -248,18 +325,53 @@ extension FleetManagementVC: UICollectionViewDelegate {
 
 extension FleetManagementVC: UICollectionViewDataSource {
   func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-    return PlaceManager.shared.places.count
+    if collectionView === self.collectionView {
+      return viewModel.items.value?.count ?? 0
+    } else {
+      return viewModel.itemHistory.value?.count ?? 0
+    }
   }
   
   func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-    let cell = collectionView.dequeueReusableCell(ItemFleetCell.self, for: indexPath)
-    let item = PlaceManager.shared.places[indexPath.row]
-    return cell
+    
+    if collectionView === self.collectionView {
+      let cell = collectionView.dequeueReusableCell(ItemFleetCell.self, for: indexPath)
+      if let item = viewModel.items.value?[indexPath.row] {
+        cell.configData(with: item)
+      }
+      return cell
+    } else {
+      let cell = collectionView.dequeueReusableCell(HistoryCell.self, for: indexPath)
+      if let item = viewModel.itemHistory.value?[indexPath.row] {
+        cell.configData(item: item)
+      }
+      return cell
+    }
   }
 }
 
 extension FleetManagementVC: UICollectionViewDelegateFlowLayout {
   func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-    return CGSize(width: self.collectionView.frame.width, height: 196.0)
+    if collectionView === self.collectionView {
+      return CGSize(width: self.collectionView.frame.width, height: 196.0)
+    } else {
+      return CGSize(width: self.collectionView.frame.width, height: 110.0)
+    }
+  }
+}
+
+extension FleetManagementVC {
+  func reloadDataHistoryTab() {
+    viewModel.fetchData()
+  }
+}
+
+extension FleetManagementVC {
+  func scrollToPage(index: Int, animated: Bool = true) {
+    mainScrollView.isScrollEnabled = true
+    let pageWidth = mainScrollView.frame.size.width
+    let targetOffset = CGPoint(x: CGFloat(index) * pageWidth, y: 0)
+    mainScrollView.setContentOffset(targetOffset, animated: animated)
+    mainScrollView.isScrollEnabled = false
   }
 }

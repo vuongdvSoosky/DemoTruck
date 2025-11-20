@@ -10,7 +10,7 @@ import UIKit
 import MapKit
 
 class LocationService: NSObject, CLLocationManagerDelegate {
-  static let shared = LocationService() // Singleton instance
+  static let shared = LocationService()
   let locationManager = CLLocationManager()
   private var onAuthorizationChange: ((CLAuthorizationStatus) -> Void)?
   private(set) var onLocationUpdate: ((CLLocation) -> Void)?

@@ -5,8 +5,9 @@
 //  Created by VuongDV on 13/11/25.
 //
 
-import SnapKit
 import UIKit
+import Lottie
+import SnapKit
 
 class LoadingVC: BaseViewController {
   private lazy var containerView: UIView = {
@@ -14,12 +15,15 @@ class LoadingVC: BaseViewController {
     view.backgroundColor = UIColor(rgb: 0xFFF8EC)
     return view
   }()
-  
-
+  private lazy var imageBg: UIImageView = {
+    let image = UIImageView()
+    //image.image = .imgBgLoadingPremium
+    return image
+  }()
   private lazy var titleLabel: UILabel = {
     let label = UILabel()
-    label.text = "Good Ride! \n Preparing Results..."
-    label.textColor = UIColor(rgb: 0x5C3218)
+    label.text = "Finding the Shortest Path"
+    label.textColor = UIColor(rgb: 0x332644)
     label.textAlignment = .center
     label.numberOfLines = 0
     label.font = AppFont.font(.boldText, size: 25)
@@ -28,7 +32,7 @@ class LoadingVC: BaseViewController {
   
   private lazy var icon: [UIImageView] = {
     var images = [UIImageView]()
-    for i in 0..<6 {
+    for i in 0..<5 {
       let img = UIImageView()
       img.image = .icLoadingLoading
       img.contentMode = .scaleAspectFit
@@ -41,12 +45,11 @@ class LoadingVC: BaseViewController {
   
   private lazy var desLabel: [UILabel] = {
     let value: [String] = [
-      "Analyzing ride data",
-      "Checking horse’s condition",
-      "Reviewing pace & distance",
-      "Processing effort level (RPE)",
-      "Preparing session summary",
-      "Building recommendations"
+      "Analyzing all stops...",
+      "Calculating best sequence...",
+      "Checking truck restrictions...",
+      "Building optimized route...",
+      "Almost done"
     ]
     
     var labels = [UILabel]()
@@ -95,68 +98,19 @@ class LoadingVC: BaseViewController {
     return vertical
   }()
   
-  private lazy var mainPremiumView: UIView = {
-    let view = UIView()
-    view.translatesAutoresizingMaskIntoConstraints = false
-    let label = UILabel()
-    label.text = "Go Premium For Faster & Deeper Insights"
-    label.font = AppFont.font(.regularTextItalic, size: 17)
-    label.textColor = UIColor(rgb: 0x000000)
-    view.addSubviews(label, premiumView)
-    label.snp.makeConstraints { make in
-      make.top.equalToSuperview()
-      make.centerX.equalToSuperview()
-    }
-    
-    premiumView.snp.makeConstraints { make in
-      make.top.equalTo(label.snp.bottom).offset(16)
-      make.width.equalTo(265)
-      make.height.equalTo(56)
-      make.centerX.equalToSuperview()
-    }
-    
-    return view
-  }()
-  
-  private lazy var premiumView: UIView = {
-    let view = UIView()
-    view.translatesAutoresizingMaskIntoConstraints = false
-    view.backgroundColor = UIColor(rgb: 0xFF3636)
-    view.cornerRadius = 27
-    
-    let icon = UIImageView()
-//    icon.image = .icPremiumLoadingIAP
-    icon.contentMode = .scaleAspectFit
-    
-    let label = UILabel()
-    label.text = "Get Priority Access"
-    label.font = AppFont.font(.boldText, size: 20)
-    label.textColor = UIColor(rgb: 0xFFFFFF)
-    
-    let stackView = UIStackView()
-    stackView.axis = .horizontal
-    stackView.spacing = 8
-    
-    [icon, label].forEach({stackView.addArrangedSubview($0)})
-    
-    view.addSubview(stackView)
-    stackView.snp.makeConstraints { make in
-      make.center.equalToSuperview()
-    }
-    return view
-  }()
-  
   private lazy var confirmView: UIView = {
     let view = UIView()
     view.translatesAutoresizingMaskIntoConstraints = false
-    view.backgroundColor = UIColor(rgb: 0x5C3218)
+    view.backgroundColor = UIColor(rgb: 0xFFEFD3)
     view.cornerRadius = 12
-    view.isHidden = true
+    view.borderColor = UIColor(rgb: 0xF26101)
+    view.borderWidth = 2
+    view.isHidden = false
     
     let label = UILabel()
-    label.text = "Confirm"
-    label.textColor = UIColor(rgb: 0xFEFEFE)
-    label.font = AppFont.font(.semiBoldText, size: 20)
+    label.text = "Cancel"
+    label.textColor = UIColor(rgb: 0x332644)
+    label.font = AppFont.font(.boldText, size: 20)
     
     view.addSubview(label)
     
@@ -166,8 +120,17 @@ class LoadingVC: BaseViewController {
     return view
   }()
   
-  private var viewModel: LoadingVM!
+  private lazy var lottieView: LottieAnimationView = {
+    let animationView = LottieAnimationView(name: "Carloading")
+    animationView.animationSpeed = 0.5
+    animationView.loopMode = .loop
+    animationView.contentMode = .scaleToFill
+    animationView.clipsToBounds = true
+    animationView.play()
+    return animationView
+  }()
   
+  private var viewModel = LoadingVM()
   private var apiCompleted = false
   private var shouldStopLastAnimation = false
   
@@ -179,9 +142,10 @@ class LoadingVC: BaseViewController {
   
   override func addComponents() {
     self.view.addSubview(containerView)
+    self.view.addSubview(imageBg)
     self.view.addSubview(titleLabel)
+    self.view.addSubview(lottieView)
     self.view.addSubview(mainStackView)
-    self.view.addSubview(mainPremiumView)
     self.view.addSubview(confirmView)
   }
   
@@ -190,33 +154,38 @@ class LoadingVC: BaseViewController {
       make.edges.equalToSuperview()
     }
     
-    titleLabel.snp.makeConstraints { make in
-      make.top.equalToSuperview().offset(90)
+    imageBg.snp.makeConstraints { make in
+      make.edges.equalToSuperview()
+    }
+    
+    lottieView.snp.makeConstraints { make in
+      make.top.equalToSuperview().offset(61)
+      make.left.right.equalToSuperview().inset(-20)
+      make.height.equalTo(243)
       make.centerX.equalToSuperview()
+    }
+    
+    titleLabel.snp.makeConstraints { make in
+      make.top.equalTo(lottieView.snp.bottom).inset(-48)
+      make.left.right.equalToSuperview().inset(20)
       make.width.equalTo(302)
     }
     
     mainStackView.snp.makeConstraints { make in
-      make.top.equalTo(titleLabel.snp.bottom).inset(-24)
+      make.top.equalTo(titleLabel.snp.bottom).inset(-17)
       make.left.equalToSuperview().inset(62)
-    }
-    mainPremiumView.snp.makeConstraints { make in
-      make.top.equalTo(mainStackView.snp.bottom).inset(-20)
-      make.centerX.equalToSuperview()
-      make.left.right.equalToSuperview().inset(20)
-      make.height.equalTo(92)
+      make.height.equalTo(180)
     }
     
     confirmView.snp.makeConstraints { make in
-      make.top.equalTo(mainPremiumView.snp.bottom).offset(86)
       make.left.right.equalToSuperview().inset(20)
+      make.bottom.equalToSuperview().inset(32)
       make.height.equalTo(52)
     }
   }
   
   override func setProperties() {
-    confirmView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapConfirmView)))
-    premiumView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapPremium)))
+    confirmView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapCancel)))
   }
   
   override func binding() {
@@ -226,7 +195,6 @@ class LoadingVC: BaseViewController {
         guard let self else {
           return
         }
-        apiCompleted = true
         shouldStopLastAnimation = true
       }.store(in: &subscriptions)
   }
@@ -289,23 +257,16 @@ class LoadingVC: BaseViewController {
   private func finishLastIcon(_ img: UIImageView) {
     img.image = .icLoadingLoadingDone
     img.transform = .identity
-    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-      self.confirmView.isHidden = false
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {[weak self] in
+      guard let self else {
+        return
+      }
+      viewModel.action.send(.beforGoing)
     }
   }
   
   // MARK: - Action
-  @objc private func onTapConfirmView() {
-    viewModel.action.send(.confirm)
-  }
-  
-  @objc private func onTapPremium() {
-    viewModel.action.send(.iap)
-  }
-}
-
-extension LoadingVC {
-  func setViewModel(_ viewModel: LoadingVM) {
-    self.viewModel = viewModel
+  @objc private func onTapCancel() {
+    viewModel.action.send(.cancelRequest)
   }
 }

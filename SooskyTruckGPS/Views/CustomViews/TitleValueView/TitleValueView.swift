@@ -54,4 +54,8 @@ final class TitleValueView: UIView {
   func updateValue(_ text: String) {
     valueLabel.text = text
   }
+  
+  func updateTitle(_ text: String) {
+    titleLabel.text = text
+  }
 }

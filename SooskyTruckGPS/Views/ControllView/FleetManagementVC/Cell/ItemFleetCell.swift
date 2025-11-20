@@ -190,4 +190,10 @@ class ItemFleetCell: BaseCollectionViewCell {
       make.bottom.equalToSuperview().inset(12)
     }
   }
+  
+  func configData(with item: RouteResponseRealm) {
+    departurePointValue.text = item.places.first?.address
+    numberOfStop.text = "\(item.places.count) intermediate stops"
+    destinationValue.text = item.places.last?.address
+  }
 }

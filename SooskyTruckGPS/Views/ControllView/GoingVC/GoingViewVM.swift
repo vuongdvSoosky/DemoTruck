@@ -13,12 +13,17 @@ class GoingViewVM: BaseViewModel {
     case getIndex(int: Int)
     case getTrackingState(state: TrackingState)
     case getItem(item: Place)
+    case getTimeTracking(time: String)
+    case getDuration(time: Double)
+    case finish
   }
   
   let action = PassthroughSubject<Action, Never>()
   let index = CurrentValueSubject<Int?, Never>(nil)
   var trackingState: TrackingState = .beginTracking
-  
+  let timeTracking = CurrentValueSubject<String, Never>("00:00:00")
+  let speed: Double = 0.0
+  var duration: Double = 0.0
   private let router = GoingRouter()
   
   override init() {
@@ -34,7 +39,6 @@ class GoingViewVM: BaseViewModel {
   }
 }
 
-
 extension GoingViewVM {
   private func progressAction(_ action: Action) {
     switch action {
@@ -44,6 +48,31 @@ extension GoingViewVM {
       trackingState = state
     case .getItem(item: let item):
       router.route(to: .arrievedView, parameters: ["Place": item])
+    case .getTimeTracking(time: let time):
+      timeTracking.value = time
+    case .finish:
+     
+      guard let router = PlaceManager.shared.placesRouter else {
+        return
+      }
+      let routeRealm = RouteResponseRealm(from: router)
+      routeRealm.history = true
+      
+      let trackingRecords = TrackingRouterModel()
+      trackingRecords.duration = duration
+      trackingRecords.speed = DistanceCalculator.shared.currentSpeed
+      trackingRecords.distanceRace = DistanceCalculator.shared.totalDistanceMiles
+      
+      RealmService.shared.appendToList(
+        parent: routeRealm,
+        keyPath: \.trackingRecords,
+        object: trackingRecords
+      )
+      RealmService.shared.add(routeRealm)
+      
+      self.router.route(to: .finish)
+    case .getDuration(time: let time):
+      duration = time
     }
   }
 }

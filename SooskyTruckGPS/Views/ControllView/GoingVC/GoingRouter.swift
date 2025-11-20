@@ -12,6 +12,7 @@ class GoingRouter: Router {
   
   enum Route: String {
     case arrievedView
+    case finish
   }
 }
 
@@ -23,6 +24,11 @@ extension GoingRouter {
     switch route {
     case .arrievedView:
       showArrivedView(parameters: parameters)
+    case .finish:
+      let tabbarVC = TabbarVC()
+      tabbarVC.setSelectIndex(navigate: .diary)
+      tabbarVC.reloadFleetManagementVC()
+      context.push(to: tabbarVC, animated: true)
     }
   }
 }

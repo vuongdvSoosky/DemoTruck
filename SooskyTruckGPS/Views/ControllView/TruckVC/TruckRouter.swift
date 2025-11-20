@@ -25,8 +25,8 @@ extension TruckRouter {
     case .viewlist:
       showListLocation()
     case .loadingVC:
-      let beforeGoing = BeforeGoingVC()
-      context.push(to: beforeGoing, animated: true)
+      let loadingVC = LoadingVC()
+      context.push(to: loadingVC, animated: true)
     }
   }
 }

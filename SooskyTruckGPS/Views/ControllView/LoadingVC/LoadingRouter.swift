@@ -12,8 +12,8 @@ class LoadingRouter: Router {
   
   enum Route: String {
     case back
-    case pushSummaryVC
     case iap
+    case beforGoing
   }
 }
 
@@ -25,12 +25,12 @@ extension LoadingRouter {
     switch route {
     case .back:
       context.pop(animated: true)
-    case .pushSummaryVC:
+    case .beforGoing:
       DispatchQueue.main.async { [weak self] in
         guard let self else {
           return
         }
-        pushSummaryVC(context, parameters: parameters)
+        pushBefoGoingVC(context)
       }
     case .iap:
       switch AppManager.shared.displaySub {
@@ -50,17 +50,9 @@ extension LoadingRouter {
 }
 
 extension LoadingRouter {
-  private func pushSummaryVC(_ context: UINavigationController, parameters: [String: Any]? = nil) {
-//    guard let parameters = parameters,
-//          let itemHorse = parameters["HorseModel"] as? HorseModel ,
-//          let trackingHorseModel = parameters["TrackingHorseModel"] as? TrackingHorseModel else {
-//      return
-//    }
-    
-//    let summaryVC = SummaryVC()
-//    summaryVC.setViewModel(SummaryViewModel(with: itemHorse, trackingHorseRerecord: trackingHorseModel))
-//    context.push(to: summaryVC, animated: true)
-//    context.removeViewController(LoadingNormalVC.self)
-//    context.removeViewController(LoadingPremiumVC.self)
+  private func pushBefoGoingVC(_ context: UINavigationController) {
+    let beforGoing = BeforeGoingVC()
+    context.push(to: beforGoing, animated: true)
+    context.removeViewController(LoadingVC.self)
   }
 }

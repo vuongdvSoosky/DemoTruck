@@ -384,7 +384,7 @@ extension TruckVC: UITextFieldDelegate {
         let annotation = CustomAnnotation(coordinate: coordinate, type: "parking", titlePlace: keyword)
         self.mapView.addAnnotation(annotation)
         self.pendingAnnotation = annotation
-        self.currentPlace = Place(address: keyword, fullAddres: keyword , coordinate: coordinate, nameRouter: "MyRoute", state: true)
+        self.currentPlace = Place(address: keyword, fullAddres: keyword , coordinate: coordinate, nameRouter: "MyRoute", state: nil)
         self.currentCalloutView.configureButton(title: "Add Stop", icon: .icPlus)
         self.showCalloutAnimated()
       }

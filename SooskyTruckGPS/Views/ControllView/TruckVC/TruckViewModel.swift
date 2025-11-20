@@ -14,6 +14,7 @@ class TruckViewModel: BaseViewModel {
   }
   
   let action = PassthroughSubject<Action, Never>()
+  var places: [Place] = []
   private let router = TruckRouter()
   
   override init() {

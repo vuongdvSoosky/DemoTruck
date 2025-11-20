@@ -12,6 +12,7 @@ class PlaceManager {
   static let shared = PlaceManager()
   
   @Published var places: [Place] = []
+  @Published var placesRouter: RouteResponse?
   
   private init() {}
   
@@ -53,5 +54,9 @@ extension PlaceManager {
         places[index].state = isSuccess
       }
     }
+  }
+  
+  func getRouterPlace(_ placeRouter: RouteResponse) {
+    self.placesRouter = placeRouter
   }
 }

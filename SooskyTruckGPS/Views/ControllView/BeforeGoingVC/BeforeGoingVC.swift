@@ -48,9 +48,11 @@ class BeforeGoingVC: BaseViewController {
     view.cornerRadius = 16
     view.borderWidth = 2
     view.borderColor = UIColor(rgb: 0xF26101)
+    view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapSave)))
     
     let label = UILabel()
     label.text = "Save"
+    label.font = AppFont.font(.boldText, size: 20)
     label.textColor = UIColor(rgb: 0x332644)
     label.textAlignment = .center
     view.addSubviews(label)
@@ -65,6 +67,7 @@ class BeforeGoingVC: BaseViewController {
     view.translatesAutoresizingMaskIntoConstraints = false
     view.cornerRadius = 16
     view.clipsToBounds = true
+    view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapGo)))
     let label = UILabel()
     label.text = "Go"
     label.textColor = UIColor(rgb: 0xFFFFFF)
@@ -153,7 +156,8 @@ class BeforeGoingVC: BaseViewController {
     let icon = UIImageView()
     icon.image = .icBack
     icon.translatesAutoresizingMaskIntoConstraints = false
-    
+    icon.isUserInteractionEnabled = true
+    icon.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapBack)))
     return icon
   }()
   
@@ -290,12 +294,6 @@ class BeforeGoingVC: BaseViewController {
   private func setupMap() {
     MapManager.shared.attachMap(to: mapKitView)
     mapKitView.delegate = self
-    // Lấy vị trí hiện tại và hiển thị dịch vụ xung quanh
-    MapManager.shared.requestUserLocation { [weak self] location in
-      guard let self = self, let location = location else { return }
-      MapManager.shared.centerMap(on: location, zoom: 0.05)
-      // self.searchNearby()
-    }
   }
   
   override func setColor() {
@@ -324,6 +322,15 @@ class BeforeGoingVC: BaseViewController {
         LogManager.show(places.count)
         self.updateAnnotations()
       }.store(in: &subscriptions)
+    
+    PlaceManager.shared.$placesRouter
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] router in
+        guard let self, let router = router else {
+          return
+        }
+        displayRouteOnMap(route: router, mapView: mapKitView)
+      }.store(in: &subscriptions)
   }
   
   private func updateAnnotations() {
@@ -335,14 +342,13 @@ class BeforeGoingVC: BaseViewController {
     let annotations = arrayPlaces.map { place -> CustomAnnotation in
       return CustomAnnotation(
         coordinate: place.coordinate,
-        type: "parking", // hoặc tuỳ type bạn có trong Place
+        type: "parking",
         titlePlace: place.address
       )
     }
     
     mapKitView.addAnnotations(annotations)
     scrollToFirstPlace()
-    drawRoutePath()
   }
   
   private func scrollToFirstPlace() {
@@ -351,27 +357,13 @@ class BeforeGoingVC: BaseViewController {
     let coordinate = first.coordinate
     let region = MKCoordinateRegion(
       center: coordinate,
-      latitudinalMeters: 800,
-      longitudinalMeters: 800
+      latitudinalMeters: 150,
+      longitudinalMeters: 150
     )
     
     mapKitView.setRegion(region, animated: true)
   }
-  
-  private func drawRoutePath() {
-    // Xoá polyline cũ
-    let overlays = mapKitView.overlays
-    mapKitView.removeOverlays(overlays)
     
-    // Lấy danh sách toạ độ từ places
-    let coords = arrayPlaces.map { $0.coordinate }
-    guard coords.count >= 2 else { return } // cần ít nhất 2 điểm để vẽ line
-    
-    // Tạo polyline
-    let polyline = MKPolyline(coordinates: coords, count: coords.count)
-    mapKitView.addOverlay(polyline)
-  }
-  
   func scrollToPage(index: Int, animated: Bool = true) {
     mainScrollView.isScrollEnabled = true
     let pageWidth = mainScrollView.frame.size.width
@@ -450,6 +442,18 @@ class BeforeGoingVC: BaseViewController {
     }
     showCalloutAnimated()
   }
+  
+  @objc private func onTapBack() {
+    viewModel.action.send(.back)
+  }
+  
+  @objc private func onTapSave() {
+    viewModel.action.send(.save)
+  }
+  
+  @objc private func onTapGo() {
+    viewModel.action.send(.go)
+  }
 }
 
 extension BeforeGoingVC {
@@ -476,11 +480,9 @@ extension BeforeGoingVC: MKMapViewDelegate {
   
   func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
     if let polyline = overlay as? MKPolyline {
-      let renderer = MKPolylineRenderer(polyline: polyline)
+      let renderer = MKPolylineRenderer(overlay: polyline)
       renderer.strokeColor = UIColor(rgb: 0xFFC26D)
-      renderer.lineWidth = 5
-      renderer.lineJoin = .round
-      renderer.lineCap = .round
+      renderer.lineWidth = 4
       return renderer
     }
     return MKOverlayRenderer(overlay: overlay)
@@ -518,5 +520,24 @@ extension BeforeGoingVC: MKMapViewDelegate {
     let tap = UITapGestureRecognizer(target: self, action: #selector(annotationTapped(_:)))
     view?.addGestureRecognizer(tap)
     return view
+  }
+}
+
+
+extension BeforeGoingVC {
+  func displayRouteOnMap(route: RouteResponse, mapView: MKMapView) {
+    guard let coordinates = route.paths.first?.points.coordinates else {
+      LogManager.show("No coordinates found")
+      return
+    }
+    mapView.removeOverlays(mapView.overlays)
+    let polylineCoordinates = coordinates.map { CLLocationCoordinate2D(latitude: $0[1], longitude: $0[0]) }
+    let polyline = MKPolyline(coordinates: polylineCoordinates, count: polylineCoordinates.count)
+    
+    // Thêm tuyến đường vào bản đồ
+    mapView.addOverlay(polyline)
+    
+    // Zoom vào khu vực chứa tuyến đường
+    mapView.setVisibleMapRect(polyline.boundingMapRect, edgePadding: UIEdgeInsets(top: 50, left: 20, bottom: 50, right: 20), animated: true)
   }
 }

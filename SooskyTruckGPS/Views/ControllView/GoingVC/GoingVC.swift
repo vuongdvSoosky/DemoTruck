@@ -102,6 +102,7 @@ class GoingVC: BaseViewController {
     view.isUserInteractionEnabled = true
     view.isHidden = true
     view.clipsToBounds = true
+    view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapFinishView)))
     
     let label = UILabel()
     label.text = "Finish"
@@ -187,6 +188,10 @@ class GoingVC: BaseViewController {
     return map
   }()
   
+  private lazy var arrayPlaces: [Place] = []
+  private var currentPlace: Place?
+  private var pendingAnnotation: MKAnnotation?
+  
   private let viewModel = GoingViewVM()
   
   override func viewDidLoad() {
@@ -201,6 +206,7 @@ class GoingVC: BaseViewController {
     let goTapGesture = UITapGestureRecognizer(target: self, action: #selector(onTapGoView))
     goView.addGestureRecognizer(goTapGesture)
     setupSwipeGoingDetailView()
+    timerManager.delegate = self
   }
   
   override func addComponents() {
@@ -259,10 +265,94 @@ class GoingVC: BaseViewController {
         }
         collectionView.reloadData()
       }.store(in: &subscriptions)
+    
+    PlaceManager.shared.$placesRouter
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] router in
+        guard let self, let router = router else {
+          return
+        }
+        displayRouteOnMap(route: router, mapView: mapView)
+      }.store(in: &subscriptions)
+    
+    PlaceManager.shared.$places
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] places in
+        guard let self else {
+          return
+        }
+        self.arrayPlaces = places
+        LogManager.show(places.count)
+        self.updateAnnotations()
+      }.store(in: &subscriptions)
+    
+    viewModel.timeTracking
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] time in
+        guard let self else {
+          return
+        }
+        durationView.updateValue(time)
+      }.store(in: &subscriptions)
+    
+    // InformationTrack
+    distanceCalculator.$totalDistanceMiles
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] distance in
+        guard let self else {
+          return
+        }
+        distanceView.updateValue("\(String(format: "%.2f", distance)) mi")
+      }.store(in: &subscriptions)
+    
+    distanceCalculator.$currentSpeedMph
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] currentSpeed in
+        guard let self else {
+          return
+        }
+        if currentSpeed == 0 {
+          speedView.updateTitle("--:--")
+        } else {
+          speedView.updateTitle("\(String(format: "%.2f", currentSpeed))")
+        }
+      }.store(in: &subscriptions)
   }
   
   private func setupMapView() {
     MapManager.shared.attachMap(to: mapView)
+    mapView.delegate = self
+  }
+  
+  private func updateAnnotations() {
+    // Xoá các annotation cũ trừ vị trí người dùng
+    let nonUserAnnotations = mapView.annotations.filter { !($0 is MKUserLocation) }
+    mapView.removeAnnotations(nonUserAnnotations)
+    
+    // Tạo annotation mới từ arrayPlaces
+    let annotations = arrayPlaces.map { place -> CustomAnnotation in
+      return CustomAnnotation(
+        coordinate: place.coordinate,
+        type: "parking",
+        titlePlace: place.address
+      )
+    }
+    
+    mapView.addAnnotations(annotations)
+    scrollToFirstPlace()
+  }
+  
+  private func scrollToFirstPlace() {
+    guard let first = arrayPlaces.first else { return }
+    
+    let coordinate = first.coordinate
+    let region = MKCoordinateRegion(
+      center: coordinate,
+      latitudinalMeters: 150,
+      longitudinalMeters: 150
+    )
+    
+    mapView.setRegion(region, animated: true)
   }
 }
 
@@ -299,21 +389,6 @@ extension GoingVC: UICollectionViewDelegateFlowLayout {
 // MARK: - Tracking
 extension GoingVC {
   private func stateGo() {
-    //    guard viewModel.itemHorse.value != nil else {
-    //      if AppManager.shared.showAds {
-    //        viewModel.action.send(.showPoupAddHorse)
-    //      } else {
-    //        viewModel.action.send(.addHorse)
-    //      }
-    //
-    //      return
-    //    }
-    
-    //    if viewModel.trainingType.value == nil {
-    //      trainingTypeView.setValue("General-Riding",valueTextColor: UIColor(rgb: 0x000000), titleTextColor: UIColor(rgb: 0xA2A2A2)
-    //      )
-    //    }
-    
     switch viewModel.trackingState {
     case .beginTracking:
       // Bắt đầu tracking lần đầu
@@ -442,6 +517,10 @@ extension GoingVC {
     
     startStateTracking()
   }
+  
+  @objc private func onTapFinishView() {
+    viewModel.action.send(.finish)
+  }
 }
 
 // MARK: - GoingDetaiView
@@ -502,5 +581,80 @@ extension GoingVC {
 extension GoingVC: GoingDetailViewDelegate {
   func didChooseItem(item: Place) {
     viewModel.action.send(.getItem(item: item))
+  }
+}
+
+extension GoingVC {
+  func displayRouteOnMap(route: RouteResponse, mapView: MKMapView) {
+    guard let coordinates = route.paths.first?.points.coordinates else {
+      LogManager.show("No coordinates found")
+      return
+    }
+    mapView.removeOverlays(mapView.overlays)
+    let polylineCoordinates = coordinates.map { CLLocationCoordinate2D(latitude: $0[1], longitude: $0[0]) }
+    let polyline = MKPolyline(coordinates: polylineCoordinates, count: polylineCoordinates.count)
+    
+    // Thêm tuyến đường vào bản đồ
+    mapView.addOverlay(polyline)
+    
+    // Zoom vào khu vực chứa tuyến đường
+    mapView.setVisibleMapRect(polyline.boundingMapRect, edgePadding: UIEdgeInsets(top: 50, left: 20, bottom: 50, right: 20), animated: true)
+  }
+}
+
+extension GoingVC: MKMapViewDelegate {
+  func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
+    if let polyline = overlay as? MKPolyline {
+      let renderer = MKPolylineRenderer(overlay: polyline)
+      renderer.strokeColor = UIColor(rgb: 0xF26101)
+      renderer.lineWidth = 4
+      return renderer
+    }
+    return MKOverlayRenderer(overlay: overlay)
+  }
+  
+  func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
+    if annotation is MKUserLocation { return nil }
+    
+    let identifier = "customPinView"
+    var view = mapView.dequeueReusableAnnotationView(withIdentifier: identifier)
+    
+    if view == nil {
+      view = MKAnnotationView(annotation: annotation, reuseIdentifier: identifier)
+      view?.canShowCallout = false
+    } else {
+      view?.annotation = annotation
+    }
+    
+    if let custom = annotation as? CustomAnnotation {
+      switch custom.type {
+      case "hospital":
+        view?.image = .icLocationStop
+      case "parking":
+        view?.image = .icLocationStop
+      case "coffee":
+        view?.image = .icLocationStop
+      default:
+        view?.image = .icLocationStop
+      }
+    } else {
+      view?.image = .icLocationStop
+    }
+    
+//    view?.centerOffset = CGPoint(x: 0, y: -15)
+//    let tap = UITapGestureRecognizer(target: self, action: #selector(annotationTapped(_:)))
+//    view?.addGestureRecognizer(tap)
+    return view
+  }
+}
+
+
+extension GoingVC: OperationTimerManagerDelegate {
+  func setCurrentTimeDouble(_ time: Double) {
+    viewModel.action.send(.getDuration(time: time))
+  }
+  
+  func updateTimeDisplay(_ time: String) {
+    viewModel.action.send(.getTimeTracking(time: time))
   }
 }
