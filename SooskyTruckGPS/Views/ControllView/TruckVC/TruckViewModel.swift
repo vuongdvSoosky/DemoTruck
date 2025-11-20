@@ -6,6 +6,7 @@
 //
 
 import Combine
+import MapKit
 
 class TruckViewModel: BaseViewModel {
   enum Action {
@@ -15,6 +16,9 @@ class TruckViewModel: BaseViewModel {
   
   let action = PassthroughSubject<Action, Never>()
   var places: [Place] = []
+  var searchCompleter = MKLocalSearchCompleter()
+  var searchSuggestions: [MKLocalSearchCompletion] = []
+  
   private let router = TruckRouter()
   
   override init() {

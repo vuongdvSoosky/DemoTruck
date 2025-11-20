@@ -83,6 +83,12 @@ class TruckVC: BaseViewController {
     return stackView
   }()
   
+  private lazy var tableView: UITableView = {
+    let tableView = UITableView()
+    
+    return tableView
+  }()
+  
   private lazy var arrayPlaces: [Place] = []
   private var currentPlace: Place?
   
@@ -115,6 +121,7 @@ class TruckVC: BaseViewController {
   }()
   // gas station, bank, car wash, supermarket, pharmacy, fast food
   private var address: String = ""
+  private var desAdress: String = ""
   
   private var currentQuery = "fast food"
   private var searchDelayTimer: Timer?
@@ -145,12 +152,16 @@ class TruckVC: BaseViewController {
   override func viewDidLoad() {
     super.viewDidLoad()
     setupMap()
+    setupTableView()
+    setupSearchCompleter()
   }
   
   override func setProperties() {
     searchTextField.delegate = self
     searchTextField.addTarget(self, action: #selector(textFieldDidChange(_:)), for: .editingChanged)
-    view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapCloseCalloutView)))
+    let tapGesture = UITapGestureRecognizer(target: self, action: #selector(onTapCloseCalloutView))
+    tapGesture.cancelsTouchesInView = false
+    view.addGestureRecognizer(tapGesture)
   }
   
   private func setupMap() {
@@ -160,7 +171,7 @@ class TruckVC: BaseViewController {
     MapManager.shared.requestUserLocation { [weak self] location in
       guard let self = self, let location = location else { return }
       MapManager.shared.centerMap(on: location, zoom: 0.02)
-      // self.searchNearby()
+      self.searchNearby()
     }
   }
   
@@ -202,7 +213,7 @@ class TruckVC: BaseViewController {
     let annotations = arrayPlaces.map { place -> CustomAnnotation in
       return CustomAnnotation(
         coordinate: place.coordinate,
-        type: "parking", // hoặc tuỳ type bạn có trong Place
+        type: "parking",
         titlePlace: place.address
       )
     }
@@ -216,8 +227,31 @@ class TruckVC: BaseViewController {
     }
   }
   
+  private func setupTableView() {
+    tableView.delegate = self
+    tableView.dataSource = self
+    tableView.registerCell(HomeSearchCell.self)
+    tableView.backgroundColor = .clear
+    tableView.showsVerticalScrollIndicator = false
+    tableView.showsHorizontalScrollIndicator = false
+    tableView.isHidden = true
+    tableView.separatorInset = UIEdgeInsets(top: 0, left: 21, bottom: 0, right: 21)
+    
+    tableView.setShadow(
+      radius: 6,
+      opacity: 1,
+      offset: CGSize(width: 0, height: 3)
+    )
+    tableView.setRoundCorners(corners: .allCorners, radius: 12)
+  }
+  private func setupSearchCompleter() {
+    viewModel.searchCompleter.delegate = self
+    viewModel.searchCompleter.region = MKCoordinateRegion()
+    viewModel.searchCompleter.resultTypes = .address
+  }
+  
   override func addComponents() {
-    self.view.addSubviews(mapView, searchView, currentCalloutView, viewList, routeStackView)
+    self.view.addSubviews(mapView, searchView, currentCalloutView, viewList, routeStackView, tableView)
   }
   
   override func setConstraints() {
@@ -234,8 +268,8 @@ class TruckVC: BaseViewController {
     currentCalloutView.snp.makeConstraints { make in
       make.centerX.equalToSuperview()
       make.centerY.equalToSuperview().offset(-100)
-      make.width.equalTo(210)
-      make.height.equalTo(100)
+      make.width.equalTo(320)
+//      make.height.greaterThanOrEqualTo(150)
     }
     
     viewList.snp.makeConstraints { make in
@@ -253,8 +287,15 @@ class TruckVC: BaseViewController {
     caculatorRouteView.snp.makeConstraints { make in
       make.height.equalTo(60)
     }
-  }
     
+    tableView.snp.makeConstraints { make in
+      make.top.equalTo(searchView.snp.bottom).offset(8)
+      make.left.equalToSuperview().offset(20)
+      make.centerX.equalToSuperview()
+      make.height.equalTo(288)
+    }
+  }
+  
   private func hideCalloutAnimated() {
     guard !currentCalloutView.isHidden else { return }
     
@@ -272,8 +313,8 @@ class TruckVC: BaseViewController {
   }
   
   private func showCalloutAnimated() {
-    let adress = self.address.shortAddress
-    currentCalloutView.configure(title: adress)
+    let adress = self.address
+    currentCalloutView.configure(title: adress, des: desAdress)
     currentCalloutView.alpha = 0
     currentCalloutView.transform = CGAffineTransform(translationX: 0, y: 20)
     currentCalloutView.isHidden = false
@@ -301,17 +342,17 @@ class TruckVC: BaseViewController {
 extension TruckVC: MKMapViewDelegate {
   func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
     // debounce tránh spam search khi người dùng kéo bản đồ liên tục
-    //        searchDelayTimer?.invalidate()
-    //        searchDelayTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: false) { [weak self] _ in
-    //          // self?.searchNearby()
-    //        }
-   // isProgrammaticRegionChange = false
+    searchDelayTimer?.invalidate()
+    searchDelayTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: false) { [weak self] _ in
+      // self?.searchNearby()
+    }
+    // isProgrammaticRegionChange = false
   }
   
   func mapView(_ mapView: MKMapView, regionWillChangeAnimated animated: Bool) {
-//    if !isProgrammaticRegionChange {
-//      hideCalloutAnimated()
-//    }
+    //    if !isProgrammaticRegionChange {
+    //      hideCalloutAnimated()
+    //    }
   }
   
   func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
@@ -354,10 +395,15 @@ extension TruckVC: MKMapViewDelegate {
 extension TruckVC: UITextFieldDelegate {
   @objc private func textFieldDidChange(_ textField: UITextField) {
     guard let text = textField.text else {
+      tableView.isHidden = true
+      viewModel.searchSuggestions.removeAll()
+      tableView.reloadData()
       return
     }
     self.address = text
     // 410 ATLANTIC AVE, BROOKLYN
+    viewModel.searchCompleter.queryFragment = text
+    tableView.isHidden = false
   }
   
   func textFieldShouldReturn(_ textField: UITextField) -> Bool {
@@ -408,8 +454,8 @@ extension TruckVC {
       self.address = matchedPlace.address
       self.currentCalloutView.configureButton(title: "Remove Stop", icon: .icTrash)
     } else {
-      let adress = annotation.titlePlace.shortAddress
-      self.currentCalloutView.configure(title: adress)
+      let adress = annotation.titlePlace
+      self.currentCalloutView.configure(title: adress, des: desAdress)
       self.currentCalloutView.configureButton(title: "Add Stop", icon: .icPlus)
     }
     showCalloutAnimated()
@@ -426,5 +472,113 @@ extension TruckVC {
   
   @objc private func onTapCaculatorRoute() {
     viewModel.action.send(.caculatorRoute)
+  }
+}
+
+// MARK: - UITableView
+extension TruckVC: UITableViewDelegate, UITableViewDataSource {
+  func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    return viewModel.searchSuggestions.count
+  }
+  
+  func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+    let cell = tableView.dequeueReusableCell(HomeSearchCell.self, for: indexPath)
+    cell.backgroundColor = .white
+    cell.selectionStyle = .none
+    
+    let data = viewModel.searchSuggestions[indexPath.row]
+    cell.configData(data: data)
+    tableView.snp.updateConstraints { make in
+      make.top.equalTo(searchView.snp.bottom).offset(8)
+      make.left.equalToSuperview().offset(20)
+      make.centerX.equalToSuperview()
+      if viewModel.searchSuggestions.count >= 4 {
+        make.height.equalTo(288)
+      } else {
+        make.height.equalTo(60 * viewModel.searchSuggestions.count)
+      }
+    }
+    
+    return cell
+  }
+  
+  func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+    guard indexPath.row < viewModel.searchSuggestions.count else {
+      LogManager.show("Invalid suggestion index: \(indexPath.row), count: \(viewModel.searchSuggestions.count)")
+      return
+    }
+    let dataSuggestion = viewModel.searchSuggestions[indexPath.row]
+    searchTextField.text = dataSuggestion.title
+    searchTextField.resignFirstResponder()
+    tableView.isHidden = true
+    
+    let request = MKLocalSearch.Request()
+    request.naturalLanguageQuery = dataSuggestion.title
+    self.address = dataSuggestion.title
+    self.desAdress = dataSuggestion.subtitle
+    LogManager.show(self.desAdress)
+    let search = MKLocalSearch(request: request)
+    request.region = mapView.region
+    search.start { [weak self] response, error in
+      guard let self = self,
+            let coordinate = response?.mapItems.first?.placemark.coordinate else { return }
+      DispatchQueue.main.async {
+        let region = MKCoordinateRegion(
+          center: coordinate,
+          latitudinalMeters: 200,
+          longitudinalMeters: 200
+        )
+        self.mapView.setRegion(region, animated: true)
+        
+        let annotation = CustomAnnotation(coordinate: coordinate, type: "parking", titlePlace: dataSuggestion.title)
+        self.mapView.addAnnotation(annotation)
+        self.pendingAnnotation = annotation
+        self.currentPlace = Place(address: dataSuggestion.title, fullAddres: dataSuggestion.title , coordinate: coordinate, nameRouter: "MyRoute", state: nil)
+        self.currentCalloutView.configureButton(title: "Add Stop", icon: .icPlus)
+        self.showCalloutAnimated()
+      }
+    }
+  }
+  
+  func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+    return 60
+  }
+}
+
+extension TruckVC: MKLocalSearchCompleterDelegate {
+  func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
+    if completer.results.isEmpty {
+      tableView.isHidden = true
+    } else {
+      viewModel.searchSuggestions = completer.results
+    }
+    tableView.reloadData()
+  }
+  
+  func completer(_ completer: MKLocalSearchCompleter, didFailWithError error: Error) {
+    LogManager.show("Completer error: \(error.localizedDescription)")
+  }
+}
+
+extension TruckVC {
+  private func formatAddress(from coordinate: CLLocationCoordinate2D, completion: @escaping (String) -> Void) {
+    let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+    CLGeocoder().reverseGeocodeLocation(location) { placemarks, error in
+      guard let placemark = placemarks?.first, error == nil else {
+        completion("Unknown Address")
+        return
+      }
+      
+      var parts: [String] = []
+      
+      if let street = placemark.thoroughfare { parts.append(street) }
+      if let city = placemark.locality { parts.append(city) }
+      if let state = placemark.administrativeArea { parts.append(state) }
+      if let zip = placemark.postalCode { parts.append(zip) }
+      if let country = placemark.country { parts.append(country) }
+      
+      let formatted = parts.joined(separator: ", ")
+      completion(formatted)
+    }
   }
 }

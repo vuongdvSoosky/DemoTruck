@@ -14,10 +14,19 @@ final class CustomAnnotationCalloutView: BaseView {
   
   private let titleLabel: UILabel = {
     let label = UILabel()
-    label.font = UIFont.boldSystemFont(ofSize: 16)
-    label.textColor = .black
-    label.textAlignment = .center
-    label.numberOfLines = 2
+    label.font = AppFont.font(.mediumText, size: 17)
+    label.textColor = UIColor(rgb: 0x332644)
+    label.textAlignment = .left
+    label.numberOfLines = 0
+    return label
+  }()
+  
+  private let desLabel: UILabel = {
+    let label = UILabel()
+    label.font = AppFont.font(.lightText, size: 15)
+    label.textColor = UIColor(rgb: 0x909090)
+    label.textAlignment = .left
+    label.numberOfLines = 0
     return label
   }()
   
@@ -86,25 +95,33 @@ final class CustomAnnotationCalloutView: BaseView {
     layer.shadowRadius = 8
     tag = 999
     
-    addSubviews(titleLabel, buttonView)
+    addSubviews(titleLabel, desLabel, buttonView)
     
     titleLabel.snp.makeConstraints { make in
       make.top.equalToSuperview().offset(12)
       make.left.right.equalToSuperview().inset(16)
     }
     
-    buttonView.snp.makeConstraints { make in
-      make.top.equalTo(titleLabel.snp.bottom).offset(10)
+    desLabel.snp.makeConstraints { make in
+      make.top.equalTo(titleLabel.snp.bottom).offset(2)
       make.centerX.equalToSuperview()
       make.left.right.equalToSuperview().inset(16)
+    }
+    
+    buttonView.snp.makeConstraints { make in
+      make.top.equalTo(desLabel.snp.bottom).offset(10)
+      make.centerX.equalToSuperview()
+      make.left.right.equalToSuperview().inset(16)
+      make.height.equalTo(40)
       make.bottom.equalToSuperview().inset(23)
     }
   }
   
   // MARK: - Configuration
   
-  func configure(title: String) {
+  func configure(title: String, des: String) {
     titleLabel.text = title
+    desLabel.text = des
   }
   
   func configureButton(title: String, icon: UIImage) {

@@ -374,7 +374,7 @@ class BeforeGoingVC: BaseViewController {
   
   private func showCalloutAnimated() {
     let adress = self.address.shortAddress
-    currentCalloutView.configure(title: adress)
+    currentCalloutView.configure(title: adress, des: "")
     currentCalloutView.alpha = 0
     currentCalloutView.transform = CGAffineTransform(translationX: 0, y: 20)
     currentCalloutView.isHidden = false
@@ -437,7 +437,7 @@ class BeforeGoingVC: BaseViewController {
       self.currentCalloutView.configureButton(title: "Remove Stop", icon: .icTrash)
     } else {
       let adress = annotation.titlePlace.shortAddress
-      self.currentCalloutView.configure(title: adress)
+      self.currentCalloutView.configure(title: adress, des: "")
       self.currentCalloutView.configureButton(title: "Add Stop", icon: .icPlus)
     }
     showCalloutAnimated()

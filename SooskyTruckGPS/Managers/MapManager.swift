@@ -32,7 +32,6 @@ final class MapManager: NSObject {
   func attachMap(to mapView: MKMapView) {
     self.mapView = mapView
     mapView.showsUserLocation = true
-    mapView.userTrackingMode = .follow
     mapView.setUserTrackingMode(.followWithHeading, animated: true)
   }
   
@@ -232,5 +231,6 @@ class CustomAnnotation: NSObject, MKAnnotation {
     self.coordinate = coordinate
     self.type = type
     self.titlePlace = titlePlace
+    LogManager.show(self.titlePlace)
   }
 }
