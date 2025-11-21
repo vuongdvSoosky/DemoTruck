@@ -99,6 +99,21 @@ class TruckVC: BaseViewController {
     return textField
   }()
   
+  // MARK: - UICollectionView
+  private lazy var collectionView: UICollectionView = {
+    let layout = UICollectionViewFlowLayout()
+    layout.scrollDirection = .horizontal
+    layout.minimumInteritemSpacing = 1
+    layout.minimumLineSpacing = 1
+    layout.estimatedItemSize = UICollectionViewFlowLayout.automaticSize
+    
+    let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
+    collectionView.translatesAutoresizingMaskIntoConstraints = false
+    collectionView.showsHorizontalScrollIndicator = false
+    collectionView.backgroundColor = .clear
+    return collectionView
+  }()
+  
   private lazy var viewList: UIView = {
     let view = UIView()
     view.translatesAutoresizingMaskIntoConstraints = false
@@ -123,7 +138,8 @@ class TruckVC: BaseViewController {
   private var address: String = ""
   private var desAdress: String = ""
   
-  private var currentQuery = "fast food"
+  private var currentQuery = ""
+  private var currentType = ""
   private var searchDelayTimer: Timer?
   private var pendingAnnotation: MKAnnotation?
   private var isProgrammaticRegionChange = false
@@ -133,11 +149,11 @@ class TruckVC: BaseViewController {
     view.translatesAutoresizingMaskIntoConstraints = false
     view.isHidden = true
     view.onButtonTapped = { [weak self] in
-      guard let self, let place = self.currentPlace else { return }
+      guard let self, let Place = self.currentPlace else { return }
       
-      PlaceManager.shared.addLocationToArray(place)
+      PlaceManager.shared.addLocationToArray(Place)
       
-      if PlaceManager.shared.isExistLocation(place) {
+      if PlaceManager.shared.isExistLocation(Place) {
         view.configureButton(title: "Remove Stop", icon: .icTrash)
       } else {
         view.configureButton(title: "Add Stop", icon: .icPlus)
@@ -162,6 +178,10 @@ class TruckVC: BaseViewController {
     let tapGesture = UITapGestureRecognizer(target: self, action: #selector(onTapCloseCalloutView))
     tapGesture.cancelsTouchesInView = false
     view.addGestureRecognizer(tapGesture)
+    
+    collectionView.delegate = self
+    collectionView.dataSource = self
+    collectionView.register(cell: ItemServiceCell.self)
   }
   
   private func setupMap() {
@@ -176,13 +196,13 @@ class TruckVC: BaseViewController {
   }
   
   override func binding() {
-    PlaceManager.shared.$places
+    PlaceManager.shared.$placeGroup
       .receive(on: DispatchQueue.main)
       .sink { [weak self] places in
         guard let self else {
           return
         }
-        self.arrayPlaces = places
+        self.arrayPlaces = places.places
         if self.arrayPlaces.isEmpty {
           hideCalloutAnimated()
         }
@@ -200,29 +220,38 @@ class TruckVC: BaseViewController {
             routeStackView.addArrayColorGradient(arrayColor: colors, startPoint: CGPoint(x: 0, y: 0.5), endPoint: CGPoint(x: 1, y: 0.5))
           }
         }
-        self.updateAnnotations()
+        self.updateAnnotations(with: "parking")
+      }.store(in: &subscriptions)
+    
+    viewModel.index
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] index in
+        guard let self else {
+          return
+        }
+        collectionView.reloadData()
       }.store(in: &subscriptions)
   }
   
-  private func updateAnnotations() {
+  private func updateAnnotations(with type: String = "") {
     // Xoá các annotation cũ trừ vị trí người dùng
     let nonUserAnnotations = mapView.annotations.filter { !($0 is MKUserLocation) }
     mapView.removeAnnotations(nonUserAnnotations)
     
     // Tạo annotation mới từ arrayPlaces
-    let annotations = arrayPlaces.map { place -> CustomAnnotation in
+    let annotations = arrayPlaces.map { Place -> CustomAnnotation in
       return CustomAnnotation(
-        coordinate: place.coordinate,
-        type: "parking",
-        titlePlace: place.address
+        coordinate: Place.coordinate,
+        type: type,
+        titlePlace: Place.address
       )
     }
     
     mapView.addAnnotations(annotations)
   }
   
-  private func searchNearby() {
-    MapManager.shared.searchServiceAroundVisibleRegion(currentQuery) { items in
+  private func searchNearby(with nameService: String = "", type: String = "") {
+    MapManager.shared.searchServiceAroundVisibleRegion(nameService, type: type) { items in
       LogManager.show("Tìm thấy \(items.count) kết quả cho \(self.currentQuery)")
     }
   }
@@ -251,7 +280,7 @@ class TruckVC: BaseViewController {
   }
   
   override func addComponents() {
-    self.view.addSubviews(mapView, searchView, currentCalloutView, viewList, routeStackView, tableView)
+    self.view.addSubviews(mapView, searchView, currentCalloutView, viewList, routeStackView, collectionView, tableView)
   }
   
   override func setConstraints() {
@@ -265,10 +294,16 @@ class TruckVC: BaseViewController {
       make.left.right.equalToSuperview().inset(20)
     }
     
+    collectionView.snp.makeConstraints { make in
+      make.top.equalTo(searchView.snp.bottom).offset(12)
+      make.left.equalToSuperview().inset(16)
+      make.right.equalToSuperview()
+      make.height.equalTo(56)
+    }
+    
     currentCalloutView.snp.makeConstraints { make in
       make.centerX.equalToSuperview()
-      make.centerY.equalToSuperview().offset(-100)
-      make.width.equalTo(320)
+      make.centerY.equalToSuperview().offset(-110)
     }
     
     viewList.snp.makeConstraints { make in
@@ -343,10 +378,10 @@ extension TruckVC: MKMapViewDelegate {
     // debounce tránh spam search khi người dùng kéo bản đồ liên tục
     searchDelayTimer?.invalidate()
     searchDelayTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: false) { [weak self] _ in
-      // self?.searchNearby()
+      self?.searchNearby(with: self?.currentQuery ?? "", type: self?.currentType ?? "")
     }
   }
-    
+  
   func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
     if annotation is MKUserLocation { return nil }
     
@@ -362,17 +397,26 @@ extension TruckVC: MKMapViewDelegate {
     
     if let custom = annotation as? CustomAnnotation {
       switch custom.type {
-      case "hospital":
-        view?.image = .icLocationStop
       case "parking":
         view?.image = .icLocationStop
-      case "coffee":
-        view?.image = .icLocationStop
       default:
-        view?.image = .icLocationStop
+        view?.image = .icLocationEmpty
       }
-    } else {
-      view?.image = .icLocationStop
+    } else if let customService = annotation as? CustomServiceAnimation {
+      switch customService.type {
+      case "Gas Station":
+        view?.image = .icPinGas
+      case "Bank":
+        view?.image = .icPinBank
+      case "Car Wash":
+        view?.image = .icPinCarWash
+      case "Pharmacy":
+        view?.image = .icPinPharmacy
+      case "Fast Food":
+        view?.image = .icPinFastFood
+      default:
+        view?.image = .icPinBlank
+      }
     }
     
     view?.centerOffset = CGPoint(x: 0, y: -15)
@@ -400,6 +444,7 @@ extension TruckVC: UITextFieldDelegate {
   func textFieldShouldReturn(_ textField: UITextField) -> Bool {
     textField.resignFirstResponder()
     guard let keyword = textField.text, !keyword.isEmpty else { return true }
+    tableView.isHidden = true
     
     let request = MKLocalSearch.Request()
     request.naturalLanguageQuery = keyword
@@ -418,10 +463,10 @@ extension TruckVC: UITextFieldDelegate {
         )
         self.mapView.setRegion(region, animated: true)
         
-        let annotation = CustomAnnotation(coordinate: coordinate, type: "parking", titlePlace: keyword)
+        let annotation = CustomAnnotation(coordinate: coordinate, type: "", titlePlace: keyword)
         self.mapView.addAnnotation(annotation)
         self.pendingAnnotation = annotation
-        self.currentPlace = Place(address: keyword, fullAddres: keyword , coordinate: coordinate, nameRouter: "MyRoute", state: nil)
+        self.currentPlace = Place(address: keyword, fullAddres: keyword , coordinate: coordinate, state: nil)
         self.currentCalloutView.configureButton(title: "Add Stop", icon: .icPlus)
         self.showCalloutAnimated()
       }
@@ -507,7 +552,6 @@ extension TruckVC: UITableViewDelegate, UITableViewDataSource {
     request.naturalLanguageQuery = dataSuggestion.title
     self.address = dataSuggestion.title
     self.desAdress = dataSuggestion.subtitle
-    LogManager.show(self.desAdress)
     let search = MKLocalSearch(request: request)
     request.region = mapView.region
     search.start { [weak self] response, error in
@@ -521,10 +565,10 @@ extension TruckVC: UITableViewDelegate, UITableViewDataSource {
         )
         self.mapView.setRegion(region, animated: true)
         
-        let annotation = CustomAnnotation(coordinate: coordinate, type: "parking", titlePlace: dataSuggestion.title)
+        let annotation = CustomAnnotation(coordinate: coordinate, type: "", titlePlace: dataSuggestion.title)
         self.mapView.addAnnotation(annotation)
         self.pendingAnnotation = annotation
-        self.currentPlace = Place(address: dataSuggestion.title, fullAddres: dataSuggestion.title , coordinate: coordinate, nameRouter: "MyRoute", state: nil)
+        self.currentPlace = Place(address: dataSuggestion.title, fullAddres: dataSuggestion.title , coordinate: coordinate, state: nil)
         self.currentCalloutView.configureButton(title: "Add Stop", icon: .icPlus)
         self.showCalloutAnimated()
       }
@@ -552,24 +596,60 @@ extension TruckVC: MKLocalSearchCompleterDelegate {
 }
 
 extension TruckVC {
-  private func formatAddress(from coordinate: CLLocationCoordinate2D, completion: @escaping (String) -> Void) {
-    let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
-    CLGeocoder().reverseGeocodeLocation(location) { placemarks, error in
-      guard let placemark = placemarks?.first, error == nil else {
-        completion("Unknown Address")
+  func geocodeAndFormatAddress(_ address: String, completion: @escaping (String) -> Void) {
+    let geocoder = CLGeocoder()
+    geocoder.geocodeAddressString(address) { Placemarks, error in
+      guard let Place = Placemarks?.first else {
+        completion(address)
         return
       }
       
-      var parts: [String] = []
+      let street = [Place.subThoroughfare, Place.thoroughfare].compactMap { $0 }.joined(separator: " ")
+      let city = Place.locality ?? ""
+      let state = Place.administrativeArea ?? ""
+      let zip = Place.postalCode ?? ""
+      let countryCode = Place.isoCountryCode ?? ""
       
-      if let street = placemark.thoroughfare { parts.append(street) }
-      if let city = placemark.locality { parts.append(city) }
-      if let state = placemark.administrativeArea { parts.append(state) }
-      if let zip = placemark.postalCode { parts.append(zip) }
-      if let country = placemark.country { parts.append(country) }
-      
-      let formatted = parts.joined(separator: ", ")
+      let formatted =
+      """
+      \(street)
+      \(city), \(state) \(zip)
+      \(countryCode)
+      """
       completion(formatted)
     }
   }
+}
+
+extension TruckVC: UICollectionViewDelegate {
+  func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+    let item = ServiceType.allCases[indexPath.row]
+    self.searchNearby(with: item.name, type: item.title)
+    self.currentQuery = item.name
+    self.currentType = item.title
+    viewModel.action.send(.getIndex(int: indexPath.row))
+  }
+}
+
+extension TruckVC: UICollectionViewDataSource {
+  func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+    return ServiceType.allCases.count
+  }
+  
+  func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+    let cell = collectionView.dequeueReusableCell(ItemServiceCell.self, for: indexPath)
+    let item = ServiceType.allCases[indexPath.item]
+    cell.binding(item: item)
+    
+    if indexPath.row == viewModel.index.value {
+      cell.didSelectedItem(item: item)
+    } else {
+      cell.unSelectedItem(item: item)
+    }
+    return cell
+  }
+}
+
+extension TruckVC: UICollectionViewDelegateFlowLayout {
+  
 }

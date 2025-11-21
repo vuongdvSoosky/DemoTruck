@@ -248,7 +248,7 @@ class FleetManagementVC: BaseViewController {
   override func binding() {
     viewModel.items
       .receive(on: DispatchQueue.main)
-      .sink { [weak self] places in
+      .sink { [weak self] Places in
         guard let self else {
           return
         }
@@ -320,7 +320,15 @@ extension FleetManagementVC {
 }
 
 extension FleetManagementVC: UICollectionViewDelegate {
-  
+  func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+    if collectionView === self.collectionView {
+      let item = viewModel.items.value?[indexPath.row]
+      LogManager.show(item)
+    } else {
+      let item = viewModel.itemHistory.value?[indexPath.row]
+      LogManager.show(item)
+    }
+  }
 }
 
 extension FleetManagementVC: UICollectionViewDataSource {
@@ -362,7 +370,14 @@ extension FleetManagementVC: UICollectionViewDelegateFlowLayout {
 
 extension FleetManagementVC {
   func reloadDataHistoryTab() {
+    setSelectedTab(1)
     viewModel.fetchData()
+  }
+  
+  func reloadDataForSavedTab() {
+    setSelectedTab(0)
+    viewModel.fetchData()
+    
   }
 }
 

@@ -7,12 +7,16 @@
 
 import CoreLocation
 
+struct PlaceGroup {
+  var nameRouter: String
+  var places: [Place]
+}
+
 struct Place: Equatable {
   var address: String
   var fullAddres: String
   var coordinate: CLLocationCoordinate2D
   var date = Date()
-  var nameRouter: String
   var state: Bool?
   
   static func == (lhs: Place, rhs: Place) -> Bool {

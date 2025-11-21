@@ -17,7 +17,7 @@ class SettingCell: BaseCollectionViewCell {
     
     icItem.snp.makeConstraints { make in
       make.leading.equalToSuperview()
-      make.width.height.equalTo(30)
+      make.width.height.equalTo(28)
       make.centerY.equalToSuperview()
     }
     
@@ -38,7 +38,7 @@ class SettingCell: BaseCollectionViewCell {
   
   private lazy var icRightRow: UIImageView = {
     let image = UIImageView()
-    image.image = UIImage()
+    image.image = .icRightRow
     image.contentMode = .scaleAspectFit
     return image
   }()

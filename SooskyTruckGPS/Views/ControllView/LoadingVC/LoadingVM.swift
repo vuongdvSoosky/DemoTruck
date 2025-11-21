@@ -60,7 +60,7 @@ extension LoadingVM {
 
 extension LoadingVM {
   private func requestAPIPlaces() {
-    let points: [[Double]] = PlaceManager.shared.places.map { [$0.coordinate.longitude, $0.coordinate.latitude] }
+    let points: [[Double]] = PlaceManager.shared.placeGroup.places.map { [$0.coordinate.longitude, $0.coordinate.latitude] }
     requestTask?.cancel()
     
     requestTask = Task { [weak self] in

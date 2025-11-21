@@ -17,7 +17,7 @@ class BeforeGoingVM: BaseViewModel {
   
   let action = PassthroughSubject<Action, Never>()
   let indexForMainScrollView = CurrentValueSubject<Int, Never>(0)
-  let placeRouter = CurrentValueSubject<RouteResponse?, Never>(nil)
+  let PlaceRouter = CurrentValueSubject<RouteResponse?, Never>(nil)
   private let router = BeforeGoingRouter()
   
   override init() {
@@ -56,7 +56,8 @@ extension BeforeGoingVM {
       return
     }
     let routeRealm = RouteResponseRealm(from: router)
-    routeRealm.addPlaces(PlaceManager.shared.places)
+    routeRealm.addPlaces(PlaceManager.shared.placeGroup.places)
     RealmService.shared.add(routeRealm)
+    self.router.route(to: .save)
   }
 }

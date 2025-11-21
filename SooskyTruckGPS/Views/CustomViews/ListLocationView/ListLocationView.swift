@@ -64,7 +64,7 @@ class ListLocationView: BaseView {
     return collectionView
   }()
   
-  private lazy var places: [Place] = []
+  private lazy var Places: [Place] = []
   
   override func addComponents() {
     addSubviews(containerView)
@@ -115,13 +115,13 @@ class ListLocationView: BaseView {
   }
   
   override func binding() {
-    PlaceManager.shared.$places
+    PlaceManager.shared.$placeGroup
       .receive(on: DispatchQueue.main)
       .sink { [weak self] places in
         guard let self else {
           return
         }
-        self.places = places
+        self.Places = places.places
         collectionView.reloadData()
       }.store(in: &subscriptions)
   }
@@ -138,12 +138,12 @@ extension ListLocationView: UICollectionViewDelegate {
 
 extension ListLocationView: UICollectionViewDataSource {
   func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-    return places.count
+    return Places.count
   }
   
   func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
     let cell = collectionView.dequeueReusableCell(ListLocationCell.self, for: indexPath)
-    let item = self.places[indexPath.row]
+    let item = self.Places[indexPath.row]
     cell.configData(item)
     cell.onDeleteTapped = { [weak self]  in
       guard let self else {

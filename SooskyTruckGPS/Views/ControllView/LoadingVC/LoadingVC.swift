@@ -122,7 +122,7 @@ class LoadingVC: BaseViewController {
   
   private lazy var lottieView: LottieAnimationView = {
     let animationView = LottieAnimationView(name: "Carloading")
-    animationView.animationSpeed = 0.5
+    animationView.animationSpeed = 1
     animationView.loopMode = .loop
     animationView.contentMode = .scaleToFill
     animationView.clipsToBounds = true

@@ -137,11 +137,11 @@ class BeforeGoingVC: BaseViewController {
     view.translatesAutoresizingMaskIntoConstraints = false
     view.isHidden = true
     view.onButtonTapped = { [weak self] in
-      guard let self, let place = self.currentPlace else { return }
+      guard let self, let Place = self.currentPlace else { return }
       
-      PlaceManager.shared.addLocationToArray(place)
+      PlaceManager.shared.addLocationToArray(Place)
       
-      if PlaceManager.shared.isExistLocation(place) {
+      if PlaceManager.shared.isExistLocation(Place) {
         view.configureButton(title: "Remove Stop", icon: .icTrash)
       } else {
         view.configureButton(title: "Add Stop", icon: .icPlus)
@@ -312,14 +312,13 @@ class BeforeGoingVC: BaseViewController {
         scrollToPage(index: index)
       }.store(in: &subscriptions)
     
-    PlaceManager.shared.$places
+    PlaceManager.shared.$placeGroup
       .receive(on: DispatchQueue.main)
       .sink { [weak self] places in
         guard let self else {
           return
         }
-        self.arrayPlaces = places
-        LogManager.show(places.count)
+        self.arrayPlaces = places.places
         self.updateAnnotations()
       }.store(in: &subscriptions)
     
@@ -339,11 +338,11 @@ class BeforeGoingVC: BaseViewController {
     mapKitView.removeAnnotations(nonUserAnnotations)
     
     // Tạo annotation mới từ arrayPlaces
-    let annotations = arrayPlaces.map { place -> CustomAnnotation in
+    let annotations = arrayPlaces.map { Place -> CustomAnnotation in
       return CustomAnnotation(
-        coordinate: place.coordinate,
+        coordinate: Place.coordinate,
         type: "parking",
-        titlePlace: place.address
+        titlePlace: Place.address
       )
     }
     

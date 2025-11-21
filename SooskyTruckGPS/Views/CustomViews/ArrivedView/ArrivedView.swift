@@ -153,7 +153,7 @@ class ArrivedView: BaseView {
     return label
   }()
   
-  private var place: Place?
+  private var Place: Place?
   
   override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
     super.touchesBegan(touches, with: event)
@@ -193,24 +193,24 @@ class ArrivedView: BaseView {
   }
   
   @objc private func onTapSuccess() {
-    guard let place = place else {
+    guard let Place = Place else {
       return
     }
-    PlaceManager.shared.changStatePlace(with: place, isSuccess: true)
+    PlaceManager.shared.changStatePlace(with: Place, isSuccess: true)
   }
   
   @objc private func onTapFailed() {
-    guard let place = place else {
+    guard let Place = Place else {
       return
     }
-    PlaceManager.shared.changStatePlace(with: place, isSuccess: false)
+    PlaceManager.shared.changStatePlace(with: Place, isSuccess: false)
   }
 }
 
 extension ArrivedView {
-  func bindingData(place: Place) {
-    self.place = place
-    addressTitle.text = place.address
-    addressContent.text = place.fullAddres
+  func bindingData(Place: Place) {
+    self.Place = Place
+    addressTitle.text = Place.address
+    addressContent.text = Place.fullAddres
   }
 }

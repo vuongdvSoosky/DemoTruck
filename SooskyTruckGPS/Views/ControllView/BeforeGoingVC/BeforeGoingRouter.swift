@@ -13,6 +13,7 @@ class BeforeGoingRouter: Router {
   enum Route: String {
     case back
     case go
+    case save
   }
 }
 
@@ -27,6 +28,11 @@ extension BeforeGoingRouter {
     case .go:
       let goingVC = GoingVC()
       context.push(to: goingVC, animated: true)
+    case .save:
+      let tabberVC = TabbarVC()
+      tabberVC.setSelectIndex(navigate: .diary)
+      tabberVC.reloadFleetManagementTabSaveVC()
+      context.remake(maxLength: 0, to: tabberVC)
     }
   }
 }

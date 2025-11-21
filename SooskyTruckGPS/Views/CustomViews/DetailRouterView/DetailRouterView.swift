@@ -177,9 +177,9 @@ class DetailRouterView: BaseView {
   }
   
   override func binding() {
-    PlaceManager.shared.$places
+    PlaceManager.shared.$placeGroup
       .receive(on: DispatchQueue.main)
-      .sink { [weak self] places in
+      .sink { [weak self] Places in
         guard let self else {
           return
         }
@@ -194,13 +194,13 @@ extension DetailRouterView: UICollectionViewDelegate {
 
 extension DetailRouterView: UICollectionViewDataSource {
   func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-    return PlaceManager.shared.places.count
+    return PlaceManager.shared.placeGroup.places.count
   }
   
   func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
     let cell = collectionView.dequeueReusableCell(DetailRouteCell.self, for: indexPath)
-    let item = PlaceManager.shared.places[indexPath.row]
-    let lastIndex = PlaceManager.shared.places.count - 1
+    let item = PlaceManager.shared.placeGroup.places[indexPath.row]
+    let lastIndex = PlaceManager.shared.placeGroup.places.count - 1
     cell.configData(item)
     if indexPath.row == lastIndex {
       cell.hideStackView()
@@ -214,7 +214,7 @@ extension DetailRouterView: UICollectionViewDataSource {
 
 extension DetailRouterView: UICollectionViewDelegateFlowLayout {
   func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-    let lastIndex = PlaceManager.shared.places.count - 1
+    let lastIndex = PlaceManager.shared.placeGroup.places.count - 1
     if indexPath.row == lastIndex {
       return CGSize(width: self.collectionView.frame.width, height: 58)
     } else {

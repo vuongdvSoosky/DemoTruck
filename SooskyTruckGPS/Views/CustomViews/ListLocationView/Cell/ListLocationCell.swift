@@ -213,9 +213,9 @@ extension ListLocationCell {
 }
 
 extension ListLocationCell {
-  func configData(_ place: Place) {
-    self.itemPlace = place
-    self.addressTitle.text = place.address
-    self.addressContent.text = place.fullAddres
+  func configData(_ Place: Place) {
+    self.itemPlace = Place
+    self.addressTitle.text = Place.address
+    self.addressContent.text = Place.fullAddres
   }
 }

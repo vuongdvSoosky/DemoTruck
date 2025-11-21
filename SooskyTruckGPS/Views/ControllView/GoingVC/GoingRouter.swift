@@ -36,7 +36,7 @@ extension GoingRouter {
 extension GoingRouter {
   private func showArrivedView(parameters: [String: Any]? = nil) {
     guard let parameters = parameters,
-    let itemPlace = parameters["Place"] as? Place    else {
+          let itemPlace = parameters["Place"] as? Place else {
       return
     }
     
@@ -45,7 +45,7 @@ extension GoingRouter {
     }
     
     let arrivedView = ArrivedView()
-    arrivedView.bindingData(place: itemPlace)
+    arrivedView.bindingData(Place: itemPlace)
     arrivedView.showSlideView(view: topVC.view)
   }
 }

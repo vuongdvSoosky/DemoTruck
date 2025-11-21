@@ -22,7 +22,7 @@ final class APIService {
       "profile": "truck",
       "points": point,
       "snap_preventions": [
-        "ferry"
+        "bridge"
       ],
       "details": [
         "street_name",

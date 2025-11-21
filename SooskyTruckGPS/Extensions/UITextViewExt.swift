@@ -8,13 +8,13 @@
 import UIKit
 import SnapKit
 
-private var placeholderKey: UInt8 = 0
+private var PlaceholderKey: UInt8 = 0
 private var maxHeightKey: UInt8 = 0
 
 extension UITextView {
-  private var placeholderLabel: UILabel? {
-    get { objc_getAssociatedObject(self, &placeholderKey) as? UILabel }
-    set { objc_setAssociatedObject(self, &placeholderKey, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC) }
+  private var PlaceholderLabel: UILabel? {
+    get { objc_getAssociatedObject(self, &PlaceholderKey) as? UILabel }
+    set { objc_setAssociatedObject(self, &PlaceholderKey, newValue, .OBJC_ASSOCIATION_RETAIN_NONATOMIC) }
   }
   
   var maxHeight: CGFloat {
@@ -26,7 +26,7 @@ extension UITextView {
                       color: UIColor = UIColor.lightGray,
                       font: UIFont? = nil,
                       inset: UIEdgeInsets = UIEdgeInsets(top: 10, left: 12, bottom: 0, right: 0)) {
-    if placeholderLabel == nil {
+    if PlaceholderLabel == nil {
       let label = UILabel()
       label.textColor = color
       label.font = font ?? self.font
@@ -40,7 +40,7 @@ extension UITextView {
         make.trailing.lessThanOrEqualToSuperview().inset(inset.right)
       }
       
-      placeholderLabel = label
+      PlaceholderLabel = label
       
       // Theo dõi text change
       NotificationCenter.default.addObserver(
@@ -50,12 +50,12 @@ extension UITextView {
         object: self
       )
     }
-    placeholderLabel?.text = text
-    placeholderLabel?.isHidden = !self.text.isEmpty
+    PlaceholderLabel?.text = text
+    PlaceholderLabel?.isHidden = !self.text.isEmpty
   }
   
   @objc private func textDidChange() {
-    placeholderLabel?.isHidden = !self.text.isEmpty
+    PlaceholderLabel?.isHidden = !self.text.isEmpty
     adjustHeight()
   }
   

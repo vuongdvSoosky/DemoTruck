@@ -130,6 +130,14 @@ extension TabbarVC: CustomTabbarViewDelagate {
       }
   }
   
+  
+  func reloadFleetManagementTabSaveVC() {
+    if let nav = viewControllers?[1] as? UINavigationController,
+       let fleetVC = nav.viewControllers.first(where: { $0 is FleetManagementVC }) as? FleetManagementVC {
+        fleetVC.reloadDataForSavedTab()
+    }
+  }
+  
   private func showPopupTutorialView(_ index: Int) {
 //    let view = PopupTutorialView()
 //    view.setupData(TutorialType.allCases[index])

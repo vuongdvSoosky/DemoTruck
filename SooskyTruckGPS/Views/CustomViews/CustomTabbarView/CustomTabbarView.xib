@@ -107,7 +107,7 @@
                                         </userDefinedRuntimeAttribute>
                                     </userDefinedRuntimeAttributes>
                                 </view>
-                                <view tag="3" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="VWn-OU-BOo" userLabel="ReminderView">
+                                <view tag="2" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="VWn-OU-BOo" userLabel="ReminderView">
                                     <rect key="frame" x="290" y="0.0" width="145" height="68"/>
                                     <subviews>
                                         <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="icSettingTabbarUnSelected" translatesAutoresizingMaskIntoConstraints="NO" id="TtX-xP-sSt">

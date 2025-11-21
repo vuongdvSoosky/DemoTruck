@@ -202,20 +202,20 @@ class DetailRouteCell: BaseCollectionViewCell {
   }
   
   @objc private func onTapChooseItem() {
-    guard let place = itemPlace else {
+    guard let Place = itemPlace else {
       return
     }
-    onChooseItemPlace?(place)
+    onChooseItemPlace?(Place)
   }
 }
 
 extension DetailRouteCell {
-  func configData(_ place: Place) {
-    self.itemPlace = place
-    self.addressTitle.text = place.address
-    self.addressContent.text = place.fullAddres
+  func configData(_ Place: Place) {
+    self.itemPlace = Place
+    self.addressTitle.text = Place.address
+    self.addressContent.text = Place.fullAddres
     
-    guard let state = place.state else {
+    guard let state = Place.state else {
       return
     }
     stateLabel.text = state ? "Success" : "Failed"

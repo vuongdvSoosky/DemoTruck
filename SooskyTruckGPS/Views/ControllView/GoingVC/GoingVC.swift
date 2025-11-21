@@ -275,14 +275,13 @@ class GoingVC: BaseViewController {
         displayRouteOnMap(route: router, mapView: mapView)
       }.store(in: &subscriptions)
     
-    PlaceManager.shared.$places
+    PlaceManager.shared.$placeGroup
       .receive(on: DispatchQueue.main)
       .sink { [weak self] places in
         guard let self else {
           return
         }
-        self.arrayPlaces = places
-        LogManager.show(places.count)
+        self.arrayPlaces = places.places
         self.updateAnnotations()
       }.store(in: &subscriptions)
     
@@ -330,11 +329,11 @@ class GoingVC: BaseViewController {
     mapView.removeAnnotations(nonUserAnnotations)
     
     // Tạo annotation mới từ arrayPlaces
-    let annotations = arrayPlaces.map { place -> CustomAnnotation in
+    let annotations = arrayPlaces.map { Place -> CustomAnnotation in
       return CustomAnnotation(
-        coordinate: place.coordinate,
+        coordinate: Place.coordinate,
         type: "parking",
-        titlePlace: place.address
+        titlePlace: Place.address
       )
     }
     

@@ -12,12 +12,14 @@ class TruckViewModel: BaseViewModel {
   enum Action {
     case viewList
     case caculatorRoute
+    case getIndex(int: Int)
   }
   
   let action = PassthroughSubject<Action, Never>()
-  var places: [Place] = []
+  var Places: [PlaceGroup] = []
   var searchCompleter = MKLocalSearchCompleter()
   var searchSuggestions: [MKLocalSearchCompletion] = []
+  let index = CurrentValueSubject<Int?, Never>(nil)
   
   private let router = TruckRouter()
   
@@ -39,6 +41,8 @@ extension TruckViewModel {
       router.route(to: .viewlist)
     case .caculatorRoute:
       router.route(to: .loadingVC)
+    case .getIndex(int: let int):
+      self.index.send(int)
     }
   }
 }

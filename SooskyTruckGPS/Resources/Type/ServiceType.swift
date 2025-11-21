@@ -58,4 +58,19 @@ enum ServiceType: CaseIterable {
       return "Fast Food"
     }
   }
+  
+  var name: String {
+    switch self {
+    case .gas:
+      return "gas station"
+    case .bank:
+      return "bank"
+    case .carwash:
+      return "car wash"
+    case .pharmacy:
+      return "pharmacy"
+    case .fastFood:
+      return "fast food"
+    }
+  }
 }

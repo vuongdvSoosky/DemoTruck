@@ -17,7 +17,7 @@ class RouteResponseRealm: Object {
   @Persisted var hints: RouteHintsRealm?
   @Persisted var info: RouteInfoRealm?
   @Persisted var paths = List<RoutePathRealm>()
-  @Persisted var places = List<PlaceRealm>()
+  @Persisted var Places = List<PlaceRealm>()
   @Persisted var trackingRecords = List<TrackingRouterModel>()
   @Persisted var history: Bool = false
   
@@ -32,12 +32,12 @@ class RouteResponseRealm: Object {
     self.paths.append(objectsIn: model.paths.map { RoutePathRealm(from: $0) })
   }
   
-  func addPlaces(_ places: [Place]) {
-    for place in places {
-      let placeRealm = PlaceRealm(from: place)
+  func addPlaces(_ Places: [Place]) {
+    for Place in Places {
+      let PlaceRealm = PlaceRealm(from: Place)
       // Kiểm tra tránh trùng kinh/vĩ độ
-      if !self.places.contains(where: { $0.latitude == placeRealm.latitude && $0.longitude == placeRealm.longitude }) {
-        self.places.append(placeRealm)
+      if !self.Places.contains(where: { $0.latitude == PlaceRealm.latitude && $0.longitude == PlaceRealm.longitude }) {
+        self.Places.append(PlaceRealm)
       }
     }
   }
@@ -207,18 +207,16 @@ class PlaceRealm: BaseObject {
   @Persisted var latitude: Double = 0
   @Persisted var longitude: Double = 0
   @Persisted var date: Date = Date()
-  @Persisted var nameRouter: String = "MyRoute"
   @Persisted var state: Bool = false
   
-  convenience init(from place: Place) {
+  convenience init(from Place: Place) {
     self.init()
-    self.address = place.address
-    self.fullAddress = place.fullAddres
-    self.latitude = place.coordinate.latitude
-    self.longitude = place.coordinate.longitude
-    self.date = place.date
-    self.nameRouter = place.nameRouter
-    self.state = place.state ?? false
+    self.address = Place.address
+    self.fullAddress = Place.fullAddres
+    self.latitude = Place.coordinate.latitude
+    self.longitude = Place.coordinate.longitude
+    self.date = Place.date
+    self.state = Place.state ?? false
   }
   
   var coordinate: CLLocationCoordinate2D {

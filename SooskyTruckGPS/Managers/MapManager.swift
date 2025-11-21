@@ -53,10 +53,10 @@ final class MapManager: NSObject {
   // MARK: - Show Pin for Address
   func showPin(for address: String, type: String = "default", title: String? = nil, completion: ((MKPlacemark?) -> Void)? = nil) {
     let geocoder = CLGeocoder()
-    geocoder.geocodeAddressString(address) { [weak self] placemarks, error in
+    geocoder.geocodeAddressString(address) { [weak self] Placemarks, error in
       guard let self = self, let mapView = self.mapView else { return }
-      guard let placemark = placemarks?.first,
-            let location = placemark.location else {
+      guard let Placemark = Placemarks?.first,
+            let location = Placemark.location else {
         LogManager.show("Không tìm thấy địa chỉ: \(error?.localizedDescription ?? "Unknown error")")
         completion?(nil)
         return
@@ -82,7 +82,7 @@ final class MapManager: NSObject {
       
       let mkPlacemark = MKPlacemark(
         coordinate: location.coordinate,
-        addressDictionary: placemark.addressDictionary as? [String: Any]
+        addressDictionary: Placemark.addressDictionary as? [String: Any]
       )
       completion?(mkPlacemark)
     }
@@ -186,7 +186,43 @@ extension MapManager {
 
 extension MapManager {
   /// Tìm dịch vụ quanh vùng hiển thị trên bản đồ
+//  func searchServiceAroundVisibleRegion(_ query: String,
+//                                        completion: @escaping ([MKMapItem]) -> Void) {
+//    guard let mapView = mapView else {
+//      completion([])
+//      return
+//    }
+//    
+//    let request = MKLocalSearch.Request()
+//    request.naturalLanguageQuery = query
+//    request.region = mapView.region
+//    
+//    let search = MKLocalSearch(request: request)
+//    search.start { [weak self] response, error in
+//      guard let self = self, let response = response else {
+//        LogManager.show("Không tìm thấy kết quả: \(error?.localizedDescription ?? "Unknown")")
+//        completion([])
+//        return
+//      }
+//      
+//      DispatchQueue.main.async {
+//        mapView.removeAnnotations(mapView.annotations)
+//        
+//        for item in response.mapItems {
+//          let annotation = MKPointAnnotation()
+//          annotation.title = item.name
+//          annotation.subtitle = item.Placemark.title
+//          annotation.coordinate = item.Placemark.coordinate
+//          mapView.addAnnotation(annotation)
+//        }
+//      }
+//      
+//      completion(response.mapItems)
+//    }
+//  }
+  
   func searchServiceAroundVisibleRegion(_ query: String,
+                                        type: String,
                                         completion: @escaping ([MKMapItem]) -> Void) {
     guard let mapView = mapView else {
       completion([])
@@ -231,6 +267,17 @@ class CustomAnnotation: NSObject, MKAnnotation {
     self.coordinate = coordinate
     self.type = type
     self.titlePlace = titlePlace
-    LogManager.show(self.titlePlace)
+  }
+}
+
+class CustomServiceAnimation: NSObject, MKAnnotation {
+  var coordinate: CLLocationCoordinate2D
+  var type: String
+  var titlePlace: String
+  
+  init(coordinate: CLLocationCoordinate2D, type: String, titlePlace: String) {
+    self.coordinate = coordinate
+    self.type = type
+    self.titlePlace = titlePlace
   }
 }
