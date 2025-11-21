@@ -91,6 +91,7 @@ class TruckVC: BaseViewController {
   
   private lazy var arrayPlaces: [Place] = []
   private var currentPlace: Place?
+  var currentTooltipView: CustomAnnotationView?
   
   private lazy var searchTextField: UITextField = {
     let textField = UITextField()
@@ -144,25 +145,6 @@ class TruckVC: BaseViewController {
   private var pendingAnnotation: MKAnnotation?
   private var isProgrammaticRegionChange = false
   
-  private lazy var currentCalloutView: CustomAnnotationCalloutView = {
-    let view = CustomAnnotationCalloutView()
-    view.translatesAutoresizingMaskIntoConstraints = false
-    view.isHidden = true
-    view.onButtonTapped = { [weak self] in
-      guard let self, let Place = self.currentPlace else { return }
-      
-      PlaceManager.shared.addLocationToArray(Place)
-      
-      if PlaceManager.shared.isExistLocation(Place) {
-        view.configureButton(title: "Remove Stop", icon: .icTrash)
-      } else {
-        view.configureButton(title: "Add Stop", icon: .icPlus)
-        hideCalloutAnimated()
-      }
-    }
-    return view
-  }()
-  
   private let viewModel = TruckViewModel()
   
   override func viewDidLoad() {
@@ -175,7 +157,7 @@ class TruckVC: BaseViewController {
   override func setProperties() {
     searchTextField.delegate = self
     searchTextField.addTarget(self, action: #selector(textFieldDidChange(_:)), for: .editingChanged)
-    let tapGesture = UITapGestureRecognizer(target: self, action: #selector(onTapCloseCalloutView))
+    let tapGesture = UITapGestureRecognizer(target: self, action: #selector(onTapCloseCalloutView(_:)))
     tapGesture.cancelsTouchesInView = false
     view.addGestureRecognizer(tapGesture)
     
@@ -191,7 +173,7 @@ class TruckVC: BaseViewController {
     MapManager.shared.requestUserLocation { [weak self] location in
       guard let self = self, let location = location else { return }
       MapManager.shared.centerMap(on: location, zoom: 0.02)
-      self.searchNearby()
+      // self.searchNearby()
     }
   }
   
@@ -203,10 +185,6 @@ class TruckVC: BaseViewController {
           return
         }
         self.arrayPlaces = places.places
-        if self.arrayPlaces.isEmpty {
-          hideCalloutAnimated()
-        }
-        
         if self.arrayPlaces.count < 2 {
           caculatorRouteView.isHidden = true
         } else {
@@ -239,12 +217,11 @@ class TruckVC: BaseViewController {
     mapView.removeAnnotations(nonUserAnnotations)
     
     // Tạo annotation mới từ arrayPlaces
-    let annotations = arrayPlaces.map { Place -> CustomAnnotation in
-      return CustomAnnotation(
-        coordinate: Place.coordinate,
-        type: type,
-        titlePlace: Place.address
-      )
+    let annotations = arrayPlaces.map { place -> CustomAnnotation in
+      return CustomAnnotation(coordinate: place.coordinate,
+                              title: self.address,
+                              subtitle: self.desAdress,
+                              type: type)
     }
     
     mapView.addAnnotations(annotations)
@@ -280,7 +257,7 @@ class TruckVC: BaseViewController {
   }
   
   override func addComponents() {
-    self.view.addSubviews(mapView, searchView, currentCalloutView, viewList, routeStackView, collectionView, tableView)
+    self.view.addSubviews(mapView, searchView, viewList, routeStackView, collectionView, tableView)
   }
   
   override func setConstraints() {
@@ -299,11 +276,6 @@ class TruckVC: BaseViewController {
       make.left.equalToSuperview().inset(16)
       make.right.equalToSuperview()
       make.height.equalTo(56)
-    }
-    
-    currentCalloutView.snp.makeConstraints { make in
-      make.centerX.equalToSuperview()
-      make.centerY.equalToSuperview().offset(-110)
     }
     
     viewList.snp.makeConstraints { make in
@@ -329,47 +301,6 @@ class TruckVC: BaseViewController {
       make.height.equalTo(288)
     }
   }
-  
-  private func hideCalloutAnimated() {
-    guard !currentCalloutView.isHidden else { return }
-    
-    UIView.animate(withDuration: 0.25,
-                   delay: 0,
-                   options: .curveEaseIn,
-                   animations: {
-      self.currentCalloutView.alpha = 0
-      self.currentCalloutView.transform = CGAffineTransform(translationX: 0, y: 20)
-    }, completion: { _ in
-      self.currentCalloutView.isHidden = true
-      self.mapView.isUserInteractionEnabled = true
-      self.currentCalloutView.transform = .identity
-    })
-  }
-  
-  private func showCalloutAnimated() {
-    let adress = self.address
-    currentCalloutView.configure(title: adress, des: desAdress)
-    currentCalloutView.alpha = 0
-    currentCalloutView.transform = CGAffineTransform(translationX: 0, y: 20)
-    currentCalloutView.isHidden = false
-    
-    // Animation hiện lên
-    UIView.animate(withDuration: 0.5,
-                   delay: 0,
-                   usingSpringWithDamping: 0.8,
-                   initialSpringVelocity: 0.5,
-                   options: .curveEaseOut,
-                   animations: {
-      self.currentCalloutView.alpha = 1
-      self.currentCalloutView.transform = .identity
-    }, completion: { [weak self] _ in
-      guard let self else {
-        return
-      }
-      mapView.isUserInteractionEnabled = false
-      // isProgrammaticRegionChange = true
-    })
-  }
 }
 
 // MARK: - MapView Delegate
@@ -382,46 +313,76 @@ extension TruckVC: MKMapViewDelegate {
     }
   }
   
+  //  func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
+  //    if annotation is MKUserLocation { return nil }
+  //
+  //    let identifier = "customPinView"
+  //    var view = mapView.dequeueReusableAnnotationView(withIdentifier: identifier)
+  //
+  //    if view == nil {
+  //      view = MKAnnotationView(annotation: annotation, reuseIdentifier: identifier)
+  //      view?.canShowCallout = false
+  //    } else {
+  //      view?.annotation = annotation
+  //    }
+  //
+  //    if let custom = annotation as? CustomAnnotation {
+  //      switch custom.type {
+  //      case "parking":
+  //        view?.image = .icLocationStop
+  //      default:
+  //        view?.image = .icLocationEmpty
+  //      }
+  //    } else if let customService = annotation as? CustomServiceAnimation {
+  //      switch customService.type {
+  //      case "Gas Station":
+  //        view?.image = .icPinGas
+  //      case "Bank":
+  //        view?.image = .icPinBank
+  //      case "Car Wash":
+  //        view?.image = .icPinCarWash
+  //      case "Pharmacy":
+  //        view?.image = .icPinPharmacy
+  //      case "Fast Food":
+  //        view?.image = .icPinFastFood
+  //      default:
+  //        view?.image = .icPinBlank
+  //      }
+  //    }
+  //
+  //    view?.centerOffset = CGPoint(x: 0, y: -15)
+  //    let tap = UITapGestureRecognizer(target: self, action: #selector(annotationTapped(_:)))
+  //    view?.addGestureRecognizer(tap)
+  //    return view
+  //  }
+  
+  func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
+    guard let customView = view as? CustomAnnotationView else { return }
+    currentTooltipView = customView
+    customView.showTooltip()
+  }
+  
   func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
     if annotation is MKUserLocation { return nil }
+    guard let customAnno = annotation as? CustomAnnotation else { return nil }
     
-    let identifier = "customPinView"
-    var view = mapView.dequeueReusableAnnotationView(withIdentifier: identifier)
+    let identifier = customAnno.identifier
+    var view = mapView.dequeueReusableAnnotationView(withIdentifier: identifier) as? CustomAnnotationView
     
     if view == nil {
-      view = MKAnnotationView(annotation: annotation, reuseIdentifier: identifier)
-      view?.canShowCallout = false
+      view = CustomAnnotationView(annotation: customAnno, reuseIdentifier: identifier)
+      self.currentTooltipView = view
+      view?.delegate = self
     } else {
-      view?.annotation = annotation
+      view?.annotation = customAnno
+    }
+      switch customAnno.type {
+    case "parking":
+      view?.image = .icLocationStop
+    default:
+      view?.image = .icLocationEmpty
     }
     
-    if let custom = annotation as? CustomAnnotation {
-      switch custom.type {
-      case "parking":
-        view?.image = .icLocationStop
-      default:
-        view?.image = .icLocationEmpty
-      }
-    } else if let customService = annotation as? CustomServiceAnimation {
-      switch customService.type {
-      case "Gas Station":
-        view?.image = .icPinGas
-      case "Bank":
-        view?.image = .icPinBank
-      case "Car Wash":
-        view?.image = .icPinCarWash
-      case "Pharmacy":
-        view?.image = .icPinPharmacy
-      case "Fast Food":
-        view?.image = .icPinFastFood
-      default:
-        view?.image = .icPinBlank
-      }
-    }
-    
-    view?.centerOffset = CGPoint(x: 0, y: -15)
-    let tap = UITapGestureRecognizer(target: self, action: #selector(annotationTapped(_:)))
-    view?.addGestureRecognizer(tap)
     return view
   }
 }
@@ -450,11 +411,10 @@ extension TruckVC: UITextFieldDelegate {
     request.naturalLanguageQuery = keyword
     let search = MKLocalSearch(request: request)
     request.region = mapView.region
+    
     search.start { [weak self] response, error in
       guard let self = self,
             let coordinate = response?.mapItems.first?.placemark.coordinate else { return }
-      
-      // Di chuyển map để location nằm ở trung tâm
       DispatchQueue.main.async {
         let region = MKCoordinateRegion(
           center: coordinate,
@@ -463,12 +423,10 @@ extension TruckVC: UITextFieldDelegate {
         )
         self.mapView.setRegion(region, animated: true)
         
-        let annotation = CustomAnnotation(coordinate: coordinate, type: "", titlePlace: keyword)
+        let annotation = CustomAnnotation(coordinate: coordinate, title: keyword , subtitle: keyword, type: "parking")
         self.mapView.addAnnotation(annotation)
         self.pendingAnnotation = annotation
         self.currentPlace = Place(address: keyword, fullAddres: keyword , coordinate: coordinate, state: nil)
-        self.currentCalloutView.configureButton(title: "Add Stop", icon: .icPlus)
-        self.showCalloutAnimated()
       }
     }
     return true
@@ -478,32 +436,30 @@ extension TruckVC: UITextFieldDelegate {
 // MARK: - Action
 
 extension TruckVC {
-  @objc private func annotationTapped(_ sender: UITapGestureRecognizer) {
-    guard let annotationView = sender.view as? MKAnnotationView,
-          let annotation = annotationView.annotation as? CustomAnnotation else { return }
-    // xử lý hành vi khi bấm vào pin
-    pendingAnnotation = annotation
-    mapView.setCenter(annotation.coordinate, animated: true)
+  @objc private func onTapCloseCalloutView(_ gesture: UITapGestureRecognizer) {
+    let location = gesture.location(in: mapView)
     
-    if let matchedPlace = arrayPlaces.first(where: { $0.address == annotation.titlePlace }) {
-      self.currentPlace = matchedPlace
-      self.address = matchedPlace.address
-      self.currentCalloutView.configureButton(title: "Remove Stop", icon: .icTrash)
-    } else {
-      let adress = annotation.titlePlace
-      self.currentCalloutView.configure(title: adress, des: desAdress)
-      self.currentCalloutView.configureButton(title: "Add Stop", icon: .icPlus)
+    // Nếu tap nằm trong tooltip => bỏ qua
+    if let tooltip = currentTooltipView?.containerView, !tooltip.isHidden,
+       tooltip.frame.contains(location) {
+      return
     }
-    showCalloutAnimated()
-  }
-  
-  @objc private func onTapCloseCalloutView() {
-    hideCalloutAnimated()
+    
+    // Nếu tap nằm trên pin => bỏ qua
+    let tappedAnnotations = mapView.annotations.filter { annotation in
+      guard let view = mapView.view(for: annotation) else { return false }
+      return view.frame.contains(location)
+    }
+    if !tappedAnnotations.isEmpty { return }
+    
+    // Tap ngoài tooltip và pin => ẩn tooltip
+    UIView.animate(withDuration: 0.25) {
+      self.currentTooltipView?.hideTooltip()
+    }
   }
   
   @objc private func onTapViewlist() {
     viewModel.action.send(.viewList)
-    hideCalloutAnimated()
   }
   
   @objc private func onTapCaculatorRoute() {
@@ -565,12 +521,10 @@ extension TruckVC: UITableViewDelegate, UITableViewDataSource {
         )
         self.mapView.setRegion(region, animated: true)
         
-        let annotation = CustomAnnotation(coordinate: coordinate, type: "", titlePlace: dataSuggestion.title)
+        let annotation = CustomAnnotation(coordinate: coordinate, title: dataSuggestion.title , subtitle: dataSuggestion.subtitle, type: "")
         self.mapView.addAnnotation(annotation)
         self.pendingAnnotation = annotation
         self.currentPlace = Place(address: dataSuggestion.title, fullAddres: dataSuggestion.title , coordinate: coordinate, state: nil)
-        self.currentCalloutView.configureButton(title: "Add Stop", icon: .icPlus)
-        self.showCalloutAnimated()
       }
     }
   }
@@ -650,6 +604,15 @@ extension TruckVC: UICollectionViewDataSource {
   }
 }
 
-extension TruckVC: UICollectionViewDelegateFlowLayout {
-  
+extension TruckVC: CustomAnnotationViewDelagate {
+  func customAnnotationView(_ annotationView: CustomAnnotationView) {
+    guard let place = self.currentPlace else { return }
+    PlaceManager.shared.addLocationToArray(place)
+    
+    if PlaceManager.shared.isExistLocation(place) {
+      annotationView.configureButton(title: "Remove Stop", icon: .icTrash)
+    } else {
+      annotationView.configureButton(title: "Add Stop", icon: .icPlus)
+    }
+  }
 }

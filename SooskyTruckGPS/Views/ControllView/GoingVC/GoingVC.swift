@@ -329,12 +329,11 @@ class GoingVC: BaseViewController {
     mapView.removeAnnotations(nonUserAnnotations)
     
     // Tạo annotation mới từ arrayPlaces
-    let annotations = arrayPlaces.map { Place -> CustomAnnotation in
+    let annotations = arrayPlaces.map { place -> CustomAnnotation in
       return CustomAnnotation(
-        coordinate: Place.coordinate,
-        type: "parking",
-        titlePlace: Place.address
-      )
+        coordinate: place.coordinate,
+        title: "parking", subtitle: place.fullAddres,
+        type: place.address)
     }
     
     mapView.addAnnotations(annotations)

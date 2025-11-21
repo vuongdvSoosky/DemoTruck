@@ -209,12 +209,11 @@ class SaveRouteDetailVC: BaseViewController {
     mapView.removeAnnotations(nonUserAnnotations)
     
     // Tạo annotation mới từ arrayPlaces
-    let annotations = arrayPlaces.map { Place -> CustomAnnotation in
+    let annotations = arrayPlaces.map { place -> CustomAnnotation in
       return CustomAnnotation(
-        coordinate: Place.coordinate,
-        type: "parking",
-        titlePlace: Place.address
-      )
+        coordinate: place.coordinate,
+        title: "parking", subtitle: place.fullAddres,
+        type: place.address)
     }
     
     mapView.addAnnotations(annotations)
@@ -417,12 +416,12 @@ extension SaveRouteDetailVC: UITextFieldDelegate {
         )
         self.mapView.setRegion(region, animated: true)
         
-        let annotation = CustomAnnotation(coordinate: coordinate, type: "parking", titlePlace: keyword)
-        self.mapView.addAnnotation(annotation)
-        self.pendingAnnotation = annotation
-        self.currentPlace = Place(address: keyword, fullAddres: keyword , coordinate: coordinate, state: nil)
-        self.currentCalloutView.configureButton(title: "Add Stop", icon: .icPlus)
-        self.showCalloutAnimated()
+//        let annotation = CustomAnnotation(coordinate: coordinate, type: "parking", titlePlace: keyword)
+//        self.mapView.addAnnotation(annotation)
+//        self.pendingAnnotation = annotation
+//        self.currentPlace = Place(address: keyword, fullAddres: keyword , coordinate: coordinate, state: nil)
+//        self.currentCalloutView.configureButton(title: "Add Stop", icon: .icPlus)
+//        self.showCalloutAnimated()
       }
     }
     return true
@@ -439,12 +438,12 @@ extension SaveRouteDetailVC {
     pendingAnnotation = annotation
     mapView.setCenter(annotation.coordinate, animated: true)
     
-    if let matchedPlace = arrayPlaces.first(where: { $0.address == annotation.titlePlace }) {
+    if let matchedPlace = arrayPlaces.first(where: { $0.address == annotation.title }) {
       self.currentPlace = matchedPlace
       self.address = matchedPlace.address
       self.currentCalloutView.configureButton(title: "Remove Stop", icon: .icTrash)
     } else {
-      let adress = annotation.titlePlace
+      let adress = annotation.title ?? ""
       self.currentCalloutView.configure(title: adress, des: desAdress)
       self.currentCalloutView.configureButton(title: "Add Stop", icon: .icPlus)
     }
@@ -520,7 +519,7 @@ extension SaveRouteDetailVC: UITableViewDelegate, UITableViewDataSource {
         )
         self.mapView.setRegion(region, animated: true)
         
-        let annotation = CustomAnnotation(coordinate: coordinate, type: "parking", titlePlace: dataSuggestion.title)
+        let annotation = CustomAnnotation(coordinate: coordinate, title: "parking", subtitle: dataSuggestion.title, type: "")
         self.mapView.addAnnotation(annotation)
         self.pendingAnnotation = annotation
         self.currentPlace = Place(address: dataSuggestion.title, fullAddres: dataSuggestion.title , coordinate: coordinate, state: nil)

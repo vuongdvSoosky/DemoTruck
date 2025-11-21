@@ -64,7 +64,7 @@ final class CustomAnnotationCalloutView: BaseView {
     }
     
     view.isUserInteractionEnabled = true
-    view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleButtonTap)))
+   // view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleButtonTap)))
     return view
   }()
   

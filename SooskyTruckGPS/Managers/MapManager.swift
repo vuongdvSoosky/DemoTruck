@@ -50,44 +50,6 @@ final class MapManager: NSObject {
     }
   }
   
-  // MARK: - Show Pin for Address
-  func showPin(for address: String, type: String = "default", title: String? = nil, completion: ((MKPlacemark?) -> Void)? = nil) {
-    let geocoder = CLGeocoder()
-    geocoder.geocodeAddressString(address) { [weak self] Placemarks, error in
-      guard let self = self, let mapView = self.mapView else { return }
-      guard let Placemark = Placemarks?.first,
-            let location = Placemark.location else {
-        LogManager.show("Không tìm thấy địa chỉ: \(error?.localizedDescription ?? "Unknown error")")
-        completion?(nil)
-        return
-      }
-      
-      let annotation = CustomAnnotation(
-        coordinate: location.coordinate,
-        type: type, titlePlace: address
-      )
-      
-      DispatchQueue.main.async {
-        mapView.removeAnnotations(mapView.annotations)
-        mapView.addAnnotation(annotation)
-        mapView.selectAnnotation(annotation, animated: true)
-        mapView.setRegion(
-          MKCoordinateRegion(
-            center: annotation.coordinate,
-            span: MKCoordinateSpan(latitudeDelta: 500, longitudeDelta: 500)
-          ),
-          animated: true
-        )
-      }
-      
-      let mkPlacemark = MKPlacemark(
-        coordinate: location.coordinate,
-        addressDictionary: Placemark.addressDictionary as? [String: Any]
-      )
-      completion?(mkPlacemark)
-    }
-  }
-  
   // MARK: - Center Map
   
   func centerMap(on location: CLLocation, zoom: Double = 0.01) {
@@ -185,42 +147,6 @@ extension MapManager {
 }
 
 extension MapManager {
-  /// Tìm dịch vụ quanh vùng hiển thị trên bản đồ
-//  func searchServiceAroundVisibleRegion(_ query: String,
-//                                        completion: @escaping ([MKMapItem]) -> Void) {
-//    guard let mapView = mapView else {
-//      completion([])
-//      return
-//    }
-//    
-//    let request = MKLocalSearch.Request()
-//    request.naturalLanguageQuery = query
-//    request.region = mapView.region
-//    
-//    let search = MKLocalSearch(request: request)
-//    search.start { [weak self] response, error in
-//      guard let self = self, let response = response else {
-//        LogManager.show("Không tìm thấy kết quả: \(error?.localizedDescription ?? "Unknown")")
-//        completion([])
-//        return
-//      }
-//      
-//      DispatchQueue.main.async {
-//        mapView.removeAnnotations(mapView.annotations)
-//        
-//        for item in response.mapItems {
-//          let annotation = MKPointAnnotation()
-//          annotation.title = item.name
-//          annotation.subtitle = item.Placemark.title
-//          annotation.coordinate = item.Placemark.coordinate
-//          mapView.addAnnotation(annotation)
-//        }
-//      }
-//      
-//      completion(response.mapItems)
-//    }
-//  }
-  
   func searchServiceAroundVisibleRegion(_ query: String,
                                         type: String,
                                         completion: @escaping ([MKMapItem]) -> Void) {
@@ -260,13 +186,16 @@ extension MapManager {
 
 class CustomAnnotation: NSObject, MKAnnotation {
   var coordinate: CLLocationCoordinate2D
-  var type: String
-  var titlePlace: String
+  var title: String?
+  var subtitle: String?
+  var identifier: String = "CustomAnnotationView"
+  var type: String?
   
-  init(coordinate: CLLocationCoordinate2D, type: String, titlePlace: String) {
+  init(coordinate: CLLocationCoordinate2D, title: String?, subtitle: String?, type: String?) {
     self.coordinate = coordinate
+    self.title = title
+    self.subtitle = subtitle
     self.type = type
-    self.titlePlace = titlePlace
   }
 }
 

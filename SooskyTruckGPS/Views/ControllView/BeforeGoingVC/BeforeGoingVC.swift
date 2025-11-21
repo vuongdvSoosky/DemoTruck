@@ -338,12 +338,11 @@ class BeforeGoingVC: BaseViewController {
     mapKitView.removeAnnotations(nonUserAnnotations)
     
     // Tạo annotation mới từ arrayPlaces
-    let annotations = arrayPlaces.map { Place -> CustomAnnotation in
+    let annotations = arrayPlaces.map { place -> CustomAnnotation in
       return CustomAnnotation(
-        coordinate: Place.coordinate,
-        type: "parking",
-        titlePlace: Place.address
-      )
+        coordinate: place.coordinate,
+        title: "parking", subtitle: place.fullAddres,
+        type: place.address)
     }
     
     mapKitView.addAnnotations(annotations)
@@ -430,12 +429,12 @@ class BeforeGoingVC: BaseViewController {
     pendingAnnotation = annotation
     mapKitView.setCenter(annotation.coordinate, animated: true)
     
-    if let matchedPlace = arrayPlaces.first(where: { $0.address == annotation.titlePlace }) {
+    if let matchedPlace = arrayPlaces.first(where: { $0.address == annotation.title }) {
       self.currentPlace = matchedPlace
       self.address = matchedPlace.address
       self.currentCalloutView.configureButton(title: "Remove Stop", icon: .icTrash)
     } else {
-      let adress = annotation.titlePlace.shortAddress
+      let adress = annotation.title?.shortAddress ?? ""
       self.currentCalloutView.configure(title: adress, des: "")
       self.currentCalloutView.configureButton(title: "Add Stop", icon: .icPlus)
     }

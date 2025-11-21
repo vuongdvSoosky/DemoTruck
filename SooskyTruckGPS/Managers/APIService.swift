@@ -11,7 +11,7 @@ final class APIService {
   static var shared = APIService()
   
   func fetchData(with point: [[Double]]) async -> RouteResponse? {
-    guard let url = URL(string: "https://truck-gps.loca.lt/calculate-route") else {
+    guard let url = URL(string: "https://graphhopper.com/api/1/route?key=a6f0a99f-e631-4e60-8799-e6f0d869b589") else {
       return nil
     }
     var request = URLRequest(url: url)
@@ -21,6 +21,7 @@ final class APIService {
     let body: [String: Any] = [
       "profile": "truck",
       "points": point,
+      "points_encoded" : false,
       "snap_preventions": [
         "bridge"
       ],
