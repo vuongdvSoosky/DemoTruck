@@ -72,3 +72,14 @@ extension Double {
     return abs(self - other) < epsilon
   }
 }
+
+extension Double {
+  var toMiles: Double {
+    return self / 1609.344
+  }
+  
+  var milesString: String {
+    return String(format: "%.2f mi", self.toMiles)
+  }
+}
+

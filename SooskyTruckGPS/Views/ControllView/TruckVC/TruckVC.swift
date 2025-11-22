@@ -173,7 +173,7 @@ class TruckVC: BaseViewController {
     MapManager.shared.requestUserLocation { [weak self] location in
       guard let self = self, let location = location else { return }
       MapManager.shared.centerMap(on: location, zoom: 0.02)
-      // self.searchNearby()
+       searchNearby()
     }
   }
   
@@ -466,14 +466,7 @@ extension TruckVC: MKMapViewDelegate {
        self?.searchNearby(with: self?.currentQuery ?? "", type: self?.currentType ?? "")
     }
   }
-  
-  
-  func mapView(_ mapView: MKMapView, didAdd views: [MKAnnotationView]) {
-    // Không tự động hiển thị tooltip khi annotation được thêm vào
-    // Tooltip chỉ hiển thị khi người dùng chọn pin, tìm kiếm, hoặc chọn trong tableView
-  }
-  
-  
+    
   func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
     if annotation is MKUserLocation { return nil }
     

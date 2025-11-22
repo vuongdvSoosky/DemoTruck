@@ -29,6 +29,8 @@ class BeforeGoingVC: BaseViewController {
   }()
   private lazy var detailRouterView: DetailRouterView = {
     let view = DetailRouterView()
+    view.translatesAutoresizingMaskIntoConstraints = false
+    view.backgroundColor = UIColor(rgb: 0xF2F2F2)
     return view
   }()
   private lazy var containerView: UIView = {
@@ -414,12 +416,14 @@ class BeforeGoingVC: BaseViewController {
     changeStateDetailRouteTabView(UIColor(rgb: 0xFFECC4), image: .icDetaiRouteSelected)
     changeStateMapTabView(.clear, image: .icMap)
     viewModel.action.send(.getIndexToScroll(index: 1))
+    self.view.backgroundColor = UIColor(rgb: 0xF2F2F2)
   }
   
   @objc private func onTapMapView() {
     changeStateMapTabView(UIColor(rgb: 0xFFECC4), image: .icMapSeleted)
     changeStateDetailRouteTabView(.clear, image: .icDetailRoute)
     viewModel.action.send(.getIndexToScroll(index: 0))
+    self.view.backgroundColor = UIColor(rgb: 0xFFFFFF)
   }
   
   @objc private func annotationTapped(_ sender: UITapGestureRecognizer) {

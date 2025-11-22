@@ -11,7 +11,7 @@ import SnapKit
 class DetailRouterView: BaseView {
   private lazy var containerView: UIView = {
     let view = UIView()
-    
+    view.translatesAutoresizingMaskIntoConstraints = false
     return view
   }()
   
@@ -124,8 +124,8 @@ class DetailRouterView: BaseView {
   private lazy var collectionView: UICollectionView = {
     let layout = UICollectionViewFlowLayout()
     layout.scrollDirection = .vertical
-    layout.minimumInteritemSpacing = 8
-    layout.minimumLineSpacing = 8
+    layout.minimumInteritemSpacing = 16
+    layout.minimumLineSpacing = 16
     
     let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
     collectionView.showsVerticalScrollIndicator = false
@@ -185,11 +185,23 @@ class DetailRouterView: BaseView {
         }
         collectionView.reloadData()
       }.store(in: &subscriptions)
+    
+    PlaceManager.shared.$placesRouter
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] placeRouter in
+        guard let self else {
+          return
+        }
+        
+        guard let distance = placeRouter?.paths.first?.distance,
+        let time = placeRouter?.paths.first?.time else {
+          return
+        }
+        
+        self.totalDistanceValue.text = "\(distance.milesString)"
+        self.totalTimeValue.text = "\(time.toTimeString)"
+      }.store(in: &subscriptions)
   }
-}
-
-extension DetailRouterView: UICollectionViewDelegate {
-  
 }
 
 extension DetailRouterView: UICollectionViewDataSource {
@@ -214,11 +226,6 @@ extension DetailRouterView: UICollectionViewDataSource {
 
 extension DetailRouterView: UICollectionViewDelegateFlowLayout {
   func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-    let lastIndex = PlaceManager.shared.placeGroup.places.count - 1
-    if indexPath.row == lastIndex {
-      return CGSize(width: self.collectionView.frame.width, height: 58)
-    } else {
-      return CGSize(width: self.collectionView.frame.width, height: 114)
-    }
+    return CGSize(width: self.collectionView.frame.width, height: 58)
   }
 }

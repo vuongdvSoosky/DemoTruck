@@ -181,7 +181,7 @@ class DetailRouteCell: BaseCollectionViewCell {
     inforView.snp.makeConstraints { make in
       make.top.equalToSuperview()
       make.left.equalTo(icon.snp.right).offset(8)
-      make.right.equalToSuperview().offset(8)
+      make.right.equalToSuperview().offset(-8)
       make.bottom.equalTo(8)
     }
     
