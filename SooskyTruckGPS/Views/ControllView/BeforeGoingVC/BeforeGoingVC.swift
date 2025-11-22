@@ -342,7 +342,7 @@ class BeforeGoingVC: BaseViewController {
       return CustomAnnotation(
         coordinate: place.coordinate,
         title: "parking", subtitle: place.fullAddres,
-        type: place.address)
+        type: place.address, id: place.address)
     }
     
     mapKitView.addAnnotations(annotations)

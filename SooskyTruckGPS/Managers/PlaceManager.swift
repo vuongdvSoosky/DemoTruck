@@ -20,7 +20,9 @@ class PlaceManager {
 extension PlaceManager {
   func addLocationToArray(_ place: Place) {
     if !self.placeGroup.places.contains(place) {
-      self.placeGroup.places.append(place)
+      var newPlace = place
+      newPlace.type = "Location"
+      self.placeGroup.places.append(newPlace)
     } else {
       self.placeGroup.places.removeAll(where: {$0.address == place.address})
     }

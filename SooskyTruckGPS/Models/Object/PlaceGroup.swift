@@ -13,11 +13,13 @@ struct PlaceGroup {
 }
 
 struct Place: Equatable {
+  var id: String?
   var address: String
   var fullAddres: String
   var coordinate: CLLocationCoordinate2D
   var date = Date()
   var state: Bool?
+  var type: String?
   
   static func == (lhs: Place, rhs: Place) -> Bool {
     let epsilon = 1e-6

@@ -190,12 +190,14 @@ class CustomAnnotation: NSObject, MKAnnotation {
   var subtitle: String?
   var identifier: String = "CustomAnnotationView"
   var type: String?
+  var id: String?
   
-  init(coordinate: CLLocationCoordinate2D, title: String?, subtitle: String?, type: String?) {
+  init(coordinate: CLLocationCoordinate2D, title: String?, subtitle: String?, type: String?, id: String?) {
     self.coordinate = coordinate
     self.title = title
     self.subtitle = subtitle
     self.type = type
+    self.id = id
   }
 }
 
@@ -203,10 +205,12 @@ class CustomServiceAnimation: NSObject, MKAnnotation {
   var coordinate: CLLocationCoordinate2D
   var type: String
   var titlePlace: String
+  var id: String
   
-  init(coordinate: CLLocationCoordinate2D, type: String, titlePlace: String) {
+  init(coordinate: CLLocationCoordinate2D, type: String, titlePlace: String, id: String) {
     self.coordinate = coordinate
     self.type = type
     self.titlePlace = titlePlace
+    self.id = id
   }
 }

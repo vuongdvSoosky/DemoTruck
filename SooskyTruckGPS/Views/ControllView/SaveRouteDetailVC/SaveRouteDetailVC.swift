@@ -213,7 +213,7 @@ class SaveRouteDetailVC: BaseViewController {
       return CustomAnnotation(
         coordinate: place.coordinate,
         title: "parking", subtitle: place.fullAddres,
-        type: place.address)
+        type: place.address, id: "")
     }
     
     mapView.addAnnotations(annotations)
@@ -519,7 +519,7 @@ extension SaveRouteDetailVC: UITableViewDelegate, UITableViewDataSource {
         )
         self.mapView.setRegion(region, animated: true)
         
-        let annotation = CustomAnnotation(coordinate: coordinate, title: "parking", subtitle: dataSuggestion.title, type: "")
+        let annotation = CustomAnnotation(coordinate: coordinate, title: "parking", subtitle: dataSuggestion.title, type: "", id: "")
         self.mapView.addAnnotation(annotation)
         self.pendingAnnotation = annotation
         self.currentPlace = Place(address: dataSuggestion.title, fullAddres: dataSuggestion.title , coordinate: coordinate, state: nil)

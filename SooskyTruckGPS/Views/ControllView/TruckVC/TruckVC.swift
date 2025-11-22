@@ -90,8 +90,8 @@ class TruckVC: BaseViewController {
   }()
   
   private lazy var arrayPlaces: [Place] = []
-  private var currentPlace: Place?
   var currentTooltipView: CustomAnnotationView?
+  var currentTooltipID: String?
   
   private lazy var searchTextField: UITextField = {
     let textField = UITextField()
@@ -198,7 +198,7 @@ class TruckVC: BaseViewController {
             routeStackView.addArrayColorGradient(arrayColor: colors, startPoint: CGPoint(x: 0, y: 0.5), endPoint: CGPoint(x: 1, y: 0.5))
           }
         }
-        self.updateAnnotations(with: "parking")
+        self.updateAnnotations(for: places.places)
       }.store(in: &subscriptions)
     
     viewModel.index
@@ -211,20 +211,51 @@ class TruckVC: BaseViewController {
       }.store(in: &subscriptions)
   }
   
-  private func updateAnnotations(with type: String = "") {
-    // Xoá các annotation cũ trừ vị trí người dùng
-    let nonUserAnnotations = mapView.annotations.filter { !($0 is MKUserLocation) }
-    mapView.removeAnnotations(nonUserAnnotations)
+  private func updateAnnotations(for places: [Place]) {
+    let placeIds = Set(places.map { $0.id })
     
-    // Tạo annotation mới từ arrayPlaces
-    let annotations = arrayPlaces.map { place -> CustomAnnotation in
-      return CustomAnnotation(coordinate: place.coordinate,
-                              title: self.address,
-                              subtitle: self.desAdress,
-                              type: type)
+    // Lọc các annotation hiện tại
+    let annotationsToRemove = mapView.annotations.compactMap { ann -> MKAnnotation? in
+      guard let customAnn = ann as? CustomAnnotation else { return nil }
+      // Nếu annotation không nằm trong placeIds → remove
+      return placeIds.contains(customAnn.id) ? nil : customAnn
     }
-    
-    mapView.addAnnotations(annotations)
+    mapView.removeAnnotations(annotationsToRemove)
+    for place in places {
+      if let existingAnnotation = mapView.annotations.first(where: {
+        guard let ann = $0 as? CustomAnnotation else { return false }
+        return ann.id == place.id
+      }) as? CustomAnnotation {
+        // Update dữ liệu annotation
+        existingAnnotation.coordinate = place.coordinate
+        existingAnnotation.title = place.address
+        existingAnnotation.subtitle = place.fullAddres
+        existingAnnotation.type = "Location"
+        
+        if let annotationView = mapView.view(for: existingAnnotation) as? CustomAnnotationView {
+          switch existingAnnotation.type {
+          case "Location":
+            annotationView.image = .icLocationStop
+          default:
+            annotationView.image = .icLocationEmpty
+          }
+          
+          if currentTooltipView?.annotationID == existingAnnotation.id {
+            annotationView.configure(title: existingAnnotation.title ?? "", des: existingAnnotation.subtitle ?? "")
+          }
+        }
+      } else {
+        // Thêm mới annotation
+        let newAnnotation = CustomAnnotation(
+          coordinate: place.coordinate,
+          title: place.address,
+          subtitle: place.fullAddres,
+          type: "Location",
+          id: place.id
+        )
+        mapView.addAnnotation(newAnnotation)
+      }
+    }
   }
   
   private func searchNearby(with nameService: String = "", type: String = "") {
@@ -301,6 +332,21 @@ class TruckVC: BaseViewController {
       make.height.equalTo(288)
     }
   }
+  
+  @objc private func annotationTapped(_ sender: UITapGestureRecognizer) {
+    guard let customView = sender.view as? CustomAnnotationView,
+          let anno = customView.annotation as? CustomAnnotation else { return }
+    
+    if let current = currentTooltipView, current.annotationID != customView.annotationID {
+      current.hideTooltip()
+    }
+    
+    currentTooltipView = customView
+    customView.showTooltip()
+    
+    // luôn update UI theo annotation mới nhất
+    currentTooltipView?.configure(title: anno.title ?? "", des: anno.subtitle ?? "")
+  }
 }
 
 // MARK: - MapView Delegate
@@ -309,81 +355,91 @@ extension TruckVC: MKMapViewDelegate {
     // debounce tránh spam search khi người dùng kéo bản đồ liên tục
     searchDelayTimer?.invalidate()
     searchDelayTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: false) { [weak self] _ in
-      self?.searchNearby(with: self?.currentQuery ?? "", type: self?.currentType ?? "")
+      // self?.searchNearby(with: self?.currentQuery ?? "", type: self?.currentType ?? "")
     }
   }
   
-  //  func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
-  //    if annotation is MKUserLocation { return nil }
-  //
-  //    let identifier = "customPinView"
-  //    var view = mapView.dequeueReusableAnnotationView(withIdentifier: identifier)
-  //
-  //    if view == nil {
-  //      view = MKAnnotationView(annotation: annotation, reuseIdentifier: identifier)
-  //      view?.canShowCallout = false
-  //    } else {
-  //      view?.annotation = annotation
-  //    }
-  //
-  //    if let custom = annotation as? CustomAnnotation {
-  //      switch custom.type {
-  //      case "parking":
-  //        view?.image = .icLocationStop
-  //      default:
-  //        view?.image = .icLocationEmpty
-  //      }
-  //    } else if let customService = annotation as? CustomServiceAnimation {
-  //      switch customService.type {
-  //      case "Gas Station":
-  //        view?.image = .icPinGas
-  //      case "Bank":
-  //        view?.image = .icPinBank
-  //      case "Car Wash":
-  //        view?.image = .icPinCarWash
-  //      case "Pharmacy":
-  //        view?.image = .icPinPharmacy
-  //      case "Fast Food":
-  //        view?.image = .icPinFastFood
-  //      default:
-  //        view?.image = .icPinBlank
-  //      }
-  //    }
-  //
-  //    view?.centerOffset = CGPoint(x: 0, y: -15)
-  //    let tap = UITapGestureRecognizer(target: self, action: #selector(annotationTapped(_:)))
-  //    view?.addGestureRecognizer(tap)
-  //    return view
-  //  }
   
-  func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
-    guard let customView = view as? CustomAnnotationView else { return }
-    currentTooltipView = customView
-    customView.showTooltip()
+  func mapView(_ mapView: MKMapView, didAdd views: [MKAnnotationView]) {
+    guard let first = views.first as? CustomAnnotationView else { return }
+    
+    // Nếu hiện không có tooltip nào, tự show tooltip đầu tiên
+    if currentTooltipView == nil {
+      first.showTooltip()
+      currentTooltipView = first
+    }
   }
+  
   
   func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
     if annotation is MKUserLocation { return nil }
-    guard let customAnno = annotation as? CustomAnnotation else { return nil }
     
-    let identifier = customAnno.identifier
-    var view = mapView.dequeueReusableAnnotationView(withIdentifier: identifier) as? CustomAnnotationView
-    
-    if view == nil {
-      view = CustomAnnotationView(annotation: customAnno, reuseIdentifier: identifier)
-      self.currentTooltipView = view
-      view?.delegate = self
-    } else {
-      view?.annotation = customAnno
-    }
+    // MARK: - CustomAnnotation
+    if let customAnno = annotation as? CustomAnnotation {
+      let identifier = customAnno.identifier
+      var view = mapView.dequeueReusableAnnotationView(withIdentifier: identifier) as? CustomAnnotationView
+      
+      if view == nil {
+        view = CustomAnnotationView(annotation: customAnno, reuseIdentifier: identifier)
+        view?.delegate = self
+      } else {
+        view?.annotation = customAnno
+      }
+      
+      // Gán ID annotation
+      view?.annotationID = customAnno.id
+      
+      // Configure tooltip đúng dữ liệu của annotation hiện tại
+      view?.configure(title: customAnno.title ?? "", des: customAnno.subtitle ?? "")
+      
+      // Chọn icon dựa vào type
       switch customAnno.type {
-    case "parking":
-      view?.image = .icLocationStop
-    default:
-      view?.image = .icLocationEmpty
+      case "Location":
+        view?.image = .icLocationStop
+      default:
+        view?.image = .icLocationEmpty
+      }
+      
+      // Tap gesture
+      if view?.gestureRecognizers?.isEmpty ?? true {
+        let tap = UITapGestureRecognizer(target: self, action: #selector(annotationTapped(_:)))
+        view?.addGestureRecognizer(tap)
+      }
+      
+      return view
     }
     
-    return view
+    // MARK: - CustomServiceAnimation
+    else if let customService = annotation as? CustomServiceAnimation {
+      let identifier = customService.id
+      var view = mapView.dequeueReusableAnnotationView(withIdentifier: identifier)
+      
+      if view == nil {
+        view = MKAnnotationView(annotation: customService, reuseIdentifier: identifier)
+      } else {
+        view?.annotation = customService
+      }
+      
+      // Chọn icon dựa vào type
+      switch customService.type {
+      case "Gas Station":
+        view?.image = .icPinGas
+      case "Bank":
+        view?.image = .icPinBank
+      case "Car Wash":
+        view?.image = .icPinCarWash
+      case "Pharmacy":
+        view?.image = .icPinPharmacy
+      case "Fast Food":
+        view?.image = .icPinFastFood
+      default:
+        view?.image = .icPinBlank
+      }
+      
+      return view
+    }
+    
+    return nil
   }
 }
 
@@ -423,10 +479,8 @@ extension TruckVC: UITextFieldDelegate {
         )
         self.mapView.setRegion(region, animated: true)
         
-        let annotation = CustomAnnotation(coordinate: coordinate, title: keyword , subtitle: keyword, type: "parking")
+        let annotation = CustomAnnotation(coordinate: coordinate, title: keyword , subtitle: keyword, type: "parking", id: keyword)
         self.mapView.addAnnotation(annotation)
-        self.pendingAnnotation = annotation
-        self.currentPlace = Place(address: keyword, fullAddres: keyword , coordinate: coordinate, state: nil)
       }
     }
     return true
@@ -495,10 +549,7 @@ extension TruckVC: UITableViewDelegate, UITableViewDataSource {
   }
   
   func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-    guard indexPath.row < viewModel.searchSuggestions.count else {
-      LogManager.show("Invalid suggestion index: \(indexPath.row), count: \(viewModel.searchSuggestions.count)")
-      return
-    }
+    guard indexPath.row < viewModel.searchSuggestions.count else { return }
     let dataSuggestion = viewModel.searchSuggestions[indexPath.row]
     searchTextField.text = dataSuggestion.title
     searchTextField.resignFirstResponder()
@@ -506,10 +557,7 @@ extension TruckVC: UITableViewDelegate, UITableViewDataSource {
     
     let request = MKLocalSearch.Request()
     request.naturalLanguageQuery = dataSuggestion.title
-    self.address = dataSuggestion.title
-    self.desAdress = dataSuggestion.subtitle
     let search = MKLocalSearch(request: request)
-    request.region = mapView.region
     search.start { [weak self] response, error in
       guard let self = self,
             let coordinate = response?.mapItems.first?.placemark.coordinate else { return }
@@ -521,10 +569,8 @@ extension TruckVC: UITableViewDelegate, UITableViewDataSource {
         )
         self.mapView.setRegion(region, animated: true)
         
-        let annotation = CustomAnnotation(coordinate: coordinate, title: dataSuggestion.title , subtitle: dataSuggestion.subtitle, type: "")
+        let annotation = CustomAnnotation(coordinate: coordinate, title: dataSuggestion.title , subtitle: dataSuggestion.subtitle, type: "", id:  dataSuggestion.title)
         self.mapView.addAnnotation(annotation)
-        self.pendingAnnotation = annotation
-        self.currentPlace = Place(address: dataSuggestion.title, fullAddres: dataSuggestion.title , coordinate: coordinate, state: nil)
       }
     }
   }
@@ -605,8 +651,8 @@ extension TruckVC: UICollectionViewDataSource {
 }
 
 extension TruckVC: CustomAnnotationViewDelagate {
-  func customAnnotationView(_ annotationView: CustomAnnotationView) {
-    guard let place = self.currentPlace else { return }
+  func customAnnotationView(_ annotationView: CustomAnnotationView, place: Place?) {
+    guard let place = place else { return }
     PlaceManager.shared.addLocationToArray(place)
     
     if PlaceManager.shared.isExistLocation(place) {

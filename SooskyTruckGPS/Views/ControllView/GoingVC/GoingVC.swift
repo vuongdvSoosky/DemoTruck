@@ -333,7 +333,7 @@ class GoingVC: BaseViewController {
       return CustomAnnotation(
         coordinate: place.coordinate,
         title: "parking", subtitle: place.fullAddres,
-        type: place.address)
+        type: place.address, id: "")
     }
     
     mapView.addAnnotations(annotations)

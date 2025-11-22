@@ -10,10 +10,11 @@ import MapKit
 import SnapKit
 
 protocol CustomAnnotationViewDelagate: AnyObject {
-  func customAnnotationView(_ annotationView: CustomAnnotationView)
+  func customAnnotationView(_ annotationView: CustomAnnotationView, place: Place?)
 }
 
 class CustomAnnotationView: MKAnnotationView {
+   var annotationID: String?
   
   // MARK: - UI Components
   let containerView: UIView = {
@@ -68,6 +69,7 @@ class CustomAnnotationView: MKAnnotationView {
   }()
   
   weak var delegate: CustomAnnotationViewDelagate?
+  private var currentPlace: Place?
   
   // MARK: - Override Annotation
   override var annotation: MKAnnotation? {
@@ -145,8 +147,8 @@ class CustomAnnotationView: MKAnnotationView {
   
   private func configureView() {
     guard let ann = annotation as? CustomAnnotation else { return }
-    titleLabel.text = ann.title
-    subtitleLabel.text = ann.subtitle
+//    titleLabel.text = ann.title
+//    subtitleLabel.text = ann.subtitle
   }
   
   func configureButton(title: String, icon: UIImage) {
@@ -154,9 +156,18 @@ class CustomAnnotationView: MKAnnotationView {
     removeIcon.image = icon
   }
   
+  func configure(title: String, des: String) {
+    titleLabel.text = title
+    subtitleLabel.text = des
+    guard let coordinate = annotation?.coordinate else {
+      return
+    }
+    self.currentPlace = Place(id: title, address: title, fullAddres: des , coordinate: coordinate, state: nil)
+  }
+  
   // MARK: - Action
   @objc private func didTapRemove() {
-    delegate?.customAnnotationView(self)
+    delegate?.customAnnotationView(self, place: currentPlace)
   }
 }
 
