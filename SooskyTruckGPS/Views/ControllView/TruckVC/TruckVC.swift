@@ -337,15 +337,25 @@ class TruckVC: BaseViewController {
     guard let customView = sender.view as? CustomAnnotationView,
           let anno = customView.annotation as? CustomAnnotation else { return }
     
-    if let current = currentTooltipView, current.annotationID != customView.annotationID {
+    showTooltipForAnnotation(anno)
+  }
+  
+  // MARK: - Helper: Hiển thị tooltip cho annotation
+  private func showTooltipForAnnotation(_ annotation: CustomAnnotation) {
+    guard let annotationView = mapView.view(for: annotation) as? CustomAnnotationView else {
+      return
+    }
+    
+    // Ẩn tooltip hiện tại nếu có
+    if let current = currentTooltipView, current.annotationID != annotationView.annotationID {
       current.hideTooltip()
     }
     
-    currentTooltipView = customView
-    customView.showTooltip()
-    
-    // luôn update UI theo annotation mới nhất
-    currentTooltipView?.configure(title: anno.title ?? "", des: anno.subtitle ?? "")
+    // Hiển thị tooltip cho annotation được chọn
+    currentTooltipView = annotationView
+    currentTooltipID = annotation.id
+    annotationView.showTooltip()
+    annotationView.configure(title: annotation.title ?? "", des: annotation.subtitle ?? "")
   }
 }
 
@@ -361,13 +371,8 @@ extension TruckVC: MKMapViewDelegate {
   
   
   func mapView(_ mapView: MKMapView, didAdd views: [MKAnnotationView]) {
-    guard let first = views.first as? CustomAnnotationView else { return }
-    
-    // Nếu hiện không có tooltip nào, tự show tooltip đầu tiên
-    if currentTooltipView == nil {
-      first.showTooltip()
-      currentTooltipView = first
-    }
+    // Không tự động hiển thị tooltip khi annotation được thêm vào
+    // Tooltip chỉ hiển thị khi người dùng chọn pin, tìm kiếm, hoặc chọn trong tableView
   }
   
   
@@ -481,6 +486,11 @@ extension TruckVC: UITextFieldDelegate {
         
         let annotation = CustomAnnotation(coordinate: coordinate, title: keyword , subtitle: keyword, type: "parking", id: keyword)
         self.mapView.addAnnotation(annotation)
+        
+        // Hiển thị tooltip sau khi tìm kiếm
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+          self.showTooltipForAnnotation(annotation)
+        }
       }
     }
     return true
@@ -571,6 +581,11 @@ extension TruckVC: UITableViewDelegate, UITableViewDataSource {
         
         let annotation = CustomAnnotation(coordinate: coordinate, title: dataSuggestion.title , subtitle: dataSuggestion.subtitle, type: "", id:  dataSuggestion.title)
         self.mapView.addAnnotation(annotation)
+        
+        // Hiển thị tooltip sau khi chọn trong tableView
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+          self.showTooltipForAnnotation(annotation)
+        }
       }
     }
   }
