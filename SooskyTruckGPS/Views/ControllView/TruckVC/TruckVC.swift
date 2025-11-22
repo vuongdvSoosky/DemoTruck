@@ -199,6 +199,8 @@ class TruckVC: BaseViewController {
           }
         }
         self.updateAnnotations(for: places.places)
+        // Cập nhật lại icon của service annotations khi placeGroup thay đổi
+        self.updateServiceAnnotationsIcons()
       }.store(in: &subscriptions)
     
     viewModel.index
@@ -209,6 +211,42 @@ class TruckVC: BaseViewController {
         }
         collectionView.reloadData()
       }.store(in: &subscriptions)
+  }
+  
+  // MARK: - Helper: Cập nhật icon của service annotations dựa trên placeGroup
+  private func updateServiceAnnotationsIcons() {
+    for annotation in mapView.annotations {
+      guard let serviceAnnotation = annotation as? CustomServiceAnimation,
+            let annotationView = mapView.view(for: serviceAnnotation) as? CustomAnnotationView else {
+        continue
+      }
+      
+      // Kiểm tra xem service đã có trong placeGroup chưa (so sánh bằng coordinate và type)
+      let place = Place(id: serviceAnnotation.id, address: serviceAnnotation.title ?? "", fullAddres: serviceAnnotation.subtitle ?? "", coordinate: serviceAnnotation.coordinate, state: nil, type: serviceAnnotation.type)
+      let isInPlaceGroup = PlaceManager.shared.isExistLocation(place)
+      
+      // Cập nhật icon
+      if isInPlaceGroup {
+        // Đã thêm vào placeGroup → hiển thị icon theo type
+        switch serviceAnnotation.type {
+        case "Gas Station":
+          annotationView.image = .icPinGas
+        case "Bank":
+          annotationView.image = .icPinBank
+        case "Car Wash":
+          annotationView.image = .icPinCarWash
+        case "Pharmacy":
+          annotationView.image = .icPinPharmacy
+        case "Fast Food":
+          annotationView.image = .icPinFastFood
+        default:
+          annotationView.image = .icPinBlank
+        }
+      } else {
+        // Chưa thêm vào placeGroup → hiển thị icLocationEmpty
+        annotationView.image = .icLocationEmpty
+      }
+    }
   }
   
   private func updateAnnotations(for places: [Place]) {
@@ -230,27 +268,49 @@ class TruckVC: BaseViewController {
         existingAnnotation.coordinate = place.coordinate
         existingAnnotation.title = place.address
         existingAnnotation.subtitle = place.fullAddres
-        existingAnnotation.type = "Location"
+        // Giữ type từ place nếu có, nếu không thì set "Location"
+        existingAnnotation.type = place.type ?? "Location"
         
+        // Force update view để đảm bảo icon được cập nhật
         if let annotationView = mapView.view(for: existingAnnotation) as? CustomAnnotationView {
+          // Chọn icon dựa vào type (có thể là Location hoặc Service type)
           switch existingAnnotation.type {
           case "Location":
             annotationView.image = .icLocationStop
+          case "Gas Station":
+            annotationView.image = .icPinGas
+          case "Bank":
+            annotationView.image = .icPinBank
+          case "Car Wash":
+            annotationView.image = .icPinCarWash
+          case "Pharmacy":
+            annotationView.image = .icPinPharmacy
+          case "Fast Food":
+            annotationView.image = .icPinFastFood
           default:
-            annotationView.image = .icLocationEmpty
+            // Nếu type không hợp lệ, kiểm tra lại từ place
+            if place.type == "Location" {
+              annotationView.image = .icLocationStop
+            } else {
+              annotationView.image = .icLocationEmpty
+            }
           }
           
           if currentTooltipView?.annotationID == existingAnnotation.id {
             annotationView.configure(title: existingAnnotation.title ?? "", des: existingAnnotation.subtitle ?? "")
           }
+        } else {
+          // Nếu view chưa tồn tại, remove và add lại annotation để force tạo view mới
+          mapView.removeAnnotation(existingAnnotation)
+          mapView.addAnnotation(existingAnnotation)
         }
       } else {
-        // Thêm mới annotation
+        // Thêm mới annotation - giữ type từ place nếu có
         let newAnnotation = CustomAnnotation(
           coordinate: place.coordinate,
           title: place.address,
           subtitle: place.fullAddres,
-          type: "Location",
+          type: place.type ?? "Location",
           id: place.id
         )
         mapView.addAnnotation(newAnnotation)
@@ -334,10 +394,14 @@ class TruckVC: BaseViewController {
   }
   
   @objc private func annotationTapped(_ sender: UITapGestureRecognizer) {
-    guard let customView = sender.view as? CustomAnnotationView,
-          let anno = customView.annotation as? CustomAnnotation else { return }
+    guard let customView = sender.view as? CustomAnnotationView else { return }
     
-    showTooltipForAnnotation(anno)
+    // Xử lý cả CustomAnnotation và CustomServiceAnimation
+    if let anno = customView.annotation as? CustomAnnotation {
+      showTooltipForAnnotation(anno)
+    } else if let serviceAnno = customView.annotation as? CustomServiceAnimation {
+      showTooltipForServiceAnnotation(serviceAnno)
+    }
   }
   
   // MARK: - Helper: Hiển thị tooltip cho annotation
@@ -356,6 +420,40 @@ class TruckVC: BaseViewController {
     currentTooltipID = annotation.id
     annotationView.showTooltip()
     annotationView.configure(title: annotation.title ?? "", des: annotation.subtitle ?? "")
+    
+    // Kiểm tra xem đã có trong placeGroup chưa
+    let place = Place(id: annotation.id, address: annotation.title ?? "", fullAddres: annotation.subtitle ?? "", coordinate: annotation.coordinate, state: nil, type: annotation.type)
+    if PlaceManager.shared.isExistLocation(place) {
+      annotationView.configureButton(title: "Remove Stop", icon: .icTrash)
+    } else {
+      annotationView.configureButton(title: "Add Stop", icon: .icPlus)
+    }
+  }
+  
+  // MARK: - Helper: Hiển thị tooltip cho service annotation
+  private func showTooltipForServiceAnnotation(_ annotation: CustomServiceAnimation) {
+    guard let annotationView = mapView.view(for: annotation) as? CustomAnnotationView else {
+      return
+    }
+    
+    // Ẩn tooltip hiện tại nếu có
+    if let current = currentTooltipView, current.annotationID != annotationView.annotationID {
+      current.hideTooltip()
+    }
+    
+    // Hiển thị tooltip cho service annotation được chọn
+    currentTooltipView = annotationView
+    currentTooltipID = annotation.id
+    annotationView.showTooltip()
+    annotationView.configure(title: annotation.title ?? "", des: annotation.subtitle ?? "")
+    
+    // Kiểm tra xem đã có trong placeGroup chưa
+    let place = Place(id: annotation.id, address: annotation.title ?? "", fullAddres: annotation.subtitle ?? "", coordinate: annotation.coordinate, state: nil, type: annotation.type)
+    if PlaceManager.shared.isExistLocation(place) {
+      annotationView.configureButton(title: "Remove Stop", icon: .icTrash)
+    } else {
+      annotationView.configureButton(title: "Add Stop", icon: .icPlus)
+    }
   }
 }
 
@@ -401,9 +499,22 @@ extension TruckVC: MKMapViewDelegate {
       switch customAnno.type {
       case "Location":
         view?.image = .icLocationStop
+      case "Gas Station":
+        view?.image = .icPinGas
+      case "Bank":
+        view?.image = .icPinBank
+      case "Car Wash":
+        view?.image = .icPinCarWash
+      case "Pharmacy":
+        view?.image = .icPinPharmacy
+      case "Fast Food":
+        view?.image = .icPinFastFood
       default:
         view?.image = .icLocationEmpty
       }
+      
+      // Ẩn tooltip mặc định (chỉ hiển thị khi tap)
+      view?.hideTooltip()
       
       // Tap gesture
       if view?.gestureRecognizers?.isEmpty ?? true {
@@ -416,29 +527,55 @@ extension TruckVC: MKMapViewDelegate {
     
     // MARK: - CustomServiceAnimation
     else if let customService = annotation as? CustomServiceAnimation {
-      let identifier = customService.id
-      var view = mapView.dequeueReusableAnnotationView(withIdentifier: identifier)
+      let identifier = customService.identifier
+      var view = mapView.dequeueReusableAnnotationView(withIdentifier: identifier) as? CustomAnnotationView
       
       if view == nil {
-        view = MKAnnotationView(annotation: customService, reuseIdentifier: identifier)
+        view = CustomAnnotationView(annotation: customService, reuseIdentifier: identifier)
+        view?.delegate = self
       } else {
         view?.annotation = customService
       }
       
-      // Chọn icon dựa vào type
-      switch customService.type {
-      case "Gas Station":
-        view?.image = .icPinGas
-      case "Bank":
-        view?.image = .icPinBank
-      case "Car Wash":
-        view?.image = .icPinCarWash
-      case "Pharmacy":
-        view?.image = .icPinPharmacy
-      case "Fast Food":
-        view?.image = .icPinFastFood
-      default:
-        view?.image = .icPinBlank
+      // Gán ID annotation
+      view?.annotationID = customService.id
+      
+      // Configure tooltip đúng dữ liệu của annotation hiện tại
+      view?.configure(title: customService.title ?? "", des: customService.subtitle ?? "")
+      
+      // Kiểm tra xem service đã được thêm vào placeGroup chưa
+      let place = Place(id: customService.id, address: customService.title ?? "", fullAddres: customService.subtitle ?? "", coordinate: customService.coordinate, state: nil, type: customService.type)
+      let isInPlaceGroup = PlaceManager.shared.isExistLocation(place)
+      
+      // Chọn icon: nếu chưa thêm vào placeGroup → icLocationEmpty, nếu đã thêm → icon theo type
+      if isInPlaceGroup {
+        // Đã thêm vào placeGroup → hiển thị icon theo type
+        switch customService.type {
+        case "Gas Station":
+          view?.image = .icPinGas
+        case "Bank":
+          view?.image = .icPinBank
+        case "Car Wash":
+          view?.image = .icPinCarWash
+        case "Pharmacy":
+          view?.image = .icPinPharmacy
+        case "Fast Food":
+          view?.image = .icPinFastFood
+        default:
+          view?.image = .icPinBlank
+        }
+      } else {
+        // Chưa thêm vào placeGroup → hiển thị icLocationEmpty
+        view?.image = .icLocationEmpty
+      }
+      
+      // Ẩn tooltip mặc định (chỉ hiển thị khi tap)
+      view?.hideTooltip()
+      
+      // Tap gesture để hiển thị tooltip
+      if view?.gestureRecognizers?.isEmpty ?? true {
+        let tap = UITapGestureRecognizer(target: self, action: #selector(annotationTapped(_:)))
+        view?.addGestureRecognizer(tap)
       }
       
       return view
@@ -691,10 +828,43 @@ extension TruckVC: CustomAnnotationViewDelagate {
     guard let place = place else { return }
     PlaceManager.shared.addLocationToArray(place)
     
-    if PlaceManager.shared.isExistLocation(place) {
+    let isInPlaceGroup = PlaceManager.shared.isExistLocation(place)
+    
+    // Cập nhật lại button state sau khi thêm/xóa
+    if isInPlaceGroup {
       annotationView.configureButton(title: "Remove Stop", icon: .icTrash)
     } else {
       annotationView.configureButton(title: "Add Stop", icon: .icPlus)
+    }
+    
+    // Cập nhật lại icon cho service annotation nếu đang hiển thị
+    if let serviceAnnotation = annotationView.annotation as? CustomServiceAnimation {
+      if isInPlaceGroup {
+        // Đã thêm vào placeGroup → hiển thị icon theo type
+        switch serviceAnnotation.type {
+        case "Gas Station":
+          annotationView.image = .icPinGas
+        case "Bank":
+          annotationView.image = .icPinBank
+        case "Car Wash":
+          annotationView.image = .icPinCarWash
+        case "Pharmacy":
+          annotationView.image = .icPinPharmacy
+        case "Fast Food":
+          annotationView.image = .icPinFastFood
+        default:
+          annotationView.image = .icPinBlank
+        }
+      } else {
+        // Chưa thêm vào placeGroup → hiển thị icLocationEmpty
+        annotationView.image = .icLocationEmpty
+      }
+    }
+    
+    // Cập nhật lại tooltip nếu đang hiển thị
+    if currentTooltipView?.annotationID == annotationView.annotationID {
+      annotationView.configureButton(title: isInPlaceGroup ? "Remove Stop" : "Add Stop", 
+                                     icon: isInPlaceGroup ? .icTrash : .icPlus)
     }
   }
 }

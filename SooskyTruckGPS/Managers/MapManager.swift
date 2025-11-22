@@ -168,13 +168,33 @@ extension MapManager {
       }
       
       DispatchQueue.main.async {
-        mapView.removeAnnotations(mapView.annotations)
+        // Chỉ xóa các service annotations cũ, giữ lại Location annotations
+        let serviceAnnotations = mapView.annotations.filter { $0 is CustomServiceAnimation }
+        mapView.removeAnnotations(serviceAnnotations)
         
+        // Tạo CustomServiceAnimation với đầy đủ thông tin
         for item in response.mapItems {
-          let annotation = MKPointAnnotation()
+          // Format địa chỉ đầy đủ từ placemark
+          var addressParts: [String] = []
+          if let city = item.placemark.locality {
+            addressParts.append(city)
+          }
+          if let state = item.placemark.administrativeArea {
+            addressParts.append(state)
+          }
+          if let country = item.placemark.country {
+            addressParts.append(country)
+          }
+          let fullAddress = addressParts.isEmpty ? (item.placemark.title ?? "") : addressParts.joined(separator: ", ")
+          
+          let annotation = CustomServiceAnimation(
+            coordinate: item.placemark.coordinate,
+            type: type,
+            titlePlace: item.name ?? "",
+            id: UUID().uuidString
+          )
           annotation.title = item.name
-          annotation.subtitle = item.placemark.title
-          annotation.coordinate = item.placemark.coordinate
+          annotation.subtitle = fullAddress
           mapView.addAnnotation(annotation)
         }
       }
@@ -206,11 +226,15 @@ class CustomServiceAnimation: NSObject, MKAnnotation {
   var type: String
   var titlePlace: String
   var id: String
+  var title: String?
+  var subtitle: String?
+  var identifier: String = "CustomAnnotationView"
   
   init(coordinate: CLLocationCoordinate2D, type: String, titlePlace: String, id: String) {
     self.coordinate = coordinate
     self.type = type
     self.titlePlace = titlePlace
     self.id = id
+    self.title = titlePlace
   }
 }

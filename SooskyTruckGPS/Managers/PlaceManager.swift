@@ -21,7 +21,15 @@ extension PlaceManager {
   func addLocationToArray(_ place: Place) {
     if !self.placeGroup.places.contains(place) {
       var newPlace = place
-      newPlace.type = "Location"
+      // Nếu không phải service type (Gas Station, Bank, etc.) thì set type = "Location"
+      // Giữ nguyên type nếu là service type
+      let serviceTypes = ["Gas Station", "Bank", "Car Wash", "Pharmacy", "Fast Food"]
+      if let placeType = newPlace.type, serviceTypes.contains(placeType) {
+        // Giữ nguyên type của service
+      } else {
+        // Location bình thường hoặc type không hợp lệ → set "Location"
+        newPlace.type = "Location"
+      }
       self.placeGroup.places.append(newPlace)
     } else {
       self.placeGroup.places.removeAll(where: {$0.address == place.address})

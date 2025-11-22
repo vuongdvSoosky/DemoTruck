@@ -162,7 +162,16 @@ class CustomAnnotationView: MKAnnotationView {
     guard let coordinate = annotation?.coordinate else {
       return
     }
-    self.currentPlace = Place(id: title, address: title, fullAddres: des , coordinate: coordinate, state: nil)
+    
+    // Lấy type từ annotation nếu là CustomServiceAnimation
+    var placeType: String? = nil
+    if let serviceAnnotation = annotation as? CustomServiceAnimation {
+      placeType = serviceAnnotation.type
+    } else if let customAnnotation = annotation as? CustomAnnotation {
+      placeType = customAnnotation.type
+    }
+    
+    self.currentPlace = Place(id: title, address: title, fullAddres: des, coordinate: coordinate, state: nil, type: placeType)
   }
   
   // MARK: - Action
