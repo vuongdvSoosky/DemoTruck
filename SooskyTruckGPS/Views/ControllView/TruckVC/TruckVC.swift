@@ -199,8 +199,8 @@ class TruckVC: BaseViewController {
           }
         }
         self.updateAnnotations(for: places.places)
-        // Cập nhật lại icon của service annotations khi placeGroup thay đổi
-        self.updateServiceAnnotationsIcons()
+        // Không cần update tất cả service annotations ở đây
+        // Chỉ update service annotation cụ thể trong CustomAnnotationViewDelagate
       }.store(in: &subscriptions)
     
     viewModel.index
@@ -463,7 +463,7 @@ extension TruckVC: MKMapViewDelegate {
     // debounce tránh spam search khi người dùng kéo bản đồ liên tục
     searchDelayTimer?.invalidate()
     searchDelayTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: false) { [weak self] _ in
-      // self?.searchNearby(with: self?.currentQuery ?? "", type: self?.currentType ?? "")
+       self?.searchNearby(with: self?.currentQuery ?? "", type: self?.currentType ?? "")
     }
   }
   
@@ -826,8 +826,8 @@ extension TruckVC: UICollectionViewDataSource {
 extension TruckVC: CustomAnnotationViewDelagate {
   func customAnnotationView(_ annotationView: CustomAnnotationView, place: Place?) {
     guard let place = place else { return }
+    let wasInPlaceGroup = PlaceManager.shared.isExistLocation(place)
     PlaceManager.shared.addLocationToArray(place)
-    
     let isInPlaceGroup = PlaceManager.shared.isExistLocation(place)
     
     // Cập nhật lại button state sau khi thêm/xóa
@@ -837,27 +837,30 @@ extension TruckVC: CustomAnnotationViewDelagate {
       annotationView.configureButton(title: "Add Stop", icon: .icPlus)
     }
     
-    // Cập nhật lại icon cho service annotation nếu đang hiển thị
+    // Chỉ cập nhật icon cho service annotation đang được thao tác (thêm/xóa)
     if let serviceAnnotation = annotationView.annotation as? CustomServiceAnimation {
-      if isInPlaceGroup {
-        // Đã thêm vào placeGroup → hiển thị icon theo type
-        switch serviceAnnotation.type {
-        case "Gas Station":
-          annotationView.image = .icPinGas
-        case "Bank":
-          annotationView.image = .icPinBank
-        case "Car Wash":
-          annotationView.image = .icPinCarWash
-        case "Pharmacy":
-          annotationView.image = .icPinPharmacy
-        case "Fast Food":
-          annotationView.image = .icPinFastFood
-        default:
-          annotationView.image = .icPinBlank
+      // Chỉ update icon nếu trạng thái thay đổi (từ có → không có hoặc ngược lại)
+      if wasInPlaceGroup != isInPlaceGroup {
+        if isInPlaceGroup {
+          // Đã thêm vào placeGroup → hiển thị icon theo type
+          switch serviceAnnotation.type {
+          case "Gas Station":
+            annotationView.image = .icPinGas
+          case "Bank":
+            annotationView.image = .icPinBank
+          case "Car Wash":
+            annotationView.image = .icPinCarWash
+          case "Pharmacy":
+            annotationView.image = .icPinPharmacy
+          case "Fast Food":
+            annotationView.image = .icPinFastFood
+          default:
+            annotationView.image = .icPinBlank
+          }
+        } else {
+          // Chưa thêm vào placeGroup → hiển thị icLocationEmpty
+          annotationView.image = .icLocationEmpty
         }
-      } else {
-        // Chưa thêm vào placeGroup → hiển thị icLocationEmpty
-        annotationView.image = .icLocationEmpty
       }
     }
     
