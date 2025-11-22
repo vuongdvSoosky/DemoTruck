@@ -246,7 +246,7 @@ class FleetManagementVC: BaseViewController {
   }
   
   override func binding() {
-    viewModel.items
+    viewModel.saveRouteItems
       .receive(on: DispatchQueue.main)
       .sink { [weak self] Places in
         guard let self else {
@@ -322,11 +322,9 @@ extension FleetManagementVC {
 extension FleetManagementVC: UICollectionViewDelegate {
   func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
     if collectionView === self.collectionView {
-      let item = viewModel.items.value?[indexPath.row]
-      LogManager.show(item)
+      viewModel.action.send(.getSaveRouteItem(index: indexPath.row))
     } else {
-      let item = viewModel.itemHistory.value?[indexPath.row]
-      LogManager.show(item)
+      viewModel.action.send(.getHistoryItem(index: indexPath.row))
     }
   }
 }
@@ -334,7 +332,7 @@ extension FleetManagementVC: UICollectionViewDelegate {
 extension FleetManagementVC: UICollectionViewDataSource {
   func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
     if collectionView === self.collectionView {
-      return viewModel.items.value?.count ?? 0
+      return viewModel.saveRouteItems.value?.count ?? 0
     } else {
       return viewModel.itemHistory.value?.count ?? 0
     }
@@ -344,7 +342,7 @@ extension FleetManagementVC: UICollectionViewDataSource {
     
     if collectionView === self.collectionView {
       let cell = collectionView.dequeueReusableCell(ItemFleetCell.self, for: indexPath)
-      if let item = viewModel.items.value?[indexPath.row] {
+      if let item = viewModel.saveRouteItems.value?[indexPath.row] {
         cell.configData(with: item)
       }
       return cell

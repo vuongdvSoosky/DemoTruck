@@ -11,12 +11,16 @@ class FleetManagementVM: BaseViewModel {
   enum Action {
     case chooseIem
     case getIndexToScroll(index: Int)
+    case getSaveRouteItem(index: Int)
+    case getHistoryItem(index: Int)
   }
   
   let action = PassthroughSubject<Action, Never>()
-  let items = CurrentValueSubject<[RouteResponseRealm]?, Never>(nil)
+  let saveRouteItems = CurrentValueSubject<[RouteResponseRealm]?, Never>(nil)
   let itemHistory = CurrentValueSubject<[RouteResponseRealm]?, Never>(nil)
   let indexForMainScrollView = CurrentValueSubject<Int, Never>(0)
+  
+  private let router = FleetManagementRouter()
   
   override init() {
     super.init()
@@ -36,7 +40,7 @@ class FleetManagementVM: BaseViewModel {
     let itemHistory = items.filter { $0.history == true }
     let itemNormal = items.filter { $0.history == false }
     
-    self.items.value = itemNormal
+    self.saveRouteItems.value = itemNormal
     self.itemHistory.value = itemHistory
     
     LogManager.show("items", itemNormal.count)
@@ -51,6 +55,10 @@ extension FleetManagementVM {
       break
     case .getIndexToScroll(index: let index):
       indexForMainScrollView.value = index
+    case .getSaveRouteItem(index: let index):
+      router.route(to: .saveRouterVC, parameters: ["RouteResponseRealm": saveRouteItems.value?[index] as Any])
+    case .getHistoryItem(index: let index):
+       break
     }
   }
 }

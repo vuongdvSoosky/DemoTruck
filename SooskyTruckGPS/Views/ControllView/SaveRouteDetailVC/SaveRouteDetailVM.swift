@@ -15,13 +15,14 @@ class SaveRouteDetailVM: BaseViewModel {
   }
   
   let action = PassthroughSubject<Action, Never>()
-  var Places: [PlaceGroup] = []
+  var item: RouteResponseRealm?
   var searchCompleter = MKLocalSearchCompleter()
   var searchSuggestions: [MKLocalSearchCompletion] = []
   
   private let router = TruckRouter()
   
-  override init() {
+  init(with item: RouteResponseRealm) {
+    self.item = item
     super.init()
     action.sink(receiveValue: {[weak self] action in
       guard let self else {

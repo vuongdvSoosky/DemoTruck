@@ -36,6 +36,7 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
+				Views/ControllView/FleetManagementVC/Untitled.swift,
 			);
 			target = 0A9A7A6F2EB85C8E00295B2A /* SooskyTruckGPS */;
 		};

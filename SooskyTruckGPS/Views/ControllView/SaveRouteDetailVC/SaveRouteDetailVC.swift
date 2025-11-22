@@ -146,7 +146,7 @@ class SaveRouteDetailVC: BaseViewController {
     return view
   }()
   
-  private let viewModel = SaveRouteDetailVM()
+  private var viewModel: SaveRouteDetailVM!
   
   override func viewDidLoad() {
     super.viewDidLoad()
@@ -569,5 +569,11 @@ extension SaveRouteDetailVC {
       let formatted = parts.joined(separator: ", ")
       completion(formatted)
     }
+  }
+}
+
+extension SaveRouteDetailVC {
+  func setViewModel(_ viewModel: SaveRouteDetailVM) {
+    self.viewModel = viewModel
   }
 }
