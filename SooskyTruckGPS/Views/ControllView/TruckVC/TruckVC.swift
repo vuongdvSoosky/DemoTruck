@@ -463,38 +463,59 @@ extension TruckVC: UITextFieldDelegate {
     tableView.isHidden = false
   }
   
-  func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-    textField.resignFirstResponder()
-    guard let keyword = textField.text, !keyword.isEmpty else { return true }
-    tableView.isHidden = true
-    
-    let request = MKLocalSearch.Request()
-    request.naturalLanguageQuery = keyword
-    let search = MKLocalSearch(request: request)
-    request.region = mapView.region
-    
-    search.start { [weak self] response, error in
-      guard let self = self,
-            let coordinate = response?.mapItems.first?.placemark.coordinate else { return }
-      DispatchQueue.main.async {
-        let region = MKCoordinateRegion(
-          center: coordinate,
-          latitudinalMeters: 200,
-          longitudinalMeters: 200
-        )
-        self.mapView.setRegion(region, animated: true)
-        
-        let annotation = CustomAnnotation(coordinate: coordinate, title: keyword , subtitle: keyword, type: "parking", id: keyword)
-        self.mapView.addAnnotation(annotation)
-        
-        // Hiển thị tooltip sau khi tìm kiếm
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-          self.showTooltipForAnnotation(annotation)
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+      textField.resignFirstResponder()
+      guard let keyword = textField.text, !keyword.isEmpty else { return true }
+      tableView.isHidden = true
+  
+      let request = MKLocalSearch.Request()
+      request.naturalLanguageQuery = keyword
+      let search = MKLocalSearch(request: request)
+      request.region = mapView.region
+  
+      search.start { [weak self] response, error in
+        guard let self = self,
+              let mapItem = response?.mapItems.first else { return }
+        let coordinate = mapItem.placemark.coordinate
+        DispatchQueue.main.async {
+          let region = MKCoordinateRegion(
+            center: coordinate,
+            latitudinalMeters: 200,
+            longitudinalMeters: 200
+          )
+          self.mapView.setRegion(region, animated: true)
+  
+          // Lấy thông tin đầy đủ từ mapItem giống như tableView
+          let placemark = mapItem.placemark
+          let title = mapItem.name ?? keyword
+          
+          // Format địa chỉ đầy đủ từ placemark
+          var addressParts: [String] = []
+
+          if let city = placemark.locality {
+            addressParts.append(city)
+          }
+          if let state = placemark.administrativeArea {
+            addressParts.append(state)
+          }
+
+          if let country = placemark.country {
+            addressParts.append(country)
+          }
+          
+          let subtitle = addressParts.isEmpty ? (placemark.title ?? "") : addressParts.joined(separator: ", ")
+          
+          let annotation = CustomAnnotation(coordinate: coordinate, title: title, subtitle: subtitle, type: "parking", id: keyword)
+          self.mapView.addAnnotation(annotation)
+  
+          // Hiển thị tooltip sau khi tìm kiếm
+          DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            self.showTooltipForAnnotation(annotation)
+          }
         }
       }
+      return true
     }
-    return true
-  }
 }
 
 // MARK: - Action
