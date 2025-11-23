@@ -193,6 +193,7 @@ class GoingVC: BaseViewController {
   private var pendingAnnotation: MKAnnotation?
   private var isUpdatingAnnotations = false
   private var lastPlaceIds: Set<String?> = []
+  private var lastPlaceStates: [String: Bool?] = [:]
   private var currentTooltipView: CustomAnnotationView?
   private var currentTooltipID: String?
   private var currentQuery = ""
@@ -288,12 +289,31 @@ class GoingVC: BaseViewController {
     
     PlaceManager.shared.$placeGroup
       .receive(on: DispatchQueue.main)
+      .map { $0.places }
+      .removeDuplicates { oldPlaces, newPlaces in
+        // Chỉ update nếu số lượng places thay đổi, ids thay đổi, hoặc state thay đổi
+        guard oldPlaces.count == newPlaces.count else { return false }
+        let oldIds = Set(oldPlaces.map { $0.id })
+        let newIds = Set(newPlaces.map { $0.id })
+        guard oldIds == newIds else { return false }
+        
+        // Kiểm tra xem có state nào thay đổi không (so sánh bằng id)
+        for newPlace in newPlaces {
+          if let oldPlace = oldPlaces.first(where: { $0.id == newPlace.id }) {
+            if oldPlace.state != newPlace.state {
+              return false // Có state thay đổi → cần update
+            }
+          }
+        }
+        return true // Không có thay đổi
+      }
+      .debounce(for: .milliseconds(100), scheduler: DispatchQueue.main)
       .sink { [weak self] places in
-        guard let self else {
+        guard let self, !self.isUpdatingAnnotations else {
           return
         }
-        self.arrayPlaces = places.places
-        self.updateAnnotations(for: places.places)
+        self.arrayPlaces = places
+        self.updateAnnotations(for: places)
       }.store(in: &subscriptions)
     
     viewModel.timeTracking
@@ -351,12 +371,46 @@ class GoingVC: BaseViewController {
     
     let placeIds = Set(placesWithIds.compactMap { $0.id })
     
-    // Kiểm tra xem có thay đổi không
-    if placeIds == lastPlaceIds && placesWithIds.count == lastPlaceIds.count {
-      // Không có thay đổi về số lượng và ids, chỉ update nếu cần
+    // Tạo dictionary để so sánh state (key là String, value là Bool?)
+    let currentPlaceStates = Dictionary(uniqueKeysWithValues: placesWithIds.compactMap { place -> (String, Bool?)? in
+      guard let id = place.id else { return nil }
+      return (id, place.state)
+    })
+    
+    // Kiểm tra xem có thay đổi không (ids, số lượng, hoặc state)
+    let hasIdsOrCountChanged = placeIds != lastPlaceIds || placesWithIds.count != lastPlaceIds.count
+    
+    // Kiểm tra state có thay đổi không
+    var hasStateChanged = false
+    if !hasIdsOrCountChanged {
+      // Nếu ids và count không đổi, kiểm tra state
+      for (id, newState) in currentPlaceStates {
+        if let oldState = lastPlaceStates[id], oldState != newState {
+          hasStateChanged = true
+          break
+        } else if lastPlaceStates[id] == nil && newState != nil {
+          hasStateChanged = true
+          break
+        }
+      }
+      // Kiểm tra xem có place nào bị remove state không
+      if !hasStateChanged {
+        for (id, oldState) in lastPlaceStates {
+          if currentPlaceStates[id] == nil && oldState != nil {
+            hasStateChanged = true
+            break
+          }
+        }
+      }
+    }
+    
+    if !hasIdsOrCountChanged && !hasStateChanged {
+      // Không có thay đổi → return
       return
     }
+    
     lastPlaceIds = placeIds
+    lastPlaceStates = currentPlaceStates
     
     // Lọc các annotation hiện tại
     let annotationsToRemove = mapView.annotations.compactMap { ann -> MKAnnotation? in
@@ -398,6 +452,15 @@ class GoingVC: BaseViewController {
           existingAnnotation.type = place.type ?? "Location"
           existingAnnotation.id = place.id
         }
+        
+        // Luôn update icon (để đảm bảo icon được cập nhật khi state thay đổi)
+        if let annotationView = mapView.view(for: existingAnnotation) as? CustomAnnotationView {
+          updateIconForAnnotation(annotationView: annotationView, place: place)
+        } else {
+          // Nếu view chưa tồn tại, remove và add lại để force tạo view mới với icon đúng
+          mapView.removeAnnotation(existingAnnotation)
+          mapView.addAnnotation(existingAnnotation)
+        }
       } else {
         // Thêm mới annotation - giữ type từ place nếu có
         let newAnnotation = CustomAnnotation(
@@ -408,6 +471,69 @@ class GoingVC: BaseViewController {
           id: place.id
         )
         mapView.addAnnotation(newAnnotation)
+      }
+    }
+    
+    // Force update icon cho tất cả annotations sau khi update xong
+    updateAllAnnotationIcons()
+  }
+  
+  // MARK: - Helper: Update icon cho tất cả annotations
+  private func updateAllAnnotationIcons() {
+    for annotation in mapView.annotations {
+      guard let customAnnotation = annotation as? CustomAnnotation,
+            let annotationView = mapView.view(for: customAnnotation) as? CustomAnnotationView else {
+        continue
+      }
+      
+      // Tìm Place tương ứng từ arrayPlaces
+      let correspondingPlace = arrayPlaces.first { place in
+        if let placeId = place.id, let annoId = customAnnotation.id {
+          return placeId == annoId
+        } else {
+          let epsilon = 1e-6
+          return abs(place.coordinate.latitude - customAnnotation.coordinate.latitude) < epsilon &&
+                 abs(place.coordinate.longitude - customAnnotation.coordinate.longitude) < epsilon
+        }
+      }
+      
+      if let place = correspondingPlace {
+        updateIconForAnnotation(annotationView: annotationView, place: place)
+      }
+    }
+  }
+  
+  // MARK: - Helper: Update icon cho annotation dựa trên state
+  private func updateIconForAnnotation(annotationView: CustomAnnotationView, place: Place) {
+    // Chọn icon dựa vào state nếu có, nếu không thì dựa vào type
+    if let state = place.state {
+      // Hiển thị icon dựa trên state (true/false)
+      if state {
+        // state == true → hiển thị icLocationFinish
+        annotationView.image = .icLocationFinish
+      } else {
+        // state == false → hiển thị icLocationFailed
+        annotationView.image = .icLocationFailed
+      }
+    } else {
+      // Nếu state là nil, hiển thị icon dựa vào type
+      if let annotation = annotationView.annotation as? CustomAnnotation {
+        switch annotation.type {
+        case "Location":
+          annotationView.image = .icLocationStop
+        case "Gas Station":
+          annotationView.image = .icPinGas
+        case "Bank":
+          annotationView.image = .icPinBank
+        case "Car Wash":
+          annotationView.image = .icPinCarWash
+        case "Pharmacy":
+          annotationView.image = .icPinPharmacy
+        case "Fast Food":
+          annotationView.image = .icPinFastFood
+        default:
+          annotationView.image = .icLocationEmpty
+        }
       }
     }
   }
