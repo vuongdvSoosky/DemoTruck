@@ -210,6 +210,14 @@ extension ListLocationCell {
       hideDeleteMode()
     }
   }
+  
+  func hideLineView() {
+    lineView.isHidden = true
+  }
+  
+  func showLineView () {
+    lineView.isHidden = false
+  }
 }
 
 extension ListLocationCell {

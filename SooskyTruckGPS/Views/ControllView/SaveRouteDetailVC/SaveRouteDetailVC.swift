@@ -49,21 +49,12 @@ class SaveRouteDetailVC: BaseViewController {
     view.translatesAutoresizingMaskIntoConstraints = false
     view.isHidden = false
     view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapCaculatorRoute)))
-    
-    let icon = UIImageView()
-    icon.contentMode = .scaleAspectFit
-    icon.image = .icCaculatoRoute
-    
-    let label = UILabel()
-    label.text = "Calculate Best Route"
-    label.textColor = UIColor(rgb: 0xFFFFFF)
-    label.font = AppFont.font(.boldText, size: 20)
-    
+  
     let stackView = UIStackView()
     stackView.axis = .horizontal
     stackView.spacing = 4
     
-    [icon, label].forEach({stackView.addArrangedSubview($0)})
+    [iconButtonView, titleButtonView].forEach({stackView.addArrangedSubview($0)})
     
     view.addSubviews(stackView)
     
@@ -72,6 +63,22 @@ class SaveRouteDetailVC: BaseViewController {
     }
     
     return view
+  }()
+  
+  private lazy var iconButtonView: UIImageView = {
+    let icon = UIImageView()
+    icon.contentMode = .scaleAspectFit
+    icon.image = .icCaculatoRoute
+    icon.isHidden = true
+    return icon
+  }()
+  
+  private lazy var titleButtonView: UILabel = {
+    let label = UILabel()
+    label.text = "GO"
+    label.textColor = UIColor(rgb: 0xFFFFFF)
+    label.font = AppFont.font(.boldText, size: 20)
+    return label
   }()
   
   private lazy var routeStackView: UIStackView = {
@@ -178,15 +185,14 @@ class SaveRouteDetailVC: BaseViewController {
   }
   
   override func binding() {
-    
-    viewModel.item
+    PlaceManager.shared.$placeGroup
       .receive(on: DispatchQueue.main)
-      .sink { [weak self] route in
-        guard let self, let route = route else {
+      .sink { [weak self] places in
+        guard let self else {
           return
         }
         
-        self.arrayPlaces = route.places.toPlaces()
+        self.arrayPlaces = places.places
         LogManager.show(self.arrayPlaces.count)
         if self.arrayPlaces.count < 2 {
           caculatorRouteView.isHidden = true
@@ -201,20 +207,8 @@ class SaveRouteDetailVC: BaseViewController {
             routeStackView.addArrayColorGradient(arrayColor: colors, startPoint: CGPoint(x: 0, y: 0.5), endPoint: CGPoint(x: 1, y: 0.5))
           }
         }
-        self.updateAnnotations(for: route.places.toPlaces())
-        
+        self.updateAnnotations(for:  places.places)
       }.store(in: &subscriptions)
-//    
-//    PlaceManager.shared.$placeGroup
-//      .receive(on: DispatchQueue.main)
-//      .sink { [weak self] places in
-//        guard let self else {
-//          return
-//        }
-//        
-//        // Không cần update tất cả service annotations ở đây
-//        // Chỉ update service annotation cụ thể trong CustomAnnotationViewDelagate
-//      }.store(in: &subscriptions)
     
     viewModel.index
       .receive(on: DispatchQueue.main)
@@ -223,6 +217,16 @@ class SaveRouteDetailVC: BaseViewController {
           return
         }
         collectionView.reloadData()
+      }.store(in: &subscriptions)
+    
+    viewModel.actionEditLocation
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self]  in
+        guard let self else {
+          return
+        }
+        titleButtonView.text = "Calculate Best Route"
+        iconButtonView.isHidden = false
       }.store(in: &subscriptions)
   }
   
@@ -333,7 +337,7 @@ class SaveRouteDetailVC: BaseViewController {
   
   private func searchNearby(with nameService: String = "", type: String = "") {
     MapManager.shared.searchServiceAroundVisibleRegion(nameService, type: type) { items in
-      LogManager.show("Tìm thấy \(items.count) kết quả cho \(self.currentQuery)")
+//      LogManager.show("Tìm thấy \(items.count) kết quả cho \(self.currentQuery)")
     }
   }
   
@@ -691,7 +695,11 @@ extension SaveRouteDetailVC {
   }
   
   @objc private func onTapCaculatorRoute() {
-    viewModel.action.send(.caculatorRoute)
+    if viewModel.isEditLocation {
+      viewModel.action.send(.caculatorRoute)
+    } else {
+      viewModel.action.send(.go)
+    }
   }
 }
 
@@ -834,6 +842,7 @@ extension SaveRouteDetailVC: CustomAnnotationViewDelagate {
     guard let place = place else { return }
     let wasInPlaceGroup = PlaceManager.shared.isExistLocation(place)
     PlaceManager.shared.addLocationToArray(place)
+    viewModel.action.send(.actionEditLocation)
     let isInPlaceGroup = PlaceManager.shared.isExistLocation(place)
     
     // Cập nhật lại button state sau khi thêm/xóa

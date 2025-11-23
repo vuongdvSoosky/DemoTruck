@@ -229,3 +229,112 @@ class TrackingRouterModel: BaseObject {
   @Persisted var distanceRace: Double?
   @Persisted var speed: Double?
 }
+
+extension RouteHintsRealm {
+  func toModel() -> RouteHints {
+    return RouteHints(
+      visitedNodes: self.visitedNodes?.toModel()
+    )
+  }
+}
+
+extension VisitedNodesRealm {
+  func toModel() -> VisitedNodes {
+    return VisitedNodes(sum: self.sum, average: self.average)
+  }
+}
+
+extension RouteInfoRealm {
+  func toModel() -> RouteInfo {
+    return RouteInfo(
+      copyrights: Array(self.copyrights),
+      took: self.took,
+      roadDataTimestamp: self.roadDataTimestamp
+    )
+  }
+}
+
+extension RoutePathRealm {
+  func toModel() -> RoutePath {
+    return RoutePath(
+      distance: self.distance,
+      weight: self.weight,
+      time: self.time,
+      transfers: self.transfers,
+      pointsEncoded: self.pointsEncoded,
+      bbox: Array(self.bbox),
+      points: self.points?.toModel() ?? RoutePoints(type: "", coordinates: []),
+      instructions: self.instructions.map { $0.toModel() },
+      details: self.details?.toModel() ?? RouteDetails(surface: nil, roadClass: nil),
+      ascend: self.ascend,
+      descend: self.descend,
+      snappedWaypoints: self.snappedWaypoints?.toModel() ?? RoutePoints(type: "", coordinates: [])
+    )
+  }
+}
+
+extension RoutePointsRealm {
+  func toModel() -> RoutePoints {
+    let coords = Array(self.coordinates.map { [$0.lon, $0.lat] })
+    return RoutePoints(type: self.type, coordinates: coords)
+  }
+}
+
+extension RouteInstructionRealm {
+  func toModel() -> RouteInstruction {
+    return RouteInstruction(
+      distance: self.distance,
+      heading: self.heading,
+      sign: self.sign,
+      interval: Array(self.interval),
+      text: self.text,
+      time: self.time,
+      streetName: self.streetName
+    )
+  }
+}
+
+extension RouteDetailsRealm {
+  func toModel() -> RouteDetails {
+    return RouteDetails(
+      surface: self.surface.map { $0.toModel() },
+      roadClass: self.roadClass.map { $0.toModel() }
+    )
+  }
+}
+
+extension SurfaceDetailRealm {
+  func toModel() -> SurfaceDetail {
+    SurfaceDetail(fromIndex: self.fromIndex,
+                  toIndex: self.toIndex,
+                  surfaceType: self.surfaceType)
+  }
+}
+
+extension RoadClassDetailRealm {
+  func toModel() -> RoadClassDetail {
+    RoadClassDetail(fromIndex: self.fromIndex,
+                    toIndex: self.toIndex,
+                    roadClass: self.roadClass)
+  }
+}
+
+extension PlaceRealm {
+  func toModel() -> Place {
+    return Place(
+      address: self.address,
+      fullAddres: self.fullAddress,
+      coordinate: CLLocationCoordinate2D(latitude: self.latitude, longitude: self.longitude),
+      date: self.date,
+      state: self.state
+    )
+  }
+}
+
+extension RouteResponseRealm {
+  func toModel() -> RouteResponse {
+    return RouteResponse(hints: self.hints?.toModel(),
+                         info: self.info?.toModel(),
+                         paths: self.paths.map { $0.toModel()})
+  }
+}

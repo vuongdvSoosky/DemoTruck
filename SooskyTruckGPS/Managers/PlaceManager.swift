@@ -28,7 +28,7 @@ extension PlaceManager {
         // Giữ nguyên type của service
       } else {
         // Location bình thường hoặc type không hợp lệ → set "Location"
-        newPlace.type = "Location"
+      newPlace.type = "Location"
       }
       self.placeGroup.places.append(newPlace)
     } else {
@@ -56,5 +56,9 @@ extension PlaceManager {
   
   func getRouterPlace(_ placesRouter: RouteResponse) {
     self.placesRouter = placesRouter
+  }
+  
+  func setPlaceGroup(_ places: [Place]) {
+    self.placeGroup.places = places
   }
 }

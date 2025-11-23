@@ -43,6 +43,7 @@ class ItemFleetCell: BaseCollectionViewCell {
     label.text = "3 intermediate stops"
     label.textColor = UIColor(rgb: 0xAFAEAE)
     label.font = AppFont.font(.regularText, size: 12)
+    label.isHidden = true
     return label
   }()
   
@@ -193,7 +194,14 @@ class ItemFleetCell: BaseCollectionViewCell {
   
   func configData(with item: RouteResponseRealm) {
     departurePointValue.text = item.places.first?.address
-    numberOfStop.text = "\(item.places.count) intermediate stops"
+   
     destinationValue.text = item.places.last?.address
+    
+    if item.places.count < 3 {
+      numberOfStop.isHidden = true
+    } else {
+      numberOfStop.isHidden = false
+      numberOfStop.text = "\(item.places.count - 2) intermediate stops"
+    }
   }
 }

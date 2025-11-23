@@ -12,6 +12,7 @@ extension List where Element: PlaceRealm {
   func toPlaces() -> [Place] {
     self.map {
       Place(
+        id: $0.id,
         address: $0.address,
         fullAddres: $0.fullAddress,
         coordinate: CLLocationCoordinate2D(latitude: $0.latitude, longitude: $0.longitude),

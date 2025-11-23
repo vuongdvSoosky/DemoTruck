@@ -116,6 +116,14 @@ struct SurfaceDetail: Codable {
   }
 }
 
+extension SurfaceDetail {
+  init(fromIndex: Int, toIndex: Int, surfaceType: String) {
+    self.fromIndex = fromIndex
+    self.toIndex = toIndex
+    self.surfaceType = surfaceType
+  }
+}
+
 struct RoadClassDetail: Codable {
   let fromIndex: Int
   let toIndex: Int
@@ -133,5 +141,13 @@ struct RoadClassDetail: Codable {
     try container.encode(fromIndex)
     try container.encode(toIndex)
     try container.encode(roadClass)
+  }
+}
+
+extension RoadClassDetail {
+  init(fromIndex: Int, toIndex: Int, roadClass: String) {
+    self.fromIndex = fromIndex
+    self.toIndex = toIndex
+    self.roadClass = roadClass
   }
 }

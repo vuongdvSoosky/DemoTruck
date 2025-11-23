@@ -14,6 +14,15 @@ class ListLocationView: BaseView {
     return view
   }()
   
+  private lazy var closeView: UIView = {
+    let view = UIView()
+    view.translatesAutoresizingMaskIntoConstraints = false
+    view.backgroundColor = .clear
+    view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapClose)))
+    
+    return view
+  }()
+  
   private lazy var contentView: UIView = {
     let view = UIView()
     view.translatesAutoresizingMaskIntoConstraints = false
@@ -64,16 +73,21 @@ class ListLocationView: BaseView {
     return collectionView
   }()
   
-  private lazy var Places: [Place] = []
+  private lazy var places: [Place] = []
+  var handlerActionDeleted: Handler?
   
   override func addComponents() {
-    addSubviews(containerView)
+    addSubviews(containerView, closeView)
     addSubviews(contentView)
     contentView.addSubviews(iconClose, titleLabel, routeNameLabel, collectionView)
   }
   
   override func setConstraints() {
     containerView.snp.makeConstraints { make in
+      make.edges.equalToSuperview()
+    }
+    
+    closeView.snp.makeConstraints { make in
       make.edges.equalToSuperview()
     }
     
@@ -121,7 +135,7 @@ class ListLocationView: BaseView {
         guard let self else {
           return
         }
-        self.Places = places.places
+        self.places = places.places
         collectionView.reloadData()
       }.store(in: &subscriptions)
   }
@@ -138,24 +152,32 @@ extension ListLocationView: UICollectionViewDelegate {
 
 extension ListLocationView: UICollectionViewDataSource {
   func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-    return Places.count
+    return places.count
   }
   
   func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
     let cell = collectionView.dequeueReusableCell(ListLocationCell.self, for: indexPath)
-    let item = self.Places[indexPath.row]
+    let item = self.places[indexPath.row]
+    let lastIndex = places.count - 1
     cell.configData(item)
     cell.onDeleteTapped = { [weak self]  in
       guard let self else {
         return
       }
       PlaceManager.shared.removePlace(item)
+      handlerActionDeleted?()
     }
     cell.onDeleteModeChanged = { [weak self] isDeleteMode in
       guard let self else { return }
       if isDeleteMode {
         self.hideDeleteModeForOtherCells(except: indexPath)
       }
+    }
+    
+    if indexPath.row == lastIndex {
+      cell.hideLineView()
+    } else {
+      cell.showLineView()
     }
     return cell
   }
