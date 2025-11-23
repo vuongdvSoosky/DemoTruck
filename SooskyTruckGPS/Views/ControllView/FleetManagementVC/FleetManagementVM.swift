@@ -58,7 +58,6 @@ extension FleetManagementVM {
     case .getSaveRouteItem(index: let index):
       router.route(to: .saveRouterVC, parameters: ["RouteResponseRealm": saveRouteItems.value?[index] as Any])
     case .getHistoryItem(index: let index):
-      LogManager.show(itemHistory.value?[index])
       router.route(to: .historyVC, parameters: ["HistoryResponseRealm": itemHistory.value?[index] as Any])
     }
   }

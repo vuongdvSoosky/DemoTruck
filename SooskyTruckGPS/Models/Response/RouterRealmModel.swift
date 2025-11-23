@@ -208,7 +208,7 @@ class PlaceRealm: BaseObject {
   @Persisted var latitude: Double = 0
   @Persisted var longitude: Double = 0
   @Persisted var date: Date = Date()
-  @Persisted var state: Bool = false
+  @Persisted var state: Bool?
   
   convenience init(from Place: Place) {
     self.init()
@@ -217,7 +217,7 @@ class PlaceRealm: BaseObject {
     self.latitude = Place.coordinate.latitude
     self.longitude = Place.coordinate.longitude
     self.date = Place.date
-    self.state = Place.state ?? false
+    self.state = Place.state
   }
   
   var coordinate: CLLocationCoordinate2D {
