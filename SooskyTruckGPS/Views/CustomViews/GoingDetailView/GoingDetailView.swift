@@ -10,6 +10,7 @@ import SnapKit
 
 protocol GoingDetailViewDelegate: AnyObject {
   func didChooseItem(item: Place)
+  func onTapEdit()
 }
 
 class GoingDetailView: BaseView {
@@ -28,12 +29,15 @@ class GoingDetailView: BaseView {
     view.clipsToBounds = true
     return view
   }()
+  
   private lazy var editView: UIView = {
     let view = UIView()
     view.translatesAutoresizingMaskIntoConstraints = false
     view.cornerRadius = 8
     view.clipsToBounds = true
     view.backgroundColor = UIColor(rgb: 0x909090)
+    view.isUserInteractionEnabled = false
+    view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapEdit)))
     
     let label = UILabel()
     label.text = "Edit Route"
@@ -243,7 +247,7 @@ extension GoingDetailView: UICollectionViewDataSource {
     }
     
     if indexPath.row == lastIndex {
-      cell.hideStackView()
+      cell.hideLineView()
     } else {
       cell.showLineView()
     }
@@ -273,5 +277,20 @@ extension GoingDetailView: UICollectionViewDelegateFlowLayout {
   
   func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {
     return UIEdgeInsets(top: 16, left: 0, bottom: 0, right: 16)
+  }
+}
+extension GoingDetailView {
+  func enabelEditView() {
+    editView.isUserInteractionEnabled = true
+    editView.backgroundColor = UIColor(rgb: 0xF26101)
+  }
+  
+  func didsaabelEditView() {
+    editView.isUserInteractionEnabled = false
+    editView.backgroundColor = UIColor(rgb: 0x909090)
+  }
+  
+  @objc private func onTapEdit() {
+    delegate?.onTapEdit()
   }
 }

@@ -519,6 +519,8 @@ extension GoingVC {
         }
       }
       
+      goingDetailView.enabelEditView()
+      
     case .pauseTracking:
       // Đang pause -> Tiếp tục tracking
       // Tiếp tục tracking
@@ -539,7 +541,7 @@ extension GoingVC {
       DispatchQueue.main.async { [weak self] in
         self?.viewModel.action.send(.getTrackingState(state: .continueTracking))
       }
-      
+      goingDetailView.didsaabelEditView()
     case .finishTracking:
       icStop.isHidden = true
     }
@@ -672,6 +674,10 @@ extension GoingVC {
 }
 
 extension GoingVC: GoingDetailViewDelegate {
+  func onTapEdit() {
+    viewModel.action.send(.edit)
+  }
+  
   func didChooseItem(item: Place) {
     viewModel.action.send(.getItem(item: item))
   }

@@ -13,6 +13,7 @@ class GoingRouter: Router {
   enum Route: String {
     case arrievedView
     case finish
+    case edit
   }
 }
 
@@ -29,6 +30,8 @@ extension GoingRouter {
       tabbarVC.setSelectIndex(navigate: .diary)
       tabbarVC.reloadFleetManagementVC()
       context.push(to: tabbarVC, animated: true)
+    case .edit:
+      gotoSaveRoute(context, parameters: parameters)
     }
   }
 }
@@ -47,5 +50,10 @@ extension GoingRouter {
     let arrivedView = ArrivedView()
     arrivedView.bindingData(Place: itemPlace)
     arrivedView.showSlideView(view: topVC.view)
+  }
+  
+  private func gotoSaveRoute(_ context: UINavigationController, parameters: [String: Any]? = nil) {
+    let saveRouteVC = EditGoingVC()
+    context.pushViewController(saveRouteVC, animated: true)
   }
 }

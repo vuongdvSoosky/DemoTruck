@@ -1,15 +1,15 @@
 //
-//  SaveRouteDetailVC.swift
+//  EditGoingVC.swift
 //  SooskyTruckGPS
 //
-//  Created by VuongDv on 21/11/25.
+//  Created by VuongDV on 23/11/25.
 //
 
 import UIKit
 import SnapKit
 import MapKit
 
-class SaveRouteDetailVC: BaseViewController {
+class EditGoingVC: BaseViewController {
   private lazy var mapView: MKMapView = {
     let view = MKMapView()
     view.translatesAutoresizingMaskIntoConstraints = false
@@ -69,13 +69,13 @@ class SaveRouteDetailVC: BaseViewController {
     let icon = UIImageView()
     icon.contentMode = .scaleAspectFit
     icon.image = .icCaculatoRoute
-    icon.isHidden = true
+    icon.isHidden = false
     return icon
   }()
   
   private lazy var titleButtonView: UILabel = {
     let label = UILabel()
-    label.text = "GO"
+    label.text = "Calculate Best Route"
     label.textColor = UIColor(rgb: 0xFFFFFF)
     label.font = AppFont.font(.boldText, size: 20)
     return label
@@ -87,6 +87,8 @@ class SaveRouteDetailVC: BaseViewController {
     stackView.addArrangedSubview(caculatorRouteView)
     stackView.cornerRadius = 20
     stackView.layer.masksToBounds = true
+    stackView.isUserInteractionEnabled = false
+    stackView.backgroundColor = UIColor(rgb: 0xBCBCBC)
     return stackView
   }()
   
@@ -161,7 +163,7 @@ class SaveRouteDetailVC: BaseViewController {
   private var currentType = ""
   private var searchDelayTimer: Timer?
   
-  private var viewModel: SaveRouteDetailVM!
+  private var viewModel = EditGoingVM()
   
   override func viewDidLoad() {
     super.viewDidLoad()
@@ -202,20 +204,6 @@ class SaveRouteDetailVC: BaseViewController {
         }
         
         self.arrayPlaces = places.places
-        LogManager.show(self.arrayPlaces.count)
-        if self.arrayPlaces.count < 2 {
-          caculatorRouteView.isHidden = true
-        } else {
-          caculatorRouteView.isHidden = false
-          DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {[weak self] in
-            guard let self else {
-              return
-            }
-            routeStackView.layoutIfNeeded()
-            let colors = [UIColor(rgb: 0xF28E01), UIColor(rgb: 0xF26101)]
-            routeStackView.addArrayColorGradient(arrayColor: colors, startPoint: CGPoint(x: 0, y: 0.5), endPoint: CGPoint(x: 1, y: 0.5))
-          }
-        }
         self.updateAnnotations(for:  places.places)
       }.store(in: &subscriptions)
     
@@ -234,8 +222,24 @@ class SaveRouteDetailVC: BaseViewController {
         guard let self else {
           return
         }
-        titleButtonView.text = "Calculate Best Route"
-        iconButtonView.isHidden = false
+        routeStackView.isUserInteractionEnabled = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {[weak self] in
+          guard let self else {
+            return
+          }
+          routeStackView.layoutIfNeeded()
+          let colors = [UIColor(rgb: 0xF28E01), UIColor(rgb: 0xF26101)]
+          routeStackView.addArrayColorGradient(arrayColor: colors, startPoint: CGPoint(x: 0, y: 0.5), endPoint: CGPoint(x: 1, y: 0.5))
+        }
+      }.store(in: &subscriptions)
+    
+    PlaceManager.shared.$placesRouter
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] router in
+        guard let self, let router = router else {
+          return
+        }
+        displayRouteOnMap(route: router, mapView: mapView)
       }.store(in: &subscriptions)
   }
   
@@ -490,7 +494,7 @@ class SaveRouteDetailVC: BaseViewController {
 }
 
 // MARK: - MapView Delegate
-extension SaveRouteDetailVC: MKMapViewDelegate {
+extension EditGoingVC: MKMapViewDelegate {
   func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
     // debounce tránh spam search khi người dùng kéo bản đồ liên tục
     searchDelayTimer?.invalidate()
@@ -611,7 +615,7 @@ extension SaveRouteDetailVC: MKMapViewDelegate {
 }
 
 // MARK: UITextFieldDelegate
-extension SaveRouteDetailVC: UITextFieldDelegate {
+extension EditGoingVC: UITextFieldDelegate {
   @objc private func textFieldDidChange(_ textField: UITextField) {
     guard let text = textField.text else {
       tableView.isHidden = true
@@ -682,7 +686,7 @@ extension SaveRouteDetailVC: UITextFieldDelegate {
 
 // MARK: - Action
 
-extension SaveRouteDetailVC {
+extension EditGoingVC {
   @objc private func onTapCloseCalloutView(_ gesture: UITapGestureRecognizer) {
     let location = gesture.location(in: mapView)
     
@@ -719,13 +723,11 @@ extension SaveRouteDetailVC {
   
   @objc private func onTapBack() {
     viewModel.action.send(.back)
-    // Reset PlaceGroup
-    PlaceManager.shared.setPlaceGroup([])
   }
 }
 
 // MARK: - UITableView
-extension SaveRouteDetailVC: UITableViewDelegate, UITableViewDataSource {
+extension EditGoingVC: UITableViewDelegate, UITableViewDataSource {
   func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
     return viewModel.searchSuggestions.count
   }
@@ -788,7 +790,7 @@ extension SaveRouteDetailVC: UITableViewDelegate, UITableViewDataSource {
   }
 }
 
-extension SaveRouteDetailVC: MKLocalSearchCompleterDelegate {
+extension EditGoingVC: MKLocalSearchCompleterDelegate {
   func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
     if completer.results.isEmpty {
       tableView.isHidden = true
@@ -803,7 +805,7 @@ extension SaveRouteDetailVC: MKLocalSearchCompleterDelegate {
   }
 }
 
-extension SaveRouteDetailVC {
+extension EditGoingVC {
   func geocodeAndFormatAddress(_ address: String, completion: @escaping (String) -> Void) {
     let geocoder = CLGeocoder()
     geocoder.geocodeAddressString(address) { Placemarks, error in
@@ -829,7 +831,7 @@ extension SaveRouteDetailVC {
   }
 }
 
-extension SaveRouteDetailVC: UICollectionViewDelegate {
+extension EditGoingVC: UICollectionViewDelegate {
   func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
     let item = ServiceType.allCases[indexPath.row]
     self.searchNearby(with: item.name, type: item.title)
@@ -839,7 +841,7 @@ extension SaveRouteDetailVC: UICollectionViewDelegate {
   }
 }
 
-extension SaveRouteDetailVC: UICollectionViewDataSource {
+extension EditGoingVC: UICollectionViewDataSource {
   func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
     return ServiceType.allCases.count
   }
@@ -858,7 +860,7 @@ extension SaveRouteDetailVC: UICollectionViewDataSource {
   }
 }
 
-extension SaveRouteDetailVC: CustomAnnotationViewDelagate {
+extension EditGoingVC: CustomAnnotationViewDelagate {
   func customAnnotationView(_ annotationView: CustomAnnotationView, place: Place?) {
     guard let place = place else { return }
     let wasInPlaceGroup = PlaceManager.shared.isExistLocation(place)
@@ -908,8 +910,21 @@ extension SaveRouteDetailVC: CustomAnnotationViewDelagate {
   }
 }
 
-extension SaveRouteDetailVC {
-  func setViewModel(_ viewModel: SaveRouteDetailVM) {
-    self.viewModel = viewModel
+
+extension EditGoingVC {
+  func displayRouteOnMap(route: RouteResponse, mapView: MKMapView) {
+    guard let coordinates = route.paths.first?.points.coordinates else {
+      LogManager.show("No coordinates found")
+      return
+    }
+    mapView.removeOverlays(mapView.overlays)
+    let polylineCoordinates = coordinates.map { CLLocationCoordinate2D(latitude: $0[1], longitude: $0[0]) }
+    let polyline = MKPolyline(coordinates: polylineCoordinates, count: polylineCoordinates.count)
+    
+    // Thêm tuyến đường vào bản đồ
+    mapView.addOverlay(polyline)
+    
+    // Zoom vào khu vực chứa tuyến đường
+    mapView.setVisibleMapRect(polyline.boundingMapRect, edgePadding: UIEdgeInsets(top: 50, left: 20, bottom: 50, right: 20), animated: true)
   }
 }

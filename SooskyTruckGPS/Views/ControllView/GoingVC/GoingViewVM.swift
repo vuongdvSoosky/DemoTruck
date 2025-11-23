@@ -16,6 +16,7 @@ class GoingViewVM: BaseViewModel {
     case getTimeTracking(time: String)
     case getDuration(time: Double)
     case finish
+    case edit
   }
   
   let action = PassthroughSubject<Action, Never>()
@@ -33,7 +34,6 @@ class GoingViewVM: BaseViewModel {
       guard let self else {
         return
       }
-      
       progressAction(action)
     }).store(in: &subscriptions)
   }
@@ -72,8 +72,11 @@ extension GoingViewVM {
       routeRealm.addPlaces(PlaceManager.shared.placeGroup.places)
       RealmService.shared.add(routeRealm)
       self.router.route(to: .finish)
+      
     case .getDuration(time: let time):
       duration = time
+    case .edit:
+      router.route(to: .edit)
     }
   }
 }

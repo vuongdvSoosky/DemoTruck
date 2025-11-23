@@ -210,12 +210,12 @@ class DetailRouteCell: BaseCollectionViewCell {
 }
 
 extension DetailRouteCell {
-  func configData(_ Place: Place) {
-    self.itemPlace = Place
-    self.addressTitle.text = Place.address
-    self.addressContent.text = Place.fullAddres
+  func configData(_ place: Place) {
+    self.itemPlace = place
+    self.addressTitle.text = place.address
+    self.addressContent.text = place.fullAddres
     
-    guard let state = Place.state else {
+    guard let state = place.state else {
       return
     }
     stateLabel.text = state ? "Success" : "Failed"
@@ -225,10 +225,37 @@ extension DetailRouteCell {
     addressTitle.textColor = UIColor(rgb: 0xBDBDBD)
     addressContent.textColor = UIColor(rgb: 0xBDBDBD)
   }
+  
+  func configData(_ place: Place, itemRoute: RouteResponseRealm?) {
+    self.itemPlace = place
+    self.addressTitle.text = place.address
+    self.addressContent.text = place.fullAddres
+    
+    guard let state = place.state else {
+      return
+    }
+    
+    stateLabel.text = state ? "Success" : "Failed"
+    stateLabel.textColor = state ? UIColor(rgb: 0x299F46) : UIColor(rgb: 0xDC2E24)
+    stateView.backgroundColor = state ? UIColor(rgb: 0xE1F1E5) :  UIColor(rgb: 0xDC2E24, alpha: 0.14)
+    iconState.image = state ? .icSuccess : .icFailed
+    addressTitle.textColor = UIColor(rgb: 0xBDBDBD)
+    addressContent.textColor = UIColor(rgb: 0xBDBDBD)
+    stateView.isHidden = false
+    
+    
+    guard let itemRoute = itemRoute, let state = place.state else {
+      return
+    }
+    
+    if itemRoute.history {
+      icon.image = state ? .icFinish : .icFailedRoute
+    }
+  }
 }
 
 extension DetailRouteCell {
-  func hideStackView() {
+  func hideLineView() {
     lineView.isHidden = true
   }
   
@@ -246,3 +273,4 @@ extension DetailRouteCell {
     stateView.isHidden = false
   }
 }
+

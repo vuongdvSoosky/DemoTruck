@@ -215,7 +215,7 @@ extension DetailRouterView: UICollectionViewDataSource {
     let lastIndex = PlaceManager.shared.placeGroup.places.count - 1
     cell.configData(item)
     if indexPath.row == lastIndex {
-      cell.hideStackView()
+      cell.hideLineView()
     } else {
       cell.showLineView()
     }

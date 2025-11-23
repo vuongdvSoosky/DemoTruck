@@ -1,5 +1,5 @@
 //
-//  HistoryDetailRouter.swift
+//  EditGoingRouter.swift
 //  SooskyTruckGPS
 //
 //  Created by VuongDV on 23/11/25.
@@ -7,7 +7,7 @@
 
 import UIKit
 
-class HistoryDetailRouter: Router {
+class EditGoingRouter: Router {
   typealias RouteType = Route
   
   enum Route: String {
@@ -18,7 +18,7 @@ class HistoryDetailRouter: Router {
   }
 }
 
-extension HistoryDetailRouter {
+extension EditGoingRouter {
   func route(to route: Route, parameters: [String: Any]? = nil) {
     guard let context = context() else {
       return
@@ -38,20 +38,19 @@ extension HistoryDetailRouter {
   }
 }
 
-extension HistoryDetailRouter {
+extension EditGoingRouter {
   private func showListLocation(_ parameters: [String: Any]? = nil) {
     guard let topVC = UIApplication.topViewController() else {
       return
     }
     guard let parameters = parameters,
-          let handler = parameters["Handler"] as? Handler,
-          let itemRoute = parameters["RouteResponseRealm"] as? RouteResponseRealm else {
+          let handler = parameters["Handler"] as? Handler else {
       return
     }
     
     let listView = ListDetailLocationView()
     listView.handlerActionDeleted = handler
-    listView.setItem(itemRoute)
+    
     listView.showSlideView(view: topVC.view)
   }
 }
