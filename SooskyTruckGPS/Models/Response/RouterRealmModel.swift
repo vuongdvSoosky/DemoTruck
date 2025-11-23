@@ -17,7 +17,7 @@ class RouteResponseRealm: Object {
   @Persisted var hints: RouteHintsRealm?
   @Persisted var info: RouteInfoRealm?
   @Persisted var paths = List<RoutePathRealm>()
-  @Persisted var Places = List<PlaceRealm>()
+  @Persisted var places = List<PlaceRealm>()
   @Persisted var trackingRecords = List<TrackingRouterModel>()
   @Persisted var history: Bool = false
   
@@ -36,8 +36,8 @@ class RouteResponseRealm: Object {
     for Place in Places {
       let PlaceRealm = PlaceRealm(from: Place)
       // Kiểm tra tránh trùng kinh/vĩ độ
-      if !self.Places.contains(where: { $0.latitude == PlaceRealm.latitude && $0.longitude == PlaceRealm.longitude }) {
-        self.Places.append(PlaceRealm)
+      if !self.places.contains(where: { $0.latitude == PlaceRealm.latitude && $0.longitude == PlaceRealm.longitude }) {
+        self.places.append(PlaceRealm)
       }
     }
   }

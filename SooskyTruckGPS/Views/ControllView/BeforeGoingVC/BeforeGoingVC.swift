@@ -134,24 +134,6 @@ class BeforeGoingVC: BaseViewController {
     return view
   }()
   
-  private lazy var currentCalloutView: CustomAnnotationCalloutView = {
-    let view = CustomAnnotationCalloutView()
-    view.translatesAutoresizingMaskIntoConstraints = false
-    view.isHidden = true
-    view.onButtonTapped = { [weak self] in
-      guard let self, let Place = self.currentPlace else { return }
-      
-      PlaceManager.shared.addLocationToArray(Place)
-      
-      if PlaceManager.shared.isExistLocation(Place) {
-        view.configureButton(title: "Remove Stop", icon: .icTrash)
-      } else {
-        view.configureButton(title: "Add Stop", icon: .icPlus)
-        hideCalloutAnimated()
-      }
-    }
-    return view
-  }()
   
   // MARK: UIImageView
   private lazy var iconBack: UIImageView = {
@@ -210,6 +192,8 @@ class BeforeGoingVC: BaseViewController {
   }()
   
   private let viewModel = BeforeGoingVM()
+  var currentTooltipView: CustomAnnotationView?
+  var currentTooltipID: String?
   
   override func addComponents() {
     self.view.addSubviews(iconBack, titleVC, containerView, stateStackView, tabView)
@@ -372,45 +356,6 @@ class BeforeGoingVC: BaseViewController {
     mainScrollView.isScrollEnabled = false
   }
   
-  private func showCalloutAnimated() {
-    let adress = self.address.shortAddress
-    currentCalloutView.configure(title: adress, des: "")
-    currentCalloutView.alpha = 0
-    currentCalloutView.transform = CGAffineTransform(translationX: 0, y: 20)
-    currentCalloutView.isHidden = false
-    
-    // Animation hiện lên
-    UIView.animate(withDuration: 0.5,
-                   delay: 0,
-                   usingSpringWithDamping: 0.8,
-                   initialSpringVelocity: 0.5,
-                   options: .curveEaseOut,
-                   animations: {
-      self.currentCalloutView.alpha = 1
-      self.currentCalloutView.transform = .identity
-    }, completion: { [weak self] _ in
-      guard let self else {
-        return
-      }
-      mapView.isUserInteractionEnabled = false
-    })
-  }
-  
-  private func hideCalloutAnimated() {
-    guard !currentCalloutView.isHidden else { return }
-    
-    UIView.animate(withDuration: 0.25,
-                   delay: 0,
-                   options: .curveEaseIn,
-                   animations: {
-      self.currentCalloutView.alpha = 0
-      self.currentCalloutView.transform = CGAffineTransform(translationX: 0, y: 20)
-    }, completion: { _ in
-      self.currentCalloutView.isHidden = true
-      self.mapView.isUserInteractionEnabled = true
-      self.currentCalloutView.transform = .identity
-    })
-  }
   
   @objc private func onTapDetailRoute() {
     changeStateDetailRouteTabView(UIColor(rgb: 0xFFECC4), image: .icDetaiRouteSelected)
@@ -427,22 +372,14 @@ class BeforeGoingVC: BaseViewController {
   }
   
   @objc private func annotationTapped(_ sender: UITapGestureRecognizer) {
-    guard let annotationView = sender.view as? MKAnnotationView,
-          let annotation = annotationView.annotation as? CustomAnnotation else { return }
-    // xử lý hành vi khi bấm vào pin
-    pendingAnnotation = annotation
-    mapKitView.setCenter(annotation.coordinate, animated: true)
+    guard let customView = sender.view as? CustomAnnotationView else { return }
     
-    if let matchedPlace = arrayPlaces.first(where: { $0.address == annotation.title }) {
-      self.currentPlace = matchedPlace
-      self.address = matchedPlace.address
-      self.currentCalloutView.configureButton(title: "Remove Stop", icon: .icTrash)
-    } else {
-      let adress = annotation.title?.shortAddress ?? ""
-      self.currentCalloutView.configure(title: adress, des: "")
-      self.currentCalloutView.configureButton(title: "Add Stop", icon: .icPlus)
+    // Xử lý cả CustomAnnotation và CustomServiceAnimation
+    if let anno = customView.annotation as? CustomAnnotation {
+      showTooltipForAnnotation(anno)
+    } else if let serviceAnno = customView.annotation as? CustomServiceAnimation {
+      showTooltipForServiceAnnotation(serviceAnno)
     }
-    showCalloutAnimated()
   }
   
   @objc private func onTapBack() {
@@ -493,35 +430,109 @@ extension BeforeGoingVC: MKMapViewDelegate {
   func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
     if annotation is MKUserLocation { return nil }
     
-    let identifier = "customPinView"
-    var view = mapView.dequeueReusableAnnotationView(withIdentifier: identifier)
-    
-    if view == nil {
-      view = MKAnnotationView(annotation: annotation, reuseIdentifier: identifier)
-      view?.canShowCallout = false
-    } else {
-      view?.annotation = annotation
-    }
-    
-    if let custom = annotation as? CustomAnnotation {
-      switch custom.type {
-      case "hospital":
-        view?.image = .icLocationStop
-      case "parking":
-        view?.image = .icLocationStop
-      case "coffee":
-        view?.image = .icLocationStop
-      default:
-        view?.image = .icLocationStop
+    // MARK: - CustomAnnotation
+    if let customAnno = annotation as? CustomAnnotation {
+      let identifier = customAnno.identifier
+      var view = mapView.dequeueReusableAnnotationView(withIdentifier: identifier) as? CustomAnnotationView
+      
+      if view == nil {
+        view = CustomAnnotationView(annotation: customAnno, reuseIdentifier: identifier)
+      } else {
+        view?.annotation = customAnno
       }
-    } else {
-      view?.image = .icLocationStop
+      
+      // Gán ID annotation
+      view?.annotationID = customAnno.id
+      
+      // Configure tooltip đúng dữ liệu của annotation hiện tại
+      view?.configure(title: customAnno.title ?? "", des: customAnno.subtitle ?? "")
+      
+      // Chọn icon dựa vào type
+      switch customAnno.type {
+      case "Location":
+        view?.image = .icLocationStop
+      case "Gas Station":
+        view?.image = .icPinGas
+      case "Bank":
+        view?.image = .icPinBank
+      case "Car Wash":
+        view?.image = .icPinCarWash
+      case "Pharmacy":
+        view?.image = .icPinPharmacy
+      case "Fast Food":
+        view?.image = .icPinFastFood
+      default:
+        view?.image = .icLocationEmpty
+      }
+      
+      // Ẩn tooltip mặc định (chỉ hiển thị khi tap)
+      view?.hideTooltip()
+      
+      // Tap gesture
+      if view?.gestureRecognizers?.isEmpty ?? true {
+        let tap = UITapGestureRecognizer(target: self, action: #selector(annotationTapped(_:)))
+        view?.addGestureRecognizer(tap)
+      }
+      
+      return view
     }
     
-    view?.centerOffset = CGPoint(x: 0, y: -15)
-    let tap = UITapGestureRecognizer(target: self, action: #selector(annotationTapped(_:)))
-    view?.addGestureRecognizer(tap)
-    return view
+    // MARK: - CustomServiceAnimation
+    else if let customService = annotation as? CustomServiceAnimation {
+      let identifier = customService.identifier
+      var view = mapView.dequeueReusableAnnotationView(withIdentifier: identifier) as? CustomAnnotationView
+      
+      if view == nil {
+        view = CustomAnnotationView(annotation: customService, reuseIdentifier: identifier)
+      } else {
+        view?.annotation = customService
+      }
+      
+      // Gán ID annotation
+      view?.annotationID = customService.id
+      
+      // Configure tooltip đúng dữ liệu của annotation hiện tại
+      view?.configure(title: customService.title ?? "", des: customService.subtitle ?? "")
+      
+      // Kiểm tra xem service đã được thêm vào placeGroup chưa
+      let place = Place(id: customService.id, address: customService.title ?? "", fullAddres: customService.subtitle ?? "", coordinate: customService.coordinate, state: nil, type: customService.type)
+      let isInPlaceGroup = PlaceManager.shared.isExistLocation(place)
+      
+      // Chọn icon: nếu chưa thêm vào placeGroup → icLocationEmpty, nếu đã thêm → icon theo type
+      if isInPlaceGroup {
+        // Đã thêm vào placeGroup → hiển thị icon theo type
+        switch customService.type {
+        case "Gas Station":
+          view?.image = .icPinGas
+        case "Bank":
+          view?.image = .icPinBank
+        case "Car Wash":
+          view?.image = .icPinCarWash
+        case "Pharmacy":
+          view?.image = .icPinPharmacy
+        case "Fast Food":
+          view?.image = .icPinFastFood
+        default:
+          view?.image = .icPinBlank
+        }
+      } else {
+        // Chưa thêm vào placeGroup → hiển thị icLocationEmpty
+        view?.image = .icLocationEmpty
+      }
+      
+      // Ẩn tooltip mặc định (chỉ hiển thị khi tap)
+      view?.hideTooltip()
+      
+      // Tap gesture để hiển thị tooltip
+      if view?.gestureRecognizers?.isEmpty ?? true {
+        let tap = UITapGestureRecognizer(target: self, action: #selector(annotationTapped(_:)))
+        view?.addGestureRecognizer(tap)
+      }
+      
+      return view
+    }
+    
+    return nil
   }
 }
 
@@ -541,5 +552,57 @@ extension BeforeGoingVC {
     
     // Zoom vào khu vực chứa tuyến đường
     mapView.setVisibleMapRect(polyline.boundingMapRect, edgePadding: UIEdgeInsets(top: 50, left: 20, bottom: 50, right: 20), animated: true)
+  }
+}
+
+extension BeforeGoingVC {
+  private func showTooltipForAnnotation(_ annotation: CustomAnnotation) {
+    guard let annotationView = mapKitView.view(for: annotation) as? CustomAnnotationView else {
+      return
+    }
+    
+    // Ẩn tooltip hiện tại nếu có
+    if let current = currentTooltipView, current.annotationID != annotationView.annotationID {
+      current.hideTooltip()
+    }
+    
+    // Hiển thị tooltip cho annotation được chọn
+    currentTooltipView = annotationView
+    currentTooltipID = annotation.id
+    annotationView.showTooltip()
+    annotationView.configure(title: annotation.title ?? "", des: annotation.subtitle ?? "")
+    
+    // Kiểm tra xem đã có trong placeGroup chưa
+    let place = Place(id: annotation.id, address: annotation.title ?? "", fullAddres: annotation.subtitle ?? "", coordinate: annotation.coordinate, state: nil, type: annotation.type)
+    if PlaceManager.shared.isExistLocation(place) {
+      annotationView.configureButton(title: "Remove Stop", icon: .icTrash)
+    } else {
+      annotationView.configureButton(title: "Add Stop", icon: .icPlus)
+    }
+  }
+  
+  private func showTooltipForServiceAnnotation(_ annotation: CustomServiceAnimation) {
+    guard let annotationView = mapKitView.view(for: annotation) as? CustomAnnotationView else {
+      return
+    }
+    
+    // Ẩn tooltip hiện tại nếu có
+    if let current = currentTooltipView, current.annotationID != annotationView.annotationID {
+      current.hideTooltip()
+    }
+    
+    // Hiển thị tooltip cho service annotation được chọn
+    currentTooltipView = annotationView
+    currentTooltipID = annotation.id
+    annotationView.showTooltip()
+    annotationView.configure(title: annotation.title ?? "", des: annotation.subtitle ?? "")
+    
+    // Kiểm tra xem đã có trong placeGroup chưa
+//    let place = Place(id: annotation.id, address: annotation.title ?? "", fullAddres: annotation.subtitle ?? "", coordinate: annotation.coordinate, state: nil, type: annotation.type)
+//    if PlaceManager.shared.isExistLocation(place) {
+//      annotationView.configureButton(title: "Remove Stop", icon: .icTrash)
+//    } else {
+//      annotationView.configureButton(title: "Add Stop", icon: .icPlus)
+//    }
   }
 }

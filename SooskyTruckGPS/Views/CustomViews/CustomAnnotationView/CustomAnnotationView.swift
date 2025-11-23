@@ -188,4 +188,32 @@ extension CustomAnnotationView {
   func showTooltip() {
     containerView.isHidden = false
   }
+  
+  func hideButton() {
+    buttonView.isHidden = true
+    // Cập nhật constraint để subtitleLabel là bottom
+    subtitleLabel.snp.remakeConstraints { make in
+      make.top.equalTo(titleLabel.snp.bottom).offset(6)
+      make.left.equalTo(titleLabel)
+      make.right.equalTo(titleLabel)
+      make.bottom.equalToSuperview().offset(-12)
+    }
+  }
+  
+  func showButton() {
+    buttonView.isHidden = false
+    // Khôi phục constraint ban đầu
+    subtitleLabel.snp.remakeConstraints { make in
+      make.top.equalTo(titleLabel.snp.bottom).offset(6)
+      make.left.equalTo(titleLabel)
+      make.right.equalTo(titleLabel)
+    }
+    buttonView.snp.remakeConstraints { make in
+      make.top.equalTo(subtitleLabel.snp.bottom).inset(-8)
+      make.left.equalToSuperview().offset(18)
+      make.right.equalToSuperview().offset(-18)
+      make.bottom.equalToSuperview().offset(-12)
+      make.height.equalTo(36)
+    }
+  }
 }
