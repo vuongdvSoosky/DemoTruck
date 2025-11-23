@@ -36,7 +36,6 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
-				Views/ControllView/FleetManagementVC/Untitled.swift,
 			);
 			target = 0A9A7A6F2EB85C8E00295B2A /* SooskyTruckGPS */;
 		};
@@ -209,7 +208,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = SooskyTruckGPS/SooskyTruckGPS.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_TEAM = 2GR4J2GH38;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = SooskyTruckGPS/Info.plist;
@@ -247,7 +246,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = SooskyTruckGPS/SooskyTruckGPS.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_TEAM = 2GR4J2GH38;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = SooskyTruckGPS/Info.plist;

@@ -75,6 +75,7 @@ class ListLocationView: BaseView {
   
   private lazy var places: [Place] = []
   var handlerActionDeleted: Handler?
+  private var itemRouter: RouteResponseRealm?
   
   override func addComponents() {
     addSubviews(containerView, closeView)
@@ -159,7 +160,7 @@ extension ListLocationView: UICollectionViewDataSource {
     let cell = collectionView.dequeueReusableCell(ListLocationCell.self, for: indexPath)
     let item = self.places[indexPath.row]
     let lastIndex = places.count - 1
-    cell.configData(item)
+    cell.configData(item, itemRoute: itemRouter)
     cell.onDeleteTapped = { [weak self]  in
       guard let self else {
         return
@@ -196,5 +197,11 @@ extension ListLocationView: UICollectionViewDataSource {
 extension ListLocationView: UICollectionViewDelegateFlowLayout {
   func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
     return CGSize(width: self.collectionView.frame.width, height: 82)
+  }
+}
+
+extension ListLocationView {
+  func setItem(_ item: RouteResponseRealm) {
+    self.itemRouter = item
   }
 }

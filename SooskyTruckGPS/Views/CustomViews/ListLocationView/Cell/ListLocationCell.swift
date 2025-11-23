@@ -221,9 +221,23 @@ extension ListLocationCell {
 }
 
 extension ListLocationCell {
-  func configData(_ Place: Place) {
-    self.itemPlace = Place
-    self.addressTitle.text = Place.address
-    self.addressContent.text = Place.fullAddres
+  func configData(_ place: Place) {
+    self.itemPlace = place
+    self.addressTitle.text = place.address
+    self.addressContent.text = place.fullAddres
+  }
+  
+  func configData(_ place: Place, itemRoute: RouteResponseRealm?) {
+    self.itemPlace = place
+    self.addressTitle.text = place.address
+    self.addressContent.text = place.fullAddres
+    
+    guard let itemRoute = itemRoute, let state = place.state else {
+      return
+    }
+    
+    if itemRoute.history {
+      icon.image = state ? .icFinish : .icFailedRoute
+    }
   }
 }

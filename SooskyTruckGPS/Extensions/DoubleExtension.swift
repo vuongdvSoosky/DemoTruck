@@ -34,6 +34,21 @@ extension Double {
     return "\(hours)h \(minutes)m \(seconds)s"
   }
   
+  func toTimeStringFromSeconds() -> String {
+      let totalSeconds = Int(self)
+      let hours = totalSeconds / 3600
+      let minutes = (totalSeconds % 3600) / 60
+      let seconds = totalSeconds % 60
+      
+      if hours > 0 {
+        return "\(hours)h \(minutes)m"
+      } else if minutes > 0 {
+        return "\(minutes)m \(seconds)s"
+      } else {
+        return "\(seconds)s"
+      }
+    }
+  
   /// Chuyển đổi giờ (Double) sang "hh:mm:ss"
   func toHHMMSSString() -> String {
     let totalSeconds = Int(self)

@@ -56,6 +56,7 @@ extension BeforeGoingVM {
       return
     }
     let routeRealm = RouteResponseRealm(from: router)
+    routeRealm.nameRouter = PlaceManager.shared.placeGroup.nameRouter
     routeRealm.addPlaces(PlaceManager.shared.placeGroup.places)
     RealmService.shared.add(routeRealm)
     self.router.route(to: .save)

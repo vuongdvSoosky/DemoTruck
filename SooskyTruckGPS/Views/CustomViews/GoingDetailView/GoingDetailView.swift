@@ -175,6 +175,21 @@ class GoingDetailView: BaseView {
         stopLabel.text = "\(place.places.count) more waypoint"
         collectionView.reloadData()
       }.store(in: &subscriptions)
+    
+    PlaceManager.shared.$placesRouter
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] placeRouter in
+        guard let self else {
+          return
+        }
+        
+        guard let distance = placeRouter?.paths.first?.distance,
+              let time = placeRouter?.paths.first?.time else {
+          return
+        }
+        totalDistanceView.update(value: "\(distance.milesString)")
+        timeEstimateView.update(value: "\(time.toTimeString)")
+      }.store(in: &subscriptions)
   }
 }
 

@@ -1,5 +1,5 @@
 //
-//  SaveRouteRouter.swift
+//  HistoryDetailRouter.swift
 //  SooskyTruckGPS
 //
 //  Created by VuongDV on 23/11/25.
@@ -7,7 +7,7 @@
 
 import UIKit
 
-class SaveRouteRouter: Router {
+class HistoryDetailRouter: Router {
   typealias RouteType = Route
   
   enum Route: String {
@@ -18,7 +18,7 @@ class SaveRouteRouter: Router {
   }
 }
 
-extension SaveRouteRouter {
+extension HistoryDetailRouter {
   func route(to route: Route, parameters: [String: Any]? = nil) {
     guard let context = context() else {
       return
@@ -38,19 +38,20 @@ extension SaveRouteRouter {
   }
 }
 
-extension SaveRouteRouter {
+extension HistoryDetailRouter {
   private func showListLocation(_ parameters: [String: Any]? = nil) {
     guard let topVC = UIApplication.topViewController() else {
       return
     }
     guard let parameters = parameters,
-          let handler = parameters["Handler"] as? Handler else {
+          let handler = parameters["Handler"] as? Handler,
+          let itemRoute = parameters["RouteResponseRealm"] as? RouteResponseRealm else {
       return
     }
     
     let listView = ListLocationView()
     listView.handlerActionDeleted = handler
-    
+    listView.setItem(itemRoute)
     listView.showSlideView(view: topVC.view)
   }
 }

@@ -1,21 +1,17 @@
 //
-//  SaveRouteDetailVM.swift
+//  HistoryDetailVM.swift
 //  SooskyTruckGPS
 //
-//  Created by VuongDv on 21/11/25.
+//  Created by VuongDV on 23/11/25.
 //
 
 import Combine
 import MapKit
 
-class SaveRouteDetailVM: BaseViewModel {
+class HistoryDetailVM: BaseViewModel {
+  
   enum Action {
     case viewList
-    case caculatorRoute
-    case getIndex(int: Int)
-    case actionEditLocation
-    case caculateRoute
-    case go
     case back
   }
   
@@ -27,7 +23,7 @@ class SaveRouteDetailVM: BaseViewModel {
   let actionEditLocation = PassthroughSubject<Void, Never>()
   var isEditLocation: Bool = false
   
-  private let router = SaveRouteRouter()
+  private let router = HistoryDetailRouter()
   
   init(with item: RouteResponseRealm) {
     self.item.value = item
@@ -43,7 +39,7 @@ class SaveRouteDetailVM: BaseViewModel {
   }
 }
 
-extension SaveRouteDetailVM {
+extension HistoryDetailVM {
   private func progressAction(_ action: Action) {
     switch action {
     case .viewList:
@@ -54,18 +50,8 @@ extension SaveRouteDetailVM {
         actionEditLocation.send(())
         isEditLocation = true
       }
-      router.route(to: .viewlist, parameters: ["Handler": handler])
-    case .caculatorRoute:
-      router.route(to: .loadingVC)
-    case .getIndex(int: let int):
-      self.index.value = int
-    case .actionEditLocation:
-      actionEditLocation.send(())
-      isEditLocation = true
-    case .caculateRoute:
-      router.route(to: .loadingVC)
-    case .go:
-      router.route(to: .go)
+      router.route(to: .viewlist, parameters: ["Handler": handler,
+                                               "RouteResponseRealm": item.value as Any])
     case .back:
       router.route(to: .back)
     }

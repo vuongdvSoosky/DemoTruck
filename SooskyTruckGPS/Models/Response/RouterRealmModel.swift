@@ -20,6 +20,7 @@ class RouteResponseRealm: Object {
   @Persisted var places = List<PlaceRealm>()
   @Persisted var trackingRecords = List<TrackingRouterModel>()
   @Persisted var history: Bool = false
+  @Persisted var nameRouter: String?
   
   convenience init(from model: RouteResponse) {
     self.init()

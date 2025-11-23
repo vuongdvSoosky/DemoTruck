@@ -148,10 +148,8 @@ extension MapManager {
 
 extension MapManager {
   func searchServiceAroundVisibleRegion(_ query: String,
-                                        type: String,
-                                        completion: @escaping ([MKMapItem]) -> Void) {
+                                        type: String) {
     guard let mapView = mapView else {
-      completion([])
       return
     }
     
@@ -163,7 +161,6 @@ extension MapManager {
     search.start { [weak self] response, error in
       guard let self = self, let response = response else {
         LogManager.show("Không tìm thấy kết quả: \(error?.localizedDescription ?? "Unknown")")
-        completion([])
         return
       }
       
@@ -198,8 +195,6 @@ extension MapManager {
           mapView.addAnnotation(annotation)
         }
       }
-      
-      completion(response.mapItems)
     }
   }
 }

@@ -49,7 +49,7 @@ class SaveRouteDetailVC: BaseViewController {
     view.translatesAutoresizingMaskIntoConstraints = false
     view.isHidden = false
     view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapCaculatorRoute)))
-  
+    
     let stackView = UIStackView()
     stackView.axis = .horizontal
     stackView.spacing = 4
@@ -88,6 +88,17 @@ class SaveRouteDetailVC: BaseViewController {
     stackView.cornerRadius = 20
     stackView.layer.masksToBounds = true
     return stackView
+  }()
+  
+  private lazy var icBack: UIImageView = {
+    let icon = UIImageView()
+    icon.translatesAutoresizingMaskIntoConstraints = false
+    icon.isUserInteractionEnabled = true
+    icon.contentMode = .scaleAspectFit
+    icon.image = .icBackSaveRouteVC
+    icon.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapBack)))
+    
+    return icon
   }()
   
   private lazy var tableView: UITableView = {
@@ -336,9 +347,7 @@ class SaveRouteDetailVC: BaseViewController {
   }
   
   private func searchNearby(with nameService: String = "", type: String = "") {
-    MapManager.shared.searchServiceAroundVisibleRegion(nameService, type: type) { items in
-//      LogManager.show("Tìm thấy \(items.count) kết quả cho \(self.currentQuery)")
-    }
+    MapManager.shared.searchServiceAroundVisibleRegion(nameService, type: type)
   }
   
   private func setupTableView() {
@@ -365,7 +374,7 @@ class SaveRouteDetailVC: BaseViewController {
   }
   
   override func addComponents() {
-    self.view.addSubviews(mapView, searchView, viewList, routeStackView, collectionView, tableView)
+    self.view.addSubviews(mapView, searchView, viewList, routeStackView, collectionView, tableView, icBack)
   }
   
   override func setConstraints() {
@@ -373,10 +382,18 @@ class SaveRouteDetailVC: BaseViewController {
       make.edges.equalToSuperview()
     }
     
+    icBack.snp.makeConstraints { make in
+      make.top.equalTo(self.view.snp.topMargin).inset(25)
+      make.width.equalTo(17)
+      make.height.equalTo(28)
+      make.left.equalToSuperview().inset(20)
+    }
+    
     searchView.snp.makeConstraints { make in
       make.top.equalTo(self.view.snp.topMargin).inset(15)
       make.height.equalTo(48)
-      make.left.right.equalToSuperview().inset(20)
+      make.left.equalTo(icBack.snp.right).inset(-18)
+      make.right.equalToSuperview().inset(20)
     }
     
     collectionView.snp.makeConstraints { make in
@@ -700,6 +717,12 @@ extension SaveRouteDetailVC {
     } else {
       viewModel.action.send(.go)
     }
+  }
+  
+  @objc private func onTapBack() {
+    viewModel.action.send(.back)
+    // Reset PlaceGroup
+    PlaceManager.shared.setPlaceGroup([])
   }
 }
 

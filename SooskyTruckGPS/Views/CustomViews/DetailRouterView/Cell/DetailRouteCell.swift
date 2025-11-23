@@ -230,14 +230,10 @@ extension DetailRouteCell {
 extension DetailRouteCell {
   func hideStackView() {
     lineView.isHidden = true
-//    timeEstimateView.isHidden = true
-//    totalDistanceView.isHidden = true
   }
   
   func showLineView() {
     lineView.isHidden = false
-//    timeEstimateView.isHidden = false
-//    totalDistanceView.isHidden = false
   }
 }
 

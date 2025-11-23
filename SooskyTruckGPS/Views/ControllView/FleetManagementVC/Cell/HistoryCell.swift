@@ -143,7 +143,7 @@ class HistoryCell: BaseCollectionViewCell {
   
   func configData(item: RouteResponseRealm) {
     self.distanceLabel.text = "\(String(format: "%.2f", item.trackingRecords.first?.distanceRace ?? 0.0)) mi"
-//    self.routeName.text = item.Places.first?.nameRouter
-    self.timeLabel.text = item.trackingRecords.first?.duration?.toHHMMSSString()
+    self.routeName.text = item.nameRouter ?? ""
+    self.timeLabel.text = item.trackingRecords.first?.duration?.toTimeStringFromSeconds()
   }
 }

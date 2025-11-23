@@ -199,8 +199,6 @@ class TruckVC: BaseViewController {
           }
         }
         self.updateAnnotations(for: places.places)
-        // Không cần update tất cả service annotations ở đây
-        // Chỉ update service annotation cụ thể trong CustomAnnotationViewDelagate
       }.store(in: &subscriptions)
     
     viewModel.index
@@ -319,9 +317,7 @@ class TruckVC: BaseViewController {
   }
   
   private func searchNearby(with nameService: String = "", type: String = "") {
-    MapManager.shared.searchServiceAroundVisibleRegion(nameService, type: type) { items in
-      LogManager.show("Tìm thấy \(items.count) kết quả cho \(self.currentQuery)")
-    }
+    MapManager.shared.searchServiceAroundVisibleRegion(nameService, type: type)
   }
   
   private func setupTableView() {

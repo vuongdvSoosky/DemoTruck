@@ -25,7 +25,7 @@ extension FleetManagementRouter {
     case .saveRouterVC:
       gotoSaveRoute(context, parameters: parameters)
     case .historyVC:
-      break
+      goToHistory(context, parameters: parameters)
     }
   }
 }
@@ -38,6 +38,16 @@ extension FleetManagementRouter {
     }
     let saveRouteVC = SaveRouteDetailVC()
     saveRouteVC.setViewModel(SaveRouteDetailVM(with: itemRoute))
+    context.pushViewController(saveRouteVC, animated: true)
+  }
+  
+  private func goToHistory(_ context: UINavigationController, parameters: [String: Any]? = nil) {
+    guard let parameters = parameters,
+          let itemRoute = parameters["HistoryResponseRealm"] as? RouteResponseRealm else {
+      return
+    }
+    let saveRouteVC = HistoryDetailVC()
+    saveRouteVC.setViewModel(HistoryDetailVM(with: itemRoute))
     context.pushViewController(saveRouteVC, animated: true)
   }
 }

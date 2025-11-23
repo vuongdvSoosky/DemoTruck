@@ -253,28 +253,17 @@ class BeforeGoingVC: BaseViewController {
       make.height.equalTo(60)
     }
   }
-  
-  override func setProperties() {
-    let detailRouteTapGesture = UITapGestureRecognizer(target: self, action: #selector(onTapDetailRoute))
-    detailRouteTabView.addGestureRecognizer(detailRouteTapGesture)
     
-    let mapTapGesture = UITapGestureRecognizer(target: self, action: #selector(onTapMapView))
-    mapTabView.addGestureRecognizer(mapTapGesture)
-  }
-  
   private lazy var arrayPlaces: [Place] = []
   private var currentPlace: Place?
   private var pendingAnnotation: MKAnnotation?
   private var address: String = ""
+  private var isUpdatingAnnotations = false
+  private var lastPlaceIds: Set<String?> = []
   
   override func viewDidLoad() {
     super.viewDidLoad()
     setupMap()
-  }
-  
-  override func viewDidLayoutSubviews() {
-    super.viewDidLayoutSubviews()
-    updateAnnotations()
   }
   
   private func setupMap() {
@@ -282,11 +271,24 @@ class BeforeGoingVC: BaseViewController {
     mapKitView.delegate = self
   }
   
+  override func setProperties() {
+    let detailRouteTapGesture = UITapGestureRecognizer(target: self, action: #selector(onTapDetailRoute))
+    detailRouteTabView.addGestureRecognizer(detailRouteTapGesture)
+    
+    let mapTapGesture = UITapGestureRecognizer(target: self, action: #selector(onTapMapView))
+    mapTabView.addGestureRecognizer(mapTapGesture)
+    
+    let tapGesture = UITapGestureRecognizer(target: self, action: #selector(onTapCloseCalloutView(_:)))
+    tapGesture.cancelsTouchesInView = false
+    view.addGestureRecognizer(tapGesture)
+  }
+  
   override func setColor() {
     self.view.backgroundColor = UIColor(rgb: 0xFFFFFF)
     let colors = [UIColor(rgb: 0xF28E01), UIColor(rgb: 0xF26101)]
     goView.addArrayColorGradient(arrayColor: colors, startPoint: CGPoint(x: 0, y: 0.5), endPoint: CGPoint(x: 1, y: 0.5))
   }
+  
   
   override func binding() {
     viewModel.indexForMainScrollView
@@ -300,12 +302,21 @@ class BeforeGoingVC: BaseViewController {
     
     PlaceManager.shared.$placeGroup
       .receive(on: DispatchQueue.main)
+      .map { $0.places }
+      .removeDuplicates { oldPlaces, newPlaces in
+        // Chỉ update nếu số lượng places thay đổi hoặc ids thay đổi
+        guard oldPlaces.count == newPlaces.count else { return false }
+        let oldIds = Set(oldPlaces.map { $0.id })
+        let newIds = Set(newPlaces.map { $0.id })
+        return oldIds == newIds
+      }
+      .debounce(for: .milliseconds(100), scheduler: DispatchQueue.main)
       .sink { [weak self] places in
-        guard let self else {
+        guard let self, !self.isUpdatingAnnotations else {
           return
         }
-        self.arrayPlaces = places.places
-        self.updateAnnotations()
+        self.arrayPlaces = places
+        self.updateAnnotations(for: places)
       }.store(in: &subscriptions)
     
     PlaceManager.shared.$placesRouter
@@ -318,25 +329,89 @@ class BeforeGoingVC: BaseViewController {
       }.store(in: &subscriptions)
   }
   
-  private func updateAnnotations() {
-    // Xoá các annotation cũ trừ vị trí người dùng
-    let nonUserAnnotations = mapKitView.annotations.filter { !($0 is MKUserLocation) }
-    mapKitView.removeAnnotations(nonUserAnnotations)
+  private func updateAnnotations(for places: [Place]) {
+    guard !isUpdatingAnnotations else { return }
+    isUpdatingAnnotations = true
+    defer { isUpdatingAnnotations = false }
     
-    // Tạo annotation mới từ arrayPlaces
-    let annotations = arrayPlaces.map { place -> CustomAnnotation in
-      return CustomAnnotation(
-        coordinate: place.coordinate,
-        title: "parking", subtitle: place.fullAddres,
-        type: place.address, id: place.address)
+    // Tạo id unique từ coordinate nếu place.id là nil
+    let placesWithIds = places.map { place -> Place in
+      var updatedPlace = place
+      if updatedPlace.id == nil {
+        // Tạo id unique dựa trên coordinate
+        updatedPlace.id = "\(place.coordinate.latitude)_\(place.coordinate.longitude)"
+      }
+      return updatedPlace
     }
     
-    mapKitView.addAnnotations(annotations)
-    scrollToFirstPlace()
+    let placeIds = Set(placesWithIds.compactMap { $0.id })
+    
+    // Kiểm tra xem có thay đổi không
+    if placeIds == lastPlaceIds && placesWithIds.count == lastPlaceIds.count {
+      // Không có thay đổi về số lượng và ids, chỉ update nếu cần
+      return
+    }
+    lastPlaceIds = placeIds
+    
+    // Lọc các annotation hiện tại
+    let annotationsToRemove = mapKitView.annotations.compactMap { ann -> MKAnnotation? in
+      guard let customAnn = ann as? CustomAnnotation else { return nil }
+      // Nếu annotation không nằm trong placeIds → remove
+      return placeIds.contains(customAnn.id ?? "") ? nil : customAnn
+    }
+    
+    if !annotationsToRemove.isEmpty {
+      mapKitView.removeAnnotations(annotationsToRemove)
+    }
+    
+    // Thêm hoặc update annotations
+    for place in placesWithIds {
+      // Tìm annotation đã tồn tại bằng id hoặc coordinate
+      if let existingAnnotation = mapKitView.annotations.first(where: {
+        guard let ann = $0 as? CustomAnnotation else { return false }
+        // So sánh bằng id nếu có, nếu không thì so sánh bằng coordinate
+        if let placeId = place.id, let annId = ann.id {
+          return annId == placeId
+        } else {
+          // So sánh bằng coordinate với độ chính xác epsilon
+          let epsilon = 1e-6
+          return abs(ann.coordinate.latitude - place.coordinate.latitude) < epsilon &&
+                 abs(ann.coordinate.longitude - place.coordinate.longitude) < epsilon
+        }
+      }) as? CustomAnnotation {
+        // Chỉ update nếu có thay đổi
+        let needsUpdate = existingAnnotation.coordinate.latitude != place.coordinate.latitude ||
+                         existingAnnotation.coordinate.longitude != place.coordinate.longitude ||
+                         existingAnnotation.title != place.address ||
+                         existingAnnotation.subtitle != place.fullAddres ||
+                         existingAnnotation.type != (place.type ?? "Location")
+        
+        if needsUpdate {
+          existingAnnotation.coordinate = place.coordinate
+          existingAnnotation.title = place.address
+          existingAnnotation.subtitle = place.fullAddres
+          existingAnnotation.type = place.type ?? "Location"
+          existingAnnotation.id = place.id
+        }
+      } else {
+        // Thêm mới annotation - giữ type từ place nếu có
+        let newAnnotation = CustomAnnotation(
+          coordinate: place.coordinate,
+          title: place.address,
+          subtitle: place.fullAddres,
+          type: place.type ?? "Location",
+          id: place.id
+        )
+        mapKitView.addAnnotation(newAnnotation)
+      }
+    }
   }
   
   private func scrollToFirstPlace() {
     guard let first = arrayPlaces.first else { return }
+    
+    // Chỉ scroll nếu có nhiều hơn 1 place, hoặc nếu region chưa được set
+    guard arrayPlaces.count > 1 || mapKitView.region.span.latitudeDelta > 1.0 else { return }
     
     let coordinate = first.coordinate
     let region = MKCoordinateRegion(
@@ -355,7 +430,6 @@ class BeforeGoingVC: BaseViewController {
     mainScrollView.setContentOffset(targetOffset, animated: animated)
     mainScrollView.isScrollEnabled = false
   }
-  
   
   @objc private func onTapDetailRoute() {
     changeStateDetailRouteTabView(UIColor(rgb: 0xFFECC4), image: .icDetaiRouteSelected)
@@ -393,6 +467,28 @@ class BeforeGoingVC: BaseViewController {
   @objc private func onTapGo() {
     viewModel.action.send(.go)
   }
+  
+  @objc private func onTapCloseCalloutView(_ gesture: UITapGestureRecognizer) {
+    let location = gesture.location(in: mapView)
+    
+    // Nếu tap nằm trong tooltip => bỏ qua
+    if let tooltip = currentTooltipView?.containerView, !tooltip.isHidden,
+       tooltip.frame.contains(location) {
+      return
+    }
+    
+    // Nếu tap nằm trên pin => bỏ qua
+    let tappedAnnotations = mapKitView.annotations.filter { annotation in
+      guard let view = mapKitView.view(for: annotation) else { return false }
+      return view.frame.contains(location)
+    }
+    if !tappedAnnotations.isEmpty { return }
+    
+    // Tap ngoài tooltip và pin => ẩn tooltip
+    UIView.animate(withDuration: 0.25) {
+      self.currentTooltipView?.hideTooltip()
+    }
+  }
 }
 
 extension BeforeGoingVC {
@@ -408,15 +504,6 @@ extension BeforeGoingVC {
 }
 
 extension BeforeGoingVC: MKMapViewDelegate {
-  func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
-    // debounce tránh spam search khi người dùng kéo bản đồ liên tục
-    //        searchDelayTimer?.invalidate()
-    //        searchDelayTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: false) { [weak self] _ in
-    //          // self?.searchNearby()
-    //        }
-    // isProgrammaticRegionChange = false
-  }
-  
   func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
     if let polyline = overlay as? MKPolyline {
       let renderer = MKPolylineRenderer(overlay: polyline)
@@ -437,8 +524,10 @@ extension BeforeGoingVC: MKMapViewDelegate {
       
       if view == nil {
         view = CustomAnnotationView(annotation: customAnno, reuseIdentifier: identifier)
+        view?.hideButton()
       } else {
         view?.annotation = customAnno
+        view?.hideButton()
       }
       
       // Gán ID annotation
@@ -484,8 +573,10 @@ extension BeforeGoingVC: MKMapViewDelegate {
       
       if view == nil {
         view = CustomAnnotationView(annotation: customService, reuseIdentifier: identifier)
+        view?.hideButton()
       } else {
         view?.annotation = customService
+        view?.hideButton()
       }
       
       // Gán ID annotation
@@ -535,7 +626,6 @@ extension BeforeGoingVC: MKMapViewDelegate {
     return nil
   }
 }
-
 
 extension BeforeGoingVC {
   func displayRouteOnMap(route: RouteResponse, mapView: MKMapView) {
@@ -596,13 +686,6 @@ extension BeforeGoingVC {
     currentTooltipID = annotation.id
     annotationView.showTooltip()
     annotationView.configure(title: annotation.title ?? "", des: annotation.subtitle ?? "")
-    
-    // Kiểm tra xem đã có trong placeGroup chưa
-//    let place = Place(id: annotation.id, address: annotation.title ?? "", fullAddres: annotation.subtitle ?? "", coordinate: annotation.coordinate, state: nil, type: annotation.type)
-//    if PlaceManager.shared.isExistLocation(place) {
-//      annotationView.configureButton(title: "Remove Stop", icon: .icTrash)
-//    } else {
-//      annotationView.configureButton(title: "Add Stop", icon: .icPlus)
-//    }
+    annotationView.hideButton()
   }
 }

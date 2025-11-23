@@ -40,8 +40,8 @@ class FleetManagementVM: BaseViewModel {
     let itemHistory = items.filter { $0.history == true }
     let itemNormal = items.filter { $0.history == false }
     
-    self.saveRouteItems.value = itemNormal
-    self.itemHistory.value = itemHistory
+    self.saveRouteItems.value = itemNormal.reversed()
+    self.itemHistory.value = itemHistory.reversed()
     
     LogManager.show("items", itemNormal.count)
     LogManager.show("itemHistory", itemHistory.count)
@@ -58,7 +58,8 @@ extension FleetManagementVM {
     case .getSaveRouteItem(index: let index):
       router.route(to: .saveRouterVC, parameters: ["RouteResponseRealm": saveRouteItems.value?[index] as Any])
     case .getHistoryItem(index: let index):
-       break
+      LogManager.show(itemHistory.value?[index])
+      router.route(to: .historyVC, parameters: ["HistoryResponseRealm": itemHistory.value?[index] as Any])
     }
   }
 }
