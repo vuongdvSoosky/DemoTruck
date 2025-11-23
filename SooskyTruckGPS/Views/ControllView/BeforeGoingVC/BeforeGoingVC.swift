@@ -536,22 +536,46 @@ extension BeforeGoingVC: MKMapViewDelegate {
       // Configure tooltip đúng dữ liệu của annotation hiện tại
       view?.configure(title: customAnno.title ?? "", des: customAnno.subtitle ?? "")
       
-      // Chọn icon dựa vào type
-      switch customAnno.type {
-      case "Location":
-        view?.image = .icLocationStop
-      case "Gas Station":
-        view?.image = .icPinGas
-      case "Bank":
-        view?.image = .icPinBank
-      case "Car Wash":
-        view?.image = .icPinCarWash
-      case "Pharmacy":
-        view?.image = .icPinPharmacy
-      case "Fast Food":
-        view?.image = .icPinFastFood
-      default:
-        view?.image = .icLocationEmpty
+      // Tìm Place tương ứng từ arrayPlaces để lấy state
+      let correspondingPlace = arrayPlaces.first { place in
+        if let placeId = place.id, let annoId = customAnno.id {
+          return placeId == annoId
+        } else {
+          // So sánh bằng coordinate nếu id không có
+          let epsilon = 1e-6
+          return abs(place.coordinate.latitude - customAnno.coordinate.latitude) < epsilon &&
+                 abs(place.coordinate.longitude - customAnno.coordinate.longitude) < epsilon
+        }
+      }
+      
+      // Chọn icon dựa vào state nếu có, nếu không thì dựa vào type
+      if let place = correspondingPlace, let state = place.state {
+        // Hiển thị icon dựa trên state (true/false)
+        if state {
+          // state == true → hiển thị icFinish
+          view?.image = .icLocationFinish
+        } else {
+          // state == false → hiển thị icFailedRoute
+          view?.image = .icLocationFailed
+        }
+      } else {
+        // Nếu state là nil, hiển thị icon dựa vào type
+        switch customAnno.type {
+        case "Location":
+          view?.image = .icLocationStop
+        case "Gas Station":
+          view?.image = .icPinGas
+        case "Bank":
+          view?.image = .icPinBank
+        case "Car Wash":
+          view?.image = .icPinCarWash
+        case "Pharmacy":
+          view?.image = .icPinPharmacy
+        case "Fast Food":
+          view?.image = .icPinFastFood
+        default:
+          view?.image = .icLocationEmpty
+        }
       }
       
       // Ẩn tooltip mặc định (chỉ hiển thị khi tap)
