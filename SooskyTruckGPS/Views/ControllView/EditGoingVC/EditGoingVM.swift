@@ -14,7 +14,6 @@ class EditGoingVM: BaseViewModel {
     case caculatorRoute
     case getIndex(int: Int)
     case actionEditLocation
-    case caculateRoute
     case go
     case back
   }
@@ -53,20 +52,24 @@ extension EditGoingVM {
       }
       router.route(to: .viewlist, parameters: ["Handler": handler])
     case .caculatorRoute:
-      router.route(to: .loadingVC)
+      let filteredPlaces = getFilteredPlacesForAPI()
+      router.route(to: .loadingVC, parameters: ["filteredPlaces": filteredPlaces])
     case .getIndex(int: let int):
       self.index.value = int
     case .actionEditLocation:
       actionEditLocation.send(())
       isEditLocation = true
-    case .caculateRoute:
-      
-      
-      router.route(to: .loadingVC)
     case .go:
       router.route(to: .go)
     case .back:
       router.route(to: .back)
     }
+  }
+  
+  // MARK: - Helper: Lọc places để gửi API (loại bỏ những place có state != nil)
+  // Tạo mảng tạm thời, không chỉnh sửa mảng gốc
+  func getFilteredPlacesForAPI() -> [Place] {
+    // Lọc ra những place có state == nil (chỉ gửi những place này lên API)
+    return PlaceManager.shared.placeGroup.places.filter { $0.state == nil }
   }
 }

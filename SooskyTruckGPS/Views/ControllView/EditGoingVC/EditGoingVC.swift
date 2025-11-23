@@ -174,6 +174,7 @@ class EditGoingVC: BaseViewController {
     setupSearchCompleter()
   }
   
+  
   override func setProperties() {
     searchTextField.delegate = self
     searchTextField.addTarget(self, action: #selector(textFieldDidChange(_:)), for: .editingChanged)

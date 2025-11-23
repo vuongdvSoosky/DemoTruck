@@ -25,6 +25,9 @@ class LoadingVM: BaseViewModel {
   
   let action = PassthroughSubject<Action, Never>()
   
+  // Filtered places để gọi API (không bao gồm places có state != nil)
+  var filteredPlacesForAPI: [Place]?
+  
   override init() {
     super.init()
     action.sink(receiveValue: {[weak self] action in
@@ -60,7 +63,9 @@ extension LoadingVM {
 
 extension LoadingVM {
   private func requestAPIPlaces() {
-    let points: [[Double]] = PlaceManager.shared.placeGroup.places.map { [$0.coordinate.longitude, $0.coordinate.latitude] }
+    // Sử dụng filtered places nếu có, nếu không thì dùng places từ PlaceManager
+    let placesToUse = filteredPlacesForAPI ?? PlaceManager.shared.placeGroup.places
+    let points: [[Double]] = placesToUse.map { [$0.coordinate.longitude, $0.coordinate.latitude] }
     requestTask?.cancel()
     
     requestTask = Task { [weak self] in

@@ -28,6 +28,11 @@ extension EditGoingRouter {
       showListLocation(parameters)
     case .loadingVC:
       let loadingVC = LoadingVC()
+      // Pass filtered places nếu có trong parameters
+      if let parameters = parameters,
+         let filteredPlaces = parameters["filteredPlaces"] as? [Place] {
+        loadingVC.filteredPlaces = filteredPlaces
+      }
       context.push(to: loadingVC, animated: true)
     case .go:
       let goingVC = GoingVC()

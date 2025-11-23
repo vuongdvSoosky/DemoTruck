@@ -133,9 +133,14 @@ class LoadingVC: BaseViewController {
   private var viewModel = LoadingVM()
   private var apiCompleted = false
   private var shouldStopLastAnimation = false
+  var filteredPlaces: [Place]?
   
   override func viewDidLoad() {
     super.viewDidLoad()
+    // Set filtered places vào viewModel nếu có
+    if let filteredPlaces = filteredPlaces {
+      viewModel.filteredPlacesForAPI = filteredPlaces
+    }
     animateIcon(at: 0)
     viewModel.action.send(.getRequest)
   }
