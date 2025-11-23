@@ -112,6 +112,8 @@ class EditGoingVC: BaseViewController {
   private lazy var arrayPlaces: [Place] = []
   var currentTooltipView: CustomAnnotationView?
   var currentTooltipID: String?
+  private var isUpdatingAnnotations = false
+  private var lastPlaceIds: Set<String?> = []
   
   private lazy var searchTextField: UITextField = {
     let textField = UITextField()
@@ -198,13 +200,21 @@ class EditGoingVC: BaseViewController {
   override func binding() {
     PlaceManager.shared.$placeGroup
       .receive(on: DispatchQueue.main)
+      .map { $0.places }
+      .removeDuplicates { oldPlaces, newPlaces in
+        // Chỉ update nếu số lượng places thay đổi hoặc ids thay đổi
+        guard oldPlaces.count == newPlaces.count else { return false }
+        let oldIds = Set(oldPlaces.map { $0.id })
+        let newIds = Set(newPlaces.map { $0.id })
+        return oldIds == newIds
+      }
+      .debounce(for: .milliseconds(100), scheduler: DispatchQueue.main)
       .sink { [weak self] places in
-        guard let self else {
+        guard let self, !self.isUpdatingAnnotations else {
           return
         }
-        
-        self.arrayPlaces = places.places
-        self.updateAnnotations(for:  places.places)
+        self.arrayPlaces = places
+        self.updateAnnotations(for: places)
       }.store(in: &subscriptions)
     
     viewModel.index
@@ -231,15 +241,6 @@ class EditGoingVC: BaseViewController {
           let colors = [UIColor(rgb: 0xF28E01), UIColor(rgb: 0xF26101)]
           routeStackView.addArrayColorGradient(arrayColor: colors, startPoint: CGPoint(x: 0, y: 0.5), endPoint: CGPoint(x: 1, y: 0.5))
         }
-      }.store(in: &subscriptions)
-    
-    PlaceManager.shared.$placesRouter
-      .receive(on: DispatchQueue.main)
-      .sink { [weak self] router in
-        guard let self, let router = router else {
-          return
-        }
-        displayRouteOnMap(route: router, mapView: mapView)
       }.store(in: &subscriptions)
   }
   
@@ -280,59 +281,68 @@ class EditGoingVC: BaseViewController {
   }
   
   private func updateAnnotations(for places: [Place]) {
-    let placeIds = Set(places.map { $0.id })
+    guard !isUpdatingAnnotations else { return }
+    isUpdatingAnnotations = true
+    defer { isUpdatingAnnotations = false }
+    
+    // Tạo id unique từ coordinate nếu place.id là nil
+    let placesWithIds = places.map { place -> Place in
+      var updatedPlace = place
+      if updatedPlace.id == nil {
+        // Tạo id unique dựa trên coordinate
+        updatedPlace.id = "\(place.coordinate.latitude)_\(place.coordinate.longitude)"
+      }
+      return updatedPlace
+    }
+    
+    let placeIds = Set(placesWithIds.compactMap { $0.id })
+    
+    // Kiểm tra xem có thay đổi không
+    if placeIds == lastPlaceIds && placesWithIds.count == lastPlaceIds.count {
+      // Không có thay đổi về số lượng và ids, chỉ update nếu cần
+      return
+    }
+    lastPlaceIds = placeIds
     
     // Lọc các annotation hiện tại
     let annotationsToRemove = mapView.annotations.compactMap { ann -> MKAnnotation? in
       guard let customAnn = ann as? CustomAnnotation else { return nil }
       // Nếu annotation không nằm trong placeIds → remove
-      return placeIds.contains(customAnn.id) ? nil : customAnn
+      return placeIds.contains(customAnn.id ?? "") ? nil : customAnn
     }
-    mapView.removeAnnotations(annotationsToRemove)
-    for place in places {
+    
+    if !annotationsToRemove.isEmpty {
+      mapView.removeAnnotations(annotationsToRemove)
+    }
+    
+    // Thêm hoặc update annotations
+    for place in placesWithIds {
+      // Tìm annotation đã tồn tại bằng id hoặc coordinate
       if let existingAnnotation = mapView.annotations.first(where: {
         guard let ann = $0 as? CustomAnnotation else { return false }
-        return ann.id == place.id
-      }) as? CustomAnnotation {
-        // Update dữ liệu annotation
-        existingAnnotation.coordinate = place.coordinate
-        existingAnnotation.title = place.address
-        existingAnnotation.subtitle = place.fullAddres
-        // Giữ type từ place nếu có, nếu không thì set "Location"
-        existingAnnotation.type = place.type ?? "Location"
-        
-        // Force update view để đảm bảo icon được cập nhật
-        if let annotationView = mapView.view(for: existingAnnotation) as? CustomAnnotationView {
-          // Chọn icon dựa vào type (có thể là Location hoặc Service type)
-          switch existingAnnotation.type {
-          case "Location":
-            annotationView.image = .icLocationStop
-          case "Gas Station":
-            annotationView.image = .icPinGas
-          case "Bank":
-            annotationView.image = .icPinBank
-          case "Car Wash":
-            annotationView.image = .icPinCarWash
-          case "Pharmacy":
-            annotationView.image = .icPinPharmacy
-          case "Fast Food":
-            annotationView.image = .icPinFastFood
-          default:
-            // Nếu type không hợp lệ, kiểm tra lại từ place
-            if place.type == "Location" {
-              annotationView.image = .icLocationStop
-            } else {
-              annotationView.image = .icLocationEmpty
-            }
-          }
-          
-          if currentTooltipView?.annotationID == existingAnnotation.id {
-            annotationView.configure(title: existingAnnotation.title ?? "", des: existingAnnotation.subtitle ?? "")
-          }
+        // So sánh bằng id nếu có, nếu không thì so sánh bằng coordinate
+        if let placeId = place.id, let annId = ann.id {
+          return annId == placeId
         } else {
-          // Nếu view chưa tồn tại, remove và add lại annotation để force tạo view mới
-          mapView.removeAnnotation(existingAnnotation)
-          mapView.addAnnotation(existingAnnotation)
+          // So sánh bằng coordinate với độ chính xác epsilon
+          let epsilon = 1e-6
+          return abs(ann.coordinate.latitude - place.coordinate.latitude) < epsilon &&
+                 abs(ann.coordinate.longitude - place.coordinate.longitude) < epsilon
+        }
+      }) as? CustomAnnotation {
+        // Chỉ update nếu có thay đổi
+        let needsUpdate = existingAnnotation.coordinate.latitude != place.coordinate.latitude ||
+                         existingAnnotation.coordinate.longitude != place.coordinate.longitude ||
+                         existingAnnotation.title != place.address ||
+                         existingAnnotation.subtitle != place.fullAddres ||
+                         existingAnnotation.type != (place.type ?? "Location")
+        
+        if needsUpdate {
+          existingAnnotation.coordinate = place.coordinate
+          existingAnnotation.title = place.address
+          existingAnnotation.subtitle = place.fullAddres
+          existingAnnotation.type = place.type ?? "Location"
+          existingAnnotation.id = place.id
         }
       } else {
         // Thêm mới annotation - giữ type từ place nếu có

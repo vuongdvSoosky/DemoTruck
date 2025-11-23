@@ -60,6 +60,8 @@ extension EditGoingVM {
       actionEditLocation.send(())
       isEditLocation = true
     case .caculateRoute:
+      
+      
       router.route(to: .loadingVC)
     case .go:
       router.route(to: .go)
