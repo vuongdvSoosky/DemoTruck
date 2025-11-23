@@ -80,8 +80,6 @@ extension LoadingVM {
         guard let data = data else { return }
         showConfirmView.send(())
         PlaceManager.shared.getRouterPlace(data)
-        LogManager.show("[Debug] data: \(data)")
-       
       }
     }
   }
