@@ -23,6 +23,7 @@ class DetailRouteCell: BaseCollectionViewCell {
     view.cornerRadius = 4
     return view
   }()
+  
   private lazy var inforView: UIView = {
     let view = UIView()
     view.translatesAutoresizingMaskIntoConstraints = false
@@ -31,25 +32,44 @@ class DetailRouteCell: BaseCollectionViewCell {
     view.borderColor = UIColor(rgb: 0xC4C4C4, alpha: 0.25)
     view.borderWidth = 0.5
     
-    let stackView = UIStackView()
-    stackView.axis = .vertical
-    stackView.spacing = 2
-    stackView.distribution = .fillEqually
-        
-    [addressTitle, addressContent].forEach({stackView.addArrangedSubview($0)})
     
     let stateStackView = UIStackView()
+    stateStackView.axis = .horizontal
+    stateStackView.spacing = 4
+    stateStackView.distribution = .fill
+    stateStackView.alignment = .fill
+    
+    stateView.setContentHuggingPriority(.required, for: .horizontal)
+    stateView.setContentCompressionResistancePriority(.required, for: .horizontal)
+    
     stateStackView.addArrangedSubview(stateView)
+    stateStackView.addArrangedSubview(emtyView)
+    
+    // Horizontal stack
+    let horizontalStackView = UIStackView()
+    horizontalStackView.axis = .horizontal
+    horizontalStackView.spacing = 4
+    horizontalStackView.distribution = .fill
+    horizontalStackView.alignment = .center
+    
+    labelView.setContentHuggingPriority(.defaultLow, for: .horizontal)
+    labelView.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
+    
+    let spacerView = UIView()
+    spacerView.setContentHuggingPriority(.defaultLow, for: .horizontal)
+    spacerView.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+    
+    horizontalStackView.addArrangedSubview(labelView)
+    horizontalStackView.addArrangedSubview(spacerView)
     
     let mainStackView = UIStackView()
     mainStackView.axis = .vertical
     mainStackView.spacing = 4
     mainStackView.distribution = .fill
-    mainStackView.alignment = .leading
     
-    [stateStackView, stackView].forEach({mainStackView.addArrangedSubview($0)})
+    [stateStackView, horizontalStackView].forEach({mainStackView.addArrangedSubview($0)})
     
-    view.addSubviews(mainStackView)
+    view.addSubview(mainStackView)
     
     mainStackView.snp.makeConstraints { make in
       make.top.equalToSuperview().inset(12)
@@ -59,6 +79,14 @@ class DetailRouteCell: BaseCollectionViewCell {
     }
     return view
   }()
+  
+  private lazy var emtyView: UIView = {
+    let view = UIView()
+    view.translatesAutoresizingMaskIntoConstraints = false
+    view.setContentHuggingPriority(.defaultLow, for: .horizontal)
+    return view
+  }()
+  
   private lazy var stateView: UIView = {
     let view = UIView()
     view.translatesAutoresizingMaskIntoConstraints = false
@@ -69,10 +97,48 @@ class DetailRouteCell: BaseCollectionViewCell {
     let stackView = UIStackView()
     stackView.axis = .horizontal
     stackView.spacing = 6
+    stackView.distribution = .fill
+    stackView.alignment = .center
+    
+    iconState.setContentHuggingPriority(.defaultHigh, for: .horizontal)
+    iconState.setContentCompressionResistancePriority(.required, for: .horizontal)
+    
+    stateLabel.setContentHuggingPriority(.required, for: .horizontal)
+    stateLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
     
     [iconState, stateLabel].forEach({stackView.addArrangedSubview($0)})
     
     view.addSubview(stackView)
+    stackView.snp.makeConstraints { make in
+      make.edges.equalToSuperview().inset(5)
+    }
+    
+    return view
+  }()
+  
+  private lazy var labelView: UIView = {
+    let view = UIView()
+    view.translatesAutoresizingMaskIntoConstraints = false
+    
+    // Vertical stack for title and content
+    let stackView = UIStackView()
+    stackView.axis = .vertical
+    stackView.spacing = 4
+    stackView.alignment = .fill
+    stackView.distribution = .fill
+    
+    // Title: ưu tiên thấp hơn content
+    addressTitle.setContentHuggingPriority(.defaultLow, for: .horizontal)
+    addressTitle.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+    
+    addressContent.numberOfLines = 0
+    addressContent.setContentHuggingPriority(.required, for: .horizontal)
+    addressContent.setContentCompressionResistancePriority(.required, for: .horizontal)
+    
+    [addressTitle, addressContent].forEach { stackView.addArrangedSubview($0) }
+    
+    view.addSubview(stackView)
+    
     stackView.snp.makeConstraints { make in
       make.edges.equalToSuperview().inset(5)
     }
@@ -91,10 +157,13 @@ class DetailRouteCell: BaseCollectionViewCell {
     let icon = UIImageView()
     icon.image = .icSuccess
     icon.contentMode = .scaleAspectFit
+    icon.snp.makeConstraints { make in
+      make.width.equalTo(12)
+    }
     return icon
   }()
   
- // MARK: - UILabel
+  // MARK: - UILabel
   private lazy var addressTitle: UILabel = {
     let label = UILabel()
     label.font = AppFont.font(.mediumText, size: 15)
@@ -113,35 +182,6 @@ class DetailRouteCell: BaseCollectionViewCell {
     label.numberOfLines = 0
     return label
   }()
-  private lazy var totalTimeValue: UILabel = {
-    let label = UILabel()
-    label.translatesAutoresizingMaskIntoConstraints = false
-    label.text = "1h59m"
-    label.textColor = UIColor(rgb: 0xF26101)
-    label.font = AppFont.font(.boldText, size: 17)
-    return label
-  }()
-  private lazy var totalTimeTitle: UILabel = {
-    let label = UILabel()
-    label.text = "Duration"
-    label.textColor = UIColor(rgb: 0x909090)
-    label.font = AppFont.font(.regularText, size: 12)
-    return label
-  }()
-  private lazy var totalDistanceValue: UILabel = {
-    let label = UILabel()
-    label.text = "5000"
-    label.textColor = UIColor(rgb: 0xF26101)
-    label.font = AppFont.font(.boldText, size: 17)
-    return label
-  }()
-  private lazy var totalDistanceTitle: UILabel = {
-    let label = UILabel()
-    label.text = "Distance(mi)"
-    label.textColor = UIColor(rgb: 0x909090)
-    label.font = AppFont.font(.regularText, size: 12)
-    return label
-  }()
   private lazy var stateLabel: UILabel = {
     let label = UILabel()
     label.translatesAutoresizingMaskIntoConstraints = false
@@ -152,7 +192,7 @@ class DetailRouteCell: BaseCollectionViewCell {
   }()
   
   // MARK: - UIStackView
-
+  
   private var deleteButtonWidth: CGFloat = 35
   private var isDeleteMode = false
   private var spacingBetweenDeleteAndContainer: CGFloat = 8
@@ -164,7 +204,7 @@ class DetailRouteCell: BaseCollectionViewCell {
   
   override func addComponents() {
     self.contentView.addSubview(containerView)
-    self.containerView.addSubviews(icon, lineView , inforView)
+    self.containerView.addSubviews(icon, lineView, inforView)
   }
   
   override func setConstraints() {
@@ -174,7 +214,8 @@ class DetailRouteCell: BaseCollectionViewCell {
     }
     
     icon.snp.makeConstraints { make in
-      make.top.left.equalToSuperview()
+      make.top.equalToSuperview()
+      make.left.equalToSuperview().inset(12)
       make.width.height.equalTo(32)
     }
     
@@ -267,10 +308,12 @@ extension DetailRouteCell {
 extension DetailRouteCell {
   func hideStateView() {
     stateView.isHidden = true
+    emtyView.isHidden = true
   }
   
   func showStateView() {
     stateView.isHidden = false
+    emtyView.isHidden = false
   }
 }
 

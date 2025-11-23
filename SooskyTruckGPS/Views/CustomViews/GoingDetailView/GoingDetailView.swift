@@ -92,6 +92,7 @@ class GoingDetailView: BaseView {
   private lazy var stackCollectionView: UIStackView = {
     let stackView = UIStackView()
     stackView.translatesAutoresizingMaskIntoConstraints = false
+    stackView.backgroundColor = .clear
     stackView.addArrangedSubview(collectionView)
     return stackView
   }()
@@ -212,7 +213,8 @@ extension GoingDetailView {
     
     stackCollectionView.snp.makeConstraints { make in
       make.top.equalTo(timeEstimateView.snp.bottom).inset(-20)
-      make.left.right.equalToSuperview().inset(12)
+      make.left.equalToSuperview().inset(12)
+      make.right.equalToSuperview().inset(12)
       make.bottom.equalToSuperview().inset(32)
     }
   }
@@ -276,7 +278,7 @@ extension GoingDetailView: UICollectionViewDelegateFlowLayout {
   }
   
   func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {
-    return UIEdgeInsets(top: 16, left: 0, bottom: 0, right: 16)
+    return UIEdgeInsets(top: 16, left: 0, bottom: 16, right: 0)
   }
 }
 extension GoingDetailView {
