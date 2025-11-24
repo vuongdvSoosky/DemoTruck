@@ -384,6 +384,12 @@ class TruckVC: BaseViewController {
       make.height.equalTo(56)
     }
     
+    iconTruck.snp.makeConstraints { make in
+      make.top.equalTo(collectionView.snp.bottom).inset(-18)
+      make.left.equalToSuperview().inset(20)
+      make.width.height.equalTo(48)
+    }
+    
     viewList.snp.makeConstraints { make in
       make.bottom.equalTo(routeStackView.snp.top).inset(-12)
       make.centerX.equalToSuperview()
@@ -409,12 +415,13 @@ class TruckVC: BaseViewController {
   }
   
   private func showTutorialView() {
-    guard let topVC = UIApplication.topTabBarController() as? TabbarVC else {
+    guard let topVC = UIApplication.context() as? TabbarVC else {
       return
     }
     
     tutorialView.showView(view: topVC.view)
   }
+  
   
   @objc private func annotationTapped(_ sender: UITapGestureRecognizer) {
     guard let customView = sender.view as? CustomAnnotationView else { return }
