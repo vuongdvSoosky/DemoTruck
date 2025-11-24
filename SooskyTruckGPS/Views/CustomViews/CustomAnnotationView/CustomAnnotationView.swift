@@ -14,7 +14,7 @@ protocol CustomAnnotationViewDelagate: AnyObject {
 }
 
 class CustomAnnotationView: MKAnnotationView {
-   var annotationID: String?
+  var annotationID: String?
   
   // MARK: - UI Components
   let containerView: UIView = {
@@ -31,7 +31,7 @@ class CustomAnnotationView: MKAnnotationView {
     let label = UILabel()
     label.font = AppFont.font(.mediumText, size: 17)
     label.textColor = UIColor(rgb: 0x332644)
-    label.textAlignment = .left
+    label.textAlignment = .center
     label.numberOfLines = 0
     return label
   }()
@@ -61,7 +61,7 @@ class CustomAnnotationView: MKAnnotationView {
   
   private let removeLabel: UILabel = {
     let label = UILabel()
-    label.font = AppFont.font(.semiBoldText, size: 12)
+    label.font = AppFont.font(.boldText, size: 12)
     label.textColor = UIColor(rgb: 0xF2F2F2)
     label.text = "Add Stop"
     label.textAlignment = .center
@@ -95,6 +95,7 @@ class CustomAnnotationView: MKAnnotationView {
     containerView.snp.makeConstraints { make in
       make.centerX.equalToSuperview()
       make.bottom.equalToSuperview().offset(-80)
+      make.width.greaterThanOrEqualTo(250)
     }
     
     containerView.addSubview(titleLabel)
@@ -147,8 +148,8 @@ class CustomAnnotationView: MKAnnotationView {
   
   private func configureView() {
     guard let ann = annotation as? CustomAnnotation else { return }
-//    titleLabel.text = ann.title
-//    subtitleLabel.text = ann.subtitle
+    //    titleLabel.text = ann.title
+    //    subtitleLabel.text = ann.subtitle
   }
   
   func configureButton(title: String, icon: UIImage) {
