@@ -102,9 +102,9 @@ class SettingsVC: BaseViewController {
   }
   
   private func setupBanner() {
-    AdMobManager.shared.addAdBanner(unitId: AdUnitID(rawValue: SampleAdUnitID.adFormatFixedBannerID2),
-                                    rootVC: self,
-                                    view: bannerView, height: 250)
+//    AdMobManager.shared.addAdBanner(unitId: AdUnitID(rawValue: SampleAdUnitID.adFormatFixedBannerID2),
+//                                    rootVC: self,
+//                                    view: bannerView, height: 250)
   }
   
   // MARK: Action

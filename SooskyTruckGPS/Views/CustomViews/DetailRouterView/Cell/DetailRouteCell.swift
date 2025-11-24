@@ -32,7 +32,6 @@ class DetailRouteCell: BaseCollectionViewCell {
     view.borderColor = UIColor(rgb: 0xC4C4C4, alpha: 0.25)
     view.borderWidth = 0.5
     
-    
     let stateStackView = UIStackView()
     stateStackView.axis = .horizontal
     stateStackView.spacing = 4
@@ -273,6 +272,7 @@ extension DetailRouteCell {
     self.addressContent.text = place.fullAddres
     
     guard let state = place.state else {
+      hideStateView()
       return
     }
     

@@ -199,6 +199,33 @@ extension MapManager {
   }
 }
 
+// MARK: - CheckLocation
+extension MapManager {
+  func checkRouteAvailable(from start: CLLocationCoordinate2D,
+                           to end: CLLocationCoordinate2D,
+                           completion: @escaping (Bool) -> Void) {
+    
+    let startPlacemark = MKPlacemark(coordinate: start)
+    let endPlacemark = MKPlacemark(coordinate: end)
+    
+    let request = MKDirections.Request()
+    request.source = MKMapItem(placemark: startPlacemark)
+    request.destination = MKMapItem(placemark: endPlacemark)
+    request.transportType = .automobile
+    
+    let directions = MKDirections(request: request)
+    directions.calculate { response, error in
+      if let routes = response?.routes, !routes.isEmpty {
+        LogManager.show("Có đường đi, distance: \(routes.first?.distance ?? 0)")
+        completion(true)
+      } else {
+        LogManager.show("Không có route khả dụng: \(error?.localizedDescription ?? "")")
+        completion(false)
+      }
+    }
+  }
+}
+
 class CustomAnnotation: NSObject, MKAnnotation {
   var coordinate: CLLocationCoordinate2D
   var title: String?

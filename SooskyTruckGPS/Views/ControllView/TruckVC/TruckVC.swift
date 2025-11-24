@@ -8,6 +8,7 @@
 import UIKit
 import SnapKit
 import MapKit
+import Toast
 
 class TruckVC: BaseViewController {
   private lazy var mapView: MKMapView = {
@@ -173,7 +174,7 @@ class TruckVC: BaseViewController {
     MapManager.shared.requestUserLocation { [weak self] location in
       guard let self = self, let location = location else { return }
       MapManager.shared.centerMap(on: location, zoom: 0.02)
-       searchNearby()
+      searchNearby()
     }
   }
   
@@ -459,10 +460,10 @@ extension TruckVC: MKMapViewDelegate {
     // debounce tránh spam search khi người dùng kéo bản đồ liên tục
     searchDelayTimer?.invalidate()
     searchDelayTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: false) { [weak self] _ in
-       self?.searchNearby(with: self?.currentQuery ?? "", type: self?.currentType ?? "")
+      self?.searchNearby(with: self?.currentQuery ?? "", type: self?.currentType ?? "")
     }
   }
-    
+  
   func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
     if annotation is MKUserLocation { return nil }
     
@@ -589,59 +590,59 @@ extension TruckVC: UITextFieldDelegate {
     tableView.isHidden = false
   }
   
-    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-      textField.resignFirstResponder()
-      guard let keyword = textField.text, !keyword.isEmpty else { return true }
-      tableView.isHidden = true
-  
-      let request = MKLocalSearch.Request()
-      request.naturalLanguageQuery = keyword
-      let search = MKLocalSearch(request: request)
-      request.region = mapView.region
-  
-      search.start { [weak self] response, error in
-        guard let self = self,
-              let mapItem = response?.mapItems.first else { return }
-        let coordinate = mapItem.placemark.coordinate
-        DispatchQueue.main.async {
-          let region = MKCoordinateRegion(
-            center: coordinate,
-            latitudinalMeters: 200,
-            longitudinalMeters: 200
-          )
-          self.mapView.setRegion(region, animated: true)
-  
-          // Lấy thông tin đầy đủ từ mapItem giống như tableView
-          let placemark = mapItem.placemark
-          let title = mapItem.name ?? keyword
-          
-          // Format địa chỉ đầy đủ từ placemark
-          var addressParts: [String] = []
-
-          if let city = placemark.locality {
-            addressParts.append(city)
-          }
-          if let state = placemark.administrativeArea {
-            addressParts.append(state)
-          }
-
-          if let country = placemark.country {
-            addressParts.append(country)
-          }
-          
-          let subtitle = addressParts.isEmpty ? (placemark.title ?? "") : addressParts.joined(separator: ", ")
-          
-          let annotation = CustomAnnotation(coordinate: coordinate, title: title, subtitle: subtitle, type: "parking", id: keyword)
-          self.mapView.addAnnotation(annotation)
-  
-          // Hiển thị tooltip sau khi tìm kiếm
-          DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            self.showTooltipForAnnotation(annotation)
-          }
+  func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+    textField.resignFirstResponder()
+    guard let keyword = textField.text, !keyword.isEmpty else { return true }
+    tableView.isHidden = true
+    
+    let request = MKLocalSearch.Request()
+    request.naturalLanguageQuery = keyword
+    let search = MKLocalSearch(request: request)
+    request.region = mapView.region
+    
+    search.start { [weak self] response, error in
+      guard let self = self,
+            let mapItem = response?.mapItems.first else { return }
+      let coordinate = mapItem.placemark.coordinate
+      DispatchQueue.main.async {
+        let region = MKCoordinateRegion(
+          center: coordinate,
+          latitudinalMeters: 200,
+          longitudinalMeters: 200
+        )
+        self.mapView.setRegion(region, animated: true)
+        
+        // Lấy thông tin đầy đủ từ mapItem giống như tableView
+        let placemark = mapItem.placemark
+        let title = mapItem.name ?? keyword
+        
+        // Format địa chỉ đầy đủ từ placemark
+        var addressParts: [String] = []
+        
+        if let city = placemark.locality {
+          addressParts.append(city)
+        }
+        if let state = placemark.administrativeArea {
+          addressParts.append(state)
+        }
+        
+        if let country = placemark.country {
+          addressParts.append(country)
+        }
+        
+        let subtitle = addressParts.isEmpty ? (placemark.title ?? "") : addressParts.joined(separator: ", ")
+        
+        let annotation = CustomAnnotation(coordinate: coordinate, title: title, subtitle: subtitle, type: "parking", id: keyword)
+        self.mapView.addAnnotation(annotation)
+        
+        // Hiển thị tooltip sau khi tìm kiếm
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+          self.showTooltipForAnnotation(annotation)
         }
       }
-      return true
     }
+    return true
+  }
 }
 
 // MARK: - Action
@@ -815,6 +816,38 @@ extension TruckVC: UICollectionViewDataSource {
 extension TruckVC: CustomAnnotationViewDelagate {
   func customAnnotationView(_ annotationView: CustomAnnotationView, place: Place?) {
     guard let place = place else { return }
+    
+    if PlaceManager.shared.placeGroup.places.count < 1 {
+      addPlaceToPlaceGourp(annotationView, place: place)
+    } else {
+      MapManager.shared.checkRouteAvailable(from: PlaceManager.shared.currentPlace?.coordinate ?? CLLocationCoordinate2D(), to: place.coordinate) { [weak self] available in
+        guard let self else {
+          return
+        }
+        if available {
+          addPlaceToPlaceGourp(annotationView, place: place)
+        } else {
+          var style = ToastStyle()
+          style.backgroundColor = UIColor(rgb: 0xF03C3C)
+          style.cornerRadius = 16
+          style.titleColor = .white
+          style.titleAlignment = .center
+          style.titleFont = AppFont.font(.semiBoldText, size: 12)
+          style.messageColor = .white
+          style.displayShadow = false
+          style.imageSize = CGSize(width: 18.0, height: 18.0)
+          
+          self.view.makeToast("Cannot calculate a route with these stops",
+                              duration: 3.0,
+                              position: .top,
+                              image: .icAlert,
+                              style: style)
+        }
+      }
+    }
+  }
+  
+  private func addPlaceToPlaceGourp(_ annotationView: CustomAnnotationView, place: Place) {
     let wasInPlaceGroup = PlaceManager.shared.isExistLocation(place)
     PlaceManager.shared.addLocationToArray(place)
     let isInPlaceGroup = PlaceManager.shared.isExistLocation(place)
@@ -855,7 +888,7 @@ extension TruckVC: CustomAnnotationViewDelagate {
     
     // Cập nhật lại tooltip nếu đang hiển thị
     if currentTooltipView?.annotationID == annotationView.annotationID {
-      annotationView.configureButton(title: isInPlaceGroup ? "Remove Stop" : "Add Stop", 
+      annotationView.configureButton(title: isInPlaceGroup ? "Remove Stop" : "Add Stop",
                                      icon: isInPlaceGroup ? .icTrash : .icPlus)
     }
   }

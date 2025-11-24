@@ -31,6 +31,7 @@ class BeforeGoingVC: BaseViewController {
     let view = DetailRouterView()
     view.translatesAutoresizingMaskIntoConstraints = false
     view.backgroundColor = UIColor(rgb: 0xF2F2F2)
+    view.disableButton()
     return view
   }()
   private lazy var containerView: UIView = {

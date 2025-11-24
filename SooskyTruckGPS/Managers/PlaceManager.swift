@@ -13,6 +13,7 @@ class PlaceManager {
   
   @Published var placeGroup: PlaceGroup = .init(nameRouter: "", places: [])
   @Published var placesRouter: RouteResponse?
+  @Published var currentPlace: Place?
   
   private init() {}
 }
@@ -31,6 +32,7 @@ extension PlaceManager {
       newPlace.type = "Location"
       }
       self.placeGroup.places.append(newPlace)
+      currentPlace = newPlace
     } else {
       self.placeGroup.places.removeAll(where: {$0.address == place.address})
     }

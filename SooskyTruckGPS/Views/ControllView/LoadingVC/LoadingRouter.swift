@@ -14,6 +14,7 @@ class LoadingRouter: Router {
     case back
     case iap
     case beforGoing
+    case showError
   }
 }
 
@@ -45,6 +46,8 @@ extension LoadingRouter {
       default:
         break
       }
+    case .showError:
+      showErrorView(context)
     }
   }
 }
@@ -54,5 +57,22 @@ extension LoadingRouter {
     let beforGoing = BeforeGoingVC()
     context.push(to: beforGoing, animated: true)
     context.removeViewController(LoadingVC.self)
+  }
+  
+  private func showErrorView(_ context: UINavigationController) {
+    guard let topVC = UIApplication.topViewController() else {
+      return
+    }
+    
+    let view = ServerErrorView()
+    view.handlerActionOkay = {[weak self] in
+      guard let self else {
+        return
+      }
+      context.pop(animated: true)
+      view.dismissSlideView()
+    }
+    
+    view.showSlideView(view: topVC.view)
   }
 }

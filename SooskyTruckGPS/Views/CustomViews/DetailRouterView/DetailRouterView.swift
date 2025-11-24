@@ -133,6 +133,8 @@ class DetailRouterView: BaseView {
     return collectionView
   }()
   
+  private var disableButtonEdit: Bool = false
+  
   override func addComponents() {
     self.addSubviews(containerView)
     containerView.addSubviews(titleRoute, totalDistanceView, timeEstimateView, collectionView)
@@ -227,5 +229,11 @@ extension DetailRouterView: UICollectionViewDataSource {
 extension DetailRouterView: UICollectionViewDelegateFlowLayout {
   func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
     return CGSize(width: self.collectionView.frame.width, height: 58)
+  }
+}
+
+extension DetailRouterView {
+  func disableButton() {
+    self.disableButtonEdit = true
   }
 }
