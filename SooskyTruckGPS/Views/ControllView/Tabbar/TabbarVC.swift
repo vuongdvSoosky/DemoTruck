@@ -16,7 +16,7 @@ class TabbarVC: UITabBarController, UITabBarControllerDelegate {
   private var previousIndex: Int = 0
   var countAdsToShow = 0
   var countShowIAP = 0
-  private var tabbarOverlay: UIView?
+  private var overlayView: UIView?
   
   private var subcription = Set<AnyCancellable>()
   private var lastSelectedIndex: Int?
@@ -47,6 +47,14 @@ class TabbarVC: UITabBarController, UITabBarControllerDelegate {
     self.tabBar.backgroundColor = .clear
     setupTabbarView()
     setConstraints()
+  }
+  
+  override func viewDidLayoutSubviews() {
+    super.viewDidLayoutSubviews()
+    
+    if let overlay = overlayView {
+      view.bringSubviewToFront(overlay)
+    }
   }
   
   private func setConstraints() {
@@ -174,10 +182,10 @@ extension TabbarVC {
 
 extension TabbarVC {
   func showTabbarOverlay() {
-    guard tabbarOverlay == nil else { return }
+    guard overlayView == nil else { return }
     
     let overlay = UIView()
-    overlay.backgroundColor = UIColor.black.withAlphaComponent(0.6)
+    overlay.backgroundColor = UIColor(rgb: 0x000000, alpha: 0.7)
     overlay.isUserInteractionEnabled = true
     overlay.alpha = 0
     
@@ -185,13 +193,20 @@ extension TabbarVC {
     overlay.snp.makeConstraints { make in
       make.leading.trailing.equalToSuperview()
       make.bottom.equalToSuperview()
-      make.height.equalTo(95)   // bằng đúng height của custom tabbar
+      make.height.equalTo(95)
     }
     
     UIView.animate(withDuration: 0.25) {
       overlay.alpha = 1
     }
     
-    self.tabbarOverlay = overlay
+    self.overlayView = overlay
+  }
+  
+  func hideOverlay() {
+    guard let overlay = overlayView else { return }
+    
+    overlay.removeFromSuperview()
+    self.overlayView = nil
   }
 }

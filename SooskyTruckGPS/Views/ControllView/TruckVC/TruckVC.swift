@@ -29,6 +29,7 @@ class TruckVC: BaseViewController {
     let icon = UIImageView()
     icon.image = .icProfileTruck
     icon.contentMode = .scaleAspectFit
+    icon.isUserInteractionEnabled = true
     icon.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapIconTruckProfile)))
     return icon
   }()
@@ -99,6 +100,7 @@ class TruckVC: BaseViewController {
     stackView.layer.masksToBounds = true
     return stackView
   }()
+
   
   private lazy var tableView: UITableView = {
     let tableView = UITableView()
@@ -106,6 +108,25 @@ class TruckVC: BaseViewController {
     return tableView
   }()
   
+  // MARK: Tutorial
+
+  private lazy var iconTutorialTruck: UIImageView = {
+    let icon = UIImageView()
+    icon.image = .icTutoriaTruckProfile
+    icon.contentMode = .scaleAspectFit
+    icon.isUserInteractionEnabled = true
+    return icon
+  }()
+  
+  private lazy var iconTutorialSearch: UIImageView = {
+    let icon = UIImageView()
+    icon.image = .icSearchTutorial
+    icon.contentMode = .scaleAspectFit
+    icon.isUserInteractionEnabled = true
+    icon.isHidden = true
+    return icon
+  }()
+    
   private lazy var arrayPlaces: [Place] = []
   var currentTooltipView: CustomAnnotationView?
   var currentTooltipID: String?
@@ -170,7 +191,15 @@ class TruckVC: BaseViewController {
     setupMap()
     setupTableView()
     setupSearchCompleter()
-    showTutorialView()
+    showOverlay()
+  }
+  
+  func showOverlay() {
+      (self.tabBarController as? TabbarVC)?.showTabbarOverlay()
+  }
+  
+  func hideOverlay() {
+    (self.tabBarController as? TabbarVC)?.hideOverlay()
   }
   
   override func setProperties() {
@@ -227,6 +256,18 @@ class TruckVC: BaseViewController {
           return
         }
         collectionView.reloadData()
+      }.store(in: &subscriptions)
+    
+    viewModel.actionTutorialTruckProFile
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] in
+        guard let self else {
+          return
+        }
+        self.view.insertSubview(searchView, aboveSubview: tutorialView)
+        self.view.insertSubview(tableView, aboveSubview: tutorialView)
+        iconTutorialSearch.isHidden = false
+        showOverlay()
       }.store(in: &subscriptions)
   }
   
@@ -363,7 +404,9 @@ class TruckVC: BaseViewController {
   }
   
   override func addComponents() {
-    self.view.addSubviews(mapView, searchView, viewList, routeStackView, collectionView, tableView, iconTruck)
+    self.view.addSubviews(mapView, searchView, viewList,
+                          routeStackView, collectionView, tableView,
+                          tutorialView, iconTruck, iconTutorialTruck, iconTutorialSearch)
   }
   
   override func setConstraints() {
@@ -371,10 +414,19 @@ class TruckVC: BaseViewController {
       make.edges.equalToSuperview()
     }
     
+    tutorialView.snp.makeConstraints { make in
+      make.edges.equalToSuperview()
+    }
+    
     searchView.snp.makeConstraints { make in
       make.top.equalTo(self.view.snp.topMargin).inset(15)
       make.height.equalTo(48)
       make.left.right.equalToSuperview().inset(20)
+    }
+    
+    iconTutorialSearch.snp.makeConstraints { make in
+      make.top.equalTo(searchView.snp.bottom).inset(-20)
+      make.centerX.equalTo(searchView.snp.centerX)
     }
     
     collectionView.snp.makeConstraints { make in
@@ -388,6 +440,11 @@ class TruckVC: BaseViewController {
       make.top.equalTo(collectionView.snp.bottom).inset(-18)
       make.left.equalToSuperview().inset(20)
       make.width.height.equalTo(48)
+    }
+    
+    iconTutorialTruck.snp.makeConstraints { make in
+      make.centerY.equalTo(iconTruck.snp.centerY)
+      make.left.equalTo(iconTruck.snp.right).inset(-10)
     }
     
     viewList.snp.makeConstraints { make in
@@ -413,15 +470,6 @@ class TruckVC: BaseViewController {
       make.height.equalTo(288)
     }
   }
-  
-  private func showTutorialView() {
-    guard let topVC = UIApplication.context() as? TabbarVC else {
-      return
-    }
-    
-    tutorialView.showView(view: topVC.view)
-  }
-  
   
   @objc private func annotationTapped(_ sender: UITapGestureRecognizer) {
     guard let customView = sender.view as? CustomAnnotationView else { return }
@@ -610,8 +658,12 @@ extension TruckVC: MKMapViewDelegate {
 // MARK: UITextFieldDelegate
 extension TruckVC: UITextFieldDelegate {
   @objc private func textFieldDidChange(_ textField: UITextField) {
-    guard let text = textField.text else {
+    guard let text = textField.text, !text.isEmpty else {
       tableView.isHidden = true
+      if UserDefaultsManager.shared.get(of: Bool.self, key: .tutorial) == false {
+        iconTutorialSearch.isHidden = false
+      }
+      
       viewModel.searchSuggestions.removeAll()
       tableView.reloadData()
       return
@@ -619,6 +671,7 @@ extension TruckVC: UITextFieldDelegate {
     self.address = text
     viewModel.searchCompleter.queryFragment = text
     tableView.isHidden = false
+    iconTutorialSearch.isHidden = true
   }
   
   func textFieldShouldReturn(_ textField: UITextField) -> Bool {
@@ -678,7 +731,6 @@ extension TruckVC: UITextFieldDelegate {
 }
 
 // MARK: - Action
-
 extension TruckVC {
   @objc private func onTapCloseCalloutView(_ gesture: UITapGestureRecognizer) {
     let location = gesture.location(in: mapView)
@@ -711,7 +763,10 @@ extension TruckVC {
   }
   
   @objc private func onTapIconTruckProfile() {
-    LogManager.show("Truck Profile")
+    viewModel.action.send(.truckProfile)
+    hideOverlay()
+    iconTutorialTruck.isHidden = true
+    self.view.insertSubview(tutorialView, aboveSubview: iconTruck)
   }
 }
 
@@ -764,8 +819,8 @@ extension TruckVC: UITableViewDelegate, UITableViewDataSource {
         self.mapView.setRegion(region, animated: true)
         
         let annotation = CustomAnnotation(coordinate: coordinate, title: dataSuggestion.title , subtitle: dataSuggestion.subtitle, type: "", id:  dataSuggestion.title)
-        self.mapView.addAnnotation(annotation)
         
+        self.mapView.addAnnotation(annotation)
         // Hiển thị tooltip sau khi chọn trong tableView
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
           self.showTooltipForAnnotation(annotation)

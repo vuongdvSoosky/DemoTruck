@@ -13,6 +13,7 @@ class TruckViewModel: BaseViewModel {
     case viewList
     case caculatorRoute
     case getIndex(int: Int)
+    case truckProfile
   }
   
   let action = PassthroughSubject<Action, Never>()
@@ -20,6 +21,7 @@ class TruckViewModel: BaseViewModel {
   var searchCompleter = MKLocalSearchCompleter()
   var searchSuggestions: [MKLocalSearchCompletion] = []
   let index = CurrentValueSubject<Int?, Never>(nil)
+  let actionTutorialTruckProFile = PassthroughSubject<Void, Never>()
   
   private let router = TruckRouter()
   
@@ -43,6 +45,14 @@ extension TruckViewModel {
       router.route(to: .loadingVC)
     case .getIndex(int: let int):
       self.index.send(int)
+    case .truckProfile:
+      let handler: Handler = { [weak self] in
+        guard let self else {
+          return
+        }
+        actionTutorialTruckProFile.send(())
+      }
+      router.route(to: .truckProFile, parameters: ["Handler": handler])
     }
   }
 }

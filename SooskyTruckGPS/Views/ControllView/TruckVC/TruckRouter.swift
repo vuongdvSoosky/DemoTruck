@@ -13,6 +13,7 @@ class TruckRouter: Router {
   enum Route: String {
     case viewlist
     case loadingVC
+    case truckProFile
   }
 }
 
@@ -27,6 +28,8 @@ extension TruckRouter {
     case .loadingVC:
       let loadingVC = LoadingVC()
       context.push(to: loadingVC, animated: true)
+    case .truckProFile:
+      showTruckProfileView(parameters)
     }
   }
 }
@@ -39,5 +42,19 @@ extension TruckRouter {
     
     let listView = ListLocationView()
     listView.showSlideView(view: topVC.view)
+  }
+  
+  private func showTruckProfileView(_ parameters: [String: Any]? = nil) {
+    guard let topVC = UIApplication.topViewController() else {
+      return
+    }
+    guard let parameters = parameters,
+          let handler = parameters["Handler"] as? Handler else {
+      return
+    }
+    
+    let listView = TruckProfileView()
+    listView.handler = handler
+    listView.showView(view: topVC.view)
   }
 }

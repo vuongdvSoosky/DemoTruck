@@ -17,6 +17,7 @@ final class UserDefaultsManager {
     case didShowOnboard
     case showIAPForReportView
     case requestLocation
+    case tutorial
   }
   
   func set<T>(_ value: T?, key: KeyUserDefaults) {
