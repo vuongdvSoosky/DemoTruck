@@ -509,7 +509,7 @@ extension EditGoingVC: MKMapViewDelegate {
   func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
     // debounce tránh spam search khi người dùng kéo bản đồ liên tục
     searchDelayTimer?.invalidate()
-    searchDelayTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: false) { [weak self] _ in
+    searchDelayTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: false) { [weak self] _ in
        self?.searchNearby(with: self?.currentQuery ?? "", type: self?.currentType ?? "")
     }
   }

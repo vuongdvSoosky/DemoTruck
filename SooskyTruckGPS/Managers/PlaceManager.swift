@@ -11,7 +11,7 @@ import MapKit
 class PlaceManager {
   static let shared = PlaceManager()
   
-  @Published var placeGroup: PlaceGroup = .init(nameRouter: "", places: [])
+  @Published var placeGroup: PlaceGroup = .init(nameRouter: "My Route", places: [])
   @Published var placesRouter: RouteResponse?
   @Published var currentPlace: Place?
   
@@ -60,7 +60,12 @@ extension PlaceManager {
     self.placesRouter = placesRouter
   }
   
-  func setPlaceGroup(_ places: [Place]) {
+  func setPlaceGroup(_ places: [Place], nameGroup: String) {
     self.placeGroup.places = places
+    self.placeGroup.nameRouter = nameGroup
+  }
+  
+  func setNamePlaceGroup(_ nameGroup: String) {
+    self.placeGroup.nameRouter = nameGroup
   }
 }

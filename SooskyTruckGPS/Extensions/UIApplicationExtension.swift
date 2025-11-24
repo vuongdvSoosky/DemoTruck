@@ -15,14 +15,30 @@ extension UIApplication {
   class func topViewController() -> UIViewController? {
     return context()?.topViewController
   }
-  
+    
   static func topTabBarController() -> UITabBarController? {
-    guard let root = keyWindow?.rootViewController else { return nil }
-    if let nav = root as? UINavigationController {
-      return nav.viewControllers.first(where: { $0 is UITabBarController }) as? UITabBarController
-    } else if let tab = root as? UITabBarController {
-      return tab
-    }
-    return nil
+    return topViewController()?.tabBarController
   }
+}
+
+extension UIApplication {
+  static func topViewController(base: UIViewController? = UIApplication.shared.connectedScenes
+    .compactMap({ $0 as? UIWindowScene })
+    .flatMap({ $0.windows })
+    .first(where: { $0.isKeyWindow })?.rootViewController) -> UIViewController? {
+      
+      if let nav = base as? UINavigationController {
+        return topViewController(base: nav.visibleViewController)
+      }
+      
+      if let tab = base as? UITabBarController {
+        return topViewController(base: tab.selectedViewController)
+      }
+      
+      if let presented = base?.presentedViewController {
+        return topViewController(base: presented)
+      }
+      
+      return base
+    }
 }

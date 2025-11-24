@@ -38,7 +38,6 @@ extension TruckRouter {
     }
     
     let listView = ListLocationView()
-    
     listView.showSlideView(view: topVC.view)
   }
 }

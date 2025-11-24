@@ -13,7 +13,7 @@ import MapKit
 // MARK: - Realm Models
 
 // Root
-class RouteResponseRealm: Object {
+class RouteResponseRealm: BaseObject {
   @Persisted var hints: RouteHintsRealm?
   @Persisted var info: RouteInfoRealm?
   @Persisted var paths = List<RoutePathRealm>()
@@ -45,7 +45,7 @@ class RouteResponseRealm: Object {
 }
 
 // Hints
-class RouteHintsRealm: Object {
+class RouteHintsRealm: BaseObject {
   @Persisted var visitedNodes: VisitedNodesRealm?
   
   convenience init(from model: RouteHints) {
@@ -56,7 +56,7 @@ class RouteHintsRealm: Object {
   }
 }
 
-class VisitedNodesRealm: Object {
+class VisitedNodesRealm: BaseObject {
   @Persisted var sum: Int = 0
   @Persisted var average: Int = 0
   
@@ -68,7 +68,7 @@ class VisitedNodesRealm: Object {
 }
 
 // Info
-class RouteInfoRealm: Object {
+class RouteInfoRealm: BaseObject {
   @Persisted var copyrights = List<String>()
   @Persisted var took: Int = 0
   @Persisted var roadDataTimestamp: String?
@@ -82,7 +82,7 @@ class RouteInfoRealm: Object {
 }
 
 // Path
-class RoutePathRealm: Object {
+class RoutePathRealm: BaseObject {
   @Persisted var distance: Double = 0
   @Persisted var weight: Double = 0
   @Persisted var time: Int = 0
@@ -116,7 +116,7 @@ class RoutePathRealm: Object {
 }
 
 // Points
-class RoutePointsRealm: Object {
+class RoutePointsRealm: BaseObject {
   @Persisted var type: String = ""
   @Persisted var coordinates = List<CoordinateRealm>()
   
@@ -139,7 +139,7 @@ class CoordinateRealm: EmbeddedObject {
 }
 
 // Instruction
-class RouteInstructionRealm: Object {
+class RouteInstructionRealm: BaseObject {
   @Persisted var distance: Double = 0
   @Persisted var heading: Double?
   @Persisted var sign: Int = 0
@@ -161,7 +161,7 @@ class RouteInstructionRealm: Object {
 }
 
 // Details
-class RouteDetailsRealm: Object {
+class RouteDetailsRealm: BaseObject {
   @Persisted var surface = List<SurfaceDetailRealm>()
   @Persisted var roadClass = List<RoadClassDetailRealm>()
   

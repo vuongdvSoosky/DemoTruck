@@ -49,17 +49,17 @@ class ListLocationCell: BaseCollectionViewCell {
     
     let stackView = UIStackView()
     stackView.axis = .vertical
-    stackView.spacing = 2
+    stackView.spacing = 4
     stackView.distribution = .fillEqually
     
     [addressTitle, addressContent].forEach({stackView.addArrangedSubview($0)})
     view.addSubview(stackView)
     
     stackView.snp.makeConstraints { make in
-      make.top.equalToSuperview()
+      make.top.equalToSuperview().inset(12)
       make.left.equalToSuperview().inset(8)
       make.right.equalToSuperview().inset(8)
-      make.bottom.lessThanOrEqualToSuperview().inset(8)
+      make.bottom.lessThanOrEqualToSuperview().inset(12)
     }
     return view
   }()

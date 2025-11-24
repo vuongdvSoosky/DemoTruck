@@ -16,6 +16,7 @@ class TabbarVC: UITabBarController, UITabBarControllerDelegate {
   private var previousIndex: Int = 0
   var countAdsToShow = 0
   var countShowIAP = 0
+  private var tabbarOverlay: UIView?
   
   private var subcription = Set<AnyCancellable>()
   private var lastSelectedIndex: Int?
@@ -80,27 +81,27 @@ extension TabbarVC: CustomTabbarViewDelagate {
   
   func didSelectedTrack(index: Int) {
     self.selectedIndex = index
-//    showInterAds(didDismiss: {[weak self] in
-//      guard let self else {
-//        return
-//      }
-//      if UserDefaultsManager.shared.get(of: Bool.self, key: .showTutorialTrack) == false {
-//        showPopupTutorialView(0)
-//        UserDefaultsManager.shared.set(true, key: .showTutorialTrack)
-//      }
-//      
-//      self.selectedIndex = index
-//    }, didFaild: {[weak self] in
-//      guard let self else {
-//        return
-//      }
-//      if UserDefaultsManager.shared.get(of: Bool.self, key: .showTutorialTrack) == false {
-//        showPopupTutorialView(0)
-//        UserDefaultsManager.shared.set(true, key: .showTutorialTrack)
-//      }
-//      self.selectedIndex = index
-//    }
-//    )
+    //    showInterAds(didDismiss: {[weak self] in
+    //      guard let self else {
+    //        return
+    //      }
+    //      if UserDefaultsManager.shared.get(of: Bool.self, key: .showTutorialTrack) == false {
+    //        showPopupTutorialView(0)
+    //        UserDefaultsManager.shared.set(true, key: .showTutorialTrack)
+    //      }
+    //
+    //      self.selectedIndex = index
+    //    }, didFaild: {[weak self] in
+    //      guard let self else {
+    //        return
+    //      }
+    //      if UserDefaultsManager.shared.get(of: Bool.self, key: .showTutorialTrack) == false {
+    //        showPopupTutorialView(0)
+    //        UserDefaultsManager.shared.set(true, key: .showTutorialTrack)
+    //      }
+    //      self.selectedIndex = index
+    //    }
+    //    )
   }
   
   func didSelectedTraining(index: Int) {
@@ -124,24 +125,24 @@ extension TabbarVC: CustomTabbarViewDelagate {
   }
   
   func reloadFleetManagementVC() {
-      if let nav = viewControllers?[1] as? UINavigationController,
-         let fleetVC = nav.viewControllers.first(where: { $0 is FleetManagementVC }) as? FleetManagementVC {
-          fleetVC.reloadDataHistoryTab()
-      }
+    if let nav = viewControllers?[1] as? UINavigationController,
+       let fleetVC = nav.viewControllers.first(where: { $0 is FleetManagementVC }) as? FleetManagementVC {
+      fleetVC.reloadDataHistoryTab()
+    }
   }
   
   
   func reloadFleetManagementTabSaveVC() {
     if let nav = viewControllers?[1] as? UINavigationController,
        let fleetVC = nav.viewControllers.first(where: { $0 is FleetManagementVC }) as? FleetManagementVC {
-        fleetVC.reloadDataForSavedTab()
+      fleetVC.reloadDataForSavedTab()
     }
   }
   
   private func showPopupTutorialView(_ index: Int) {
-//    let view = PopupTutorialView()
-//    view.setupData(TutorialType.allCases[index])
-//    view.showSlideView(view: self.view)
+    //    let view = PopupTutorialView()
+    //    view.setupData(TutorialType.allCases[index])
+    //    view.showSlideView(view: self.view)
   }
 }
 
@@ -168,5 +169,29 @@ extension TabbarVC {
   
   private func showReward(with idAds: String , didReward: @escaping (Bool) -> Void) {
     AdMobManager.shared.showRewarded(unitId: AdUnitID(rawValue: idAds), completion: didReward)
+  }
+}
+
+extension TabbarVC {
+  func showTabbarOverlay() {
+    guard tabbarOverlay == nil else { return }
+    
+    let overlay = UIView()
+    overlay.backgroundColor = UIColor.black.withAlphaComponent(0.6)
+    overlay.isUserInteractionEnabled = true
+    overlay.alpha = 0
+    
+    self.view.addSubview(overlay)
+    overlay.snp.makeConstraints { make in
+      make.leading.trailing.equalToSuperview()
+      make.bottom.equalToSuperview()
+      make.height.equalTo(95)   // bằng đúng height của custom tabbar
+    }
+    
+    UIView.animate(withDuration: 0.25) {
+      overlay.alpha = 1
+    }
+    
+    self.tabbarOverlay = overlay
   }
 }

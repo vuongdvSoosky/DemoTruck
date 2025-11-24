@@ -13,6 +13,7 @@ class FleetManagementVM: BaseViewModel {
     case getIndexToScroll(index: Int)
     case getSaveRouteItem(index: Int)
     case getHistoryItem(index: Int)
+    case removeItemHistory(item: RouteResponseRealm)
   }
   
   let action = PassthroughSubject<Action, Never>()
@@ -59,6 +60,13 @@ extension FleetManagementVM {
       router.route(to: .saveRouterVC, parameters: ["RouteResponseRealm": saveRouteItems.value?[index] as Any])
     case .getHistoryItem(index: let index):
       router.route(to: .historyVC, parameters: ["HistoryResponseRealm": itemHistory.value?[index] as Any])
+    case .removeItemHistory(item: let item):
+      guard let object = RealmService.shared.getById(ofType: RouteResponseRealm.self, id: item.id) else {
+        return
+      }
+      
+      RealmService.shared.delete(object)
+      fetchData()
     }
   }
 }

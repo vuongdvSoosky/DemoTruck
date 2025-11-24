@@ -15,6 +15,7 @@ class HistoryDetailVC: BaseViewController {
   private lazy var containerView: UIView = {
     let view = UIView()
     view.translatesAutoresizingMaskIntoConstraints = false
+    
     return view
   }()
  
@@ -275,6 +276,8 @@ extension HistoryDetailVC {
   
   @objc private func onTapBack() {
     viewModel.action.send(.back)
+    // Reset Places
+    PlaceManager.shared.setPlaceGroup([], nameGroup: "")
   }
   
   @objc private func onTapViewlist() {

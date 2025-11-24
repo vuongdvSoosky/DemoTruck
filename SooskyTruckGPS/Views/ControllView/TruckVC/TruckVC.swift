@@ -17,6 +17,22 @@ class TruckVC: BaseViewController {
     return view
   }()
   
+  private lazy var tutorialView: UIView = {
+    let view = UIView()
+    view.translatesAutoresizingMaskIntoConstraints = false
+    view.backgroundColor = UIColor(rgb: 0x000000, alpha: 0.7)
+    
+    return view
+  }()
+  
+  private lazy var iconTruck: UIImageView = {
+    let icon = UIImageView()
+    icon.image = .icProfileTruck
+    icon.contentMode = .scaleAspectFit
+    icon.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapIconTruckProfile)))
+    return icon
+  }()
+  
   private lazy var searchView: UIView = {
     let view = UIView()
     view.translatesAutoresizingMaskIntoConstraints = false
@@ -97,7 +113,7 @@ class TruckVC: BaseViewController {
   private lazy var searchTextField: UITextField = {
     let textField = UITextField()
     textField.translatesAutoresizingMaskIntoConstraints = false
-    textField.placeholder = "Search here"
+    textField.placeholder = "Search for any places"
     return textField
   }()
   
@@ -122,6 +138,7 @@ class TruckVC: BaseViewController {
     view.cornerRadius = 24
     view.backgroundColor = UIColor(rgb: 0xFFFFFF)
     view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapViewlist)))
+    view.isHidden = true
     
     let label = UILabel()
     label.text = "View List"
@@ -153,6 +170,7 @@ class TruckVC: BaseViewController {
     setupMap()
     setupTableView()
     setupSearchCompleter()
+    showTutorialView()
   }
   
   override func setProperties() {
@@ -345,7 +363,7 @@ class TruckVC: BaseViewController {
   }
   
   override func addComponents() {
-    self.view.addSubviews(mapView, searchView, viewList, routeStackView, collectionView, tableView)
+    self.view.addSubviews(mapView, searchView, viewList, routeStackView, collectionView, tableView, iconTruck)
   }
   
   override func setConstraints() {
@@ -388,6 +406,14 @@ class TruckVC: BaseViewController {
       make.centerX.equalToSuperview()
       make.height.equalTo(288)
     }
+  }
+  
+  private func showTutorialView() {
+    guard let topVC = UIApplication.topTabBarController() as? TabbarVC else {
+      return
+    }
+    
+    tutorialView.showView(view: topVC.view)
   }
   
   @objc private func annotationTapped(_ sender: UITapGestureRecognizer) {
@@ -457,9 +483,8 @@ class TruckVC: BaseViewController {
 // MARK: - MapView Delegate
 extension TruckVC: MKMapViewDelegate {
   func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
-    // debounce tránh spam search khi người dùng kéo bản đồ liên tục
     searchDelayTimer?.invalidate()
-    searchDelayTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: false) { [weak self] _ in
+    searchDelayTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: false) { [weak self] _ in
       self?.searchNearby(with: self?.currentQuery ?? "", type: self?.currentType ?? "")
     }
   }
@@ -585,7 +610,6 @@ extension TruckVC: UITextFieldDelegate {
       return
     }
     self.address = text
-    // 410 ATLANTIC AVE, BROOKLYN
     viewModel.searchCompleter.queryFragment = text
     tableView.isHidden = false
   }
@@ -603,6 +627,7 @@ extension TruckVC: UITextFieldDelegate {
     search.start { [weak self] response, error in
       guard let self = self,
             let mapItem = response?.mapItems.first else { return }
+      
       let coordinate = mapItem.placemark.coordinate
       DispatchQueue.main.async {
         let region = MKCoordinateRegion(
@@ -676,6 +701,10 @@ extension TruckVC {
   
   @objc private func onTapCaculatorRoute() {
     viewModel.action.send(.caculatorRoute)
+  }
+  
+  @objc private func onTapIconTruckProfile() {
+    LogManager.show("Truck Profile")
   }
 }
 
@@ -848,6 +877,7 @@ extension TruckVC: CustomAnnotationViewDelagate {
   }
   
   private func addPlaceToPlaceGourp(_ annotationView: CustomAnnotationView, place: Place) {
+    viewList.isHidden = false
     let wasInPlaceGroup = PlaceManager.shared.isExistLocation(place)
     PlaceManager.shared.addLocationToArray(place)
     let isInPlaceGroup = PlaceManager.shared.isExistLocation(place)

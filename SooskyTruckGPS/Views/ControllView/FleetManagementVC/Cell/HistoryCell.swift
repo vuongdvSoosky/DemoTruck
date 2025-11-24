@@ -9,6 +9,16 @@ import UIKit
 import SnapKit
 
 class HistoryCell: BaseCollectionViewCell {
+  private let deleteButton: UIButton = {
+    let button = UIButton()
+    button.backgroundColor = .systemRed
+    button.layer.cornerRadius = 12
+    button.setImage(.icTrashButton, for: .normal)
+    button.tintColor = .white
+    button.translatesAutoresizingMaskIntoConstraints = false
+    return button
+  }()
+  
   private lazy var containerView: UIView = {
     let view = UIView()
     view.translatesAutoresizingMaskIntoConstraints = false
@@ -103,18 +113,39 @@ class HistoryCell: BaseCollectionViewCell {
     return label
   }()
   
+  private var deleteButtonWidth: CGFloat = 35
+  private var isDeleteMode = false
+  private var spacingBetweenDeleteAndContainer: CGFloat = 8
+  var onDeleteTapped: (() -> Void)?
+  var onDeleteModeChanged: ((Bool) -> Void)?
+  var onChooseItemPlace: ((RouteResponseRealm) -> Void)?
+  var itemPlace: RouteResponseRealm?
+  
   override func addComponents() {
+    self.contentView.addSubview(deleteButton)
     self.contentView.addSubviews(containerView)
     containerView.addSubviews(routeName, dateLabel, distanceView, timeView)
+  }
+  
+  override func prepareForReuse() {
+    super.prepareForReuse()
+    hideDeleteMode()
   }
   
   override func setColor() {
     containerView.addShadow()
   }
   
-  override func setProperties() {
+  override func setConstraints() {
     containerView.snp.makeConstraints { make in
       make.edges.equalToSuperview().inset(2)
+    }
+    
+    deleteButton.snp.makeConstraints { make in
+      make.top.equalTo(contentView).inset(2)
+      make.bottom.equalTo(contentView).inset(10)
+      make.trailing.equalTo(contentView).offset(-3)
+      make.width.equalTo(deleteButtonWidth)
     }
     
     routeName.snp.makeConstraints { make in
@@ -141,9 +172,82 @@ class HistoryCell: BaseCollectionViewCell {
     }
   }
   
+  override func setProperties() {
+    // Add left swipe gesture to show delete mode
+    let leftSwipeGesture = UISwipeGestureRecognizer(target: self, action: #selector(handleLeftSwipe(_:)))
+    leftSwipeGesture.direction = .left
+    containerView.addGestureRecognizer(leftSwipeGesture)
+    
+    // Add right swipe gesture to hide delete mode
+    let rightSwipeGesture = UISwipeGestureRecognizer(target: self, action: #selector(handleRightSwipe(_:)))
+    rightSwipeGesture.direction = .right
+    containerView.addGestureRecognizer(rightSwipeGesture)
+    
+    // Add delete button action
+    deleteButton.addTarget(self, action: #selector(deleteButtonTapped), for: .touchUpInside)
+    containerView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapChoosePlace)))
+  }
+  
+  // MARK: - Gesture Handlers
+  @objc private func handleLeftSwipe(_ gesture: UISwipeGestureRecognizer) {
+    if !isDeleteMode {
+      showDeleteMode()
+    }
+  }
+  
+  @objc private func handleRightSwipe(_ gesture: UISwipeGestureRecognizer) {
+    if isDeleteMode {
+      hideDeleteMode()
+    }
+  }
+  
+  @objc private func handleTap(_ gesture: UITapGestureRecognizer) {
+    if isDeleteMode {
+      hideDeleteMode()
+    }
+  }
+  
+  @objc private func deleteButtonTapped() {
+    onDeleteTapped?()
+  }
+  
+  @objc private func onTapChoosePlace() {
+    guard let itemPlace = itemPlace else { return }
+    onChooseItemPlace?(itemPlace)
+  }
+  
+  func hideDeleteModeCell() {
+    if isDeleteMode {
+      hideDeleteMode()
+    }
+  }
+}
+
+extension HistoryCell {
+  // MARK: - Private Methods
+  private func showDeleteMode() {
+    isDeleteMode = true
+    onDeleteModeChanged?(true)
+    UIView.animate(withDuration: 0.3, delay: 0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0, options: .curveEaseInOut) {
+      let translationX = -(self.deleteButtonWidth + self.spacingBetweenDeleteAndContainer)
+      self.containerView.transform = CGAffineTransform(translationX: translationX, y: 0)
+    }
+  }
+  
+  private func hideDeleteMode() {
+    isDeleteMode = false
+    onDeleteModeChanged?(false)
+    UIView.animate(withDuration: 0.3, delay: 0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0, options: .curveEaseInOut) {
+      self.containerView.transform = .identity
+    }
+  }
+}
+
+extension HistoryCell {
   func configData(item: RouteResponseRealm) {
+    self.itemPlace = item
     self.distanceLabel.text = "\(String(format: "%.2f", item.trackingRecords.first?.distanceRace ?? 0.0)) mi"
-    self.routeName.text = item.nameRouter ?? ""
+    self.routeName.text = item.nameRouter ?? "My Route"
     self.timeLabel.text = item.trackingRecords.first?.duration?.toTimeStringFromSeconds()
   }
 }

@@ -68,9 +68,13 @@ extension GoingViewVM {
         keyPath: \.trackingRecords,
         object: trackingRecords
       )
+      
+      LogManager.show(PlaceManager.shared.placeGroup.nameRouter)
       routeRealm.nameRouter = PlaceManager.shared.placeGroup.nameRouter
       routeRealm.addPlaces(PlaceManager.shared.placeGroup.places)
       RealmService.shared.add(routeRealm)
+      
+      PlaceManager.shared.setPlaceGroup([], nameGroup: "")
       self.router.route(to: .finish)
       
     case .getDuration(time: let time):

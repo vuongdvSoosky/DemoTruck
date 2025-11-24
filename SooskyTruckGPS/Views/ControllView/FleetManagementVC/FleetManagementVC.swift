@@ -17,7 +17,7 @@ class FleetManagementVC: BaseViewController {
     view.clipsToBounds = true
     
     view.addSubview(tabStackView)
-    view.backgroundColor = UIColor(rgb: 0xFFFFFF)
+    view.backgroundColor = UIColor(rgb: 0xFCFCFC)
     tabStackView.snp.makeConstraints { make in
       make.top.left.right.bottom.equalToSuperview().inset(4)
     }
@@ -171,6 +171,8 @@ class FleetManagementVC: BaseViewController {
   
   private let viewModel = FleetManagementVM()
   
+  var handlerActionDeleted: Handler?
+  
   override func addComponents() {
     self.view.addSubviews(titleVC, tabView, calenderView, mainScrollView)
     mainScrollView.addSubviews(contentView)
@@ -320,13 +322,6 @@ extension FleetManagementVC {
 }
 
 extension FleetManagementVC: UICollectionViewDelegate {
-  func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-    if collectionView === self.collectionView {
-      viewModel.action.send(.getSaveRouteItem(index: indexPath.row))
-    } else {
-      viewModel.action.send(.getHistoryItem(index: indexPath.row))
-    }
-  }
 }
 
 extension FleetManagementVC: UICollectionViewDataSource {
@@ -344,14 +339,77 @@ extension FleetManagementVC: UICollectionViewDataSource {
       let cell = collectionView.dequeueReusableCell(ItemFleetCell.self, for: indexPath)
       if let item = viewModel.saveRouteItems.value?[indexPath.row] {
         cell.configData(with: item)
+        
+        cell.onDeleteTapped = { [weak self]  in
+          guard let self else {
+            return
+          }
+          viewModel.action.send(.removeItemHistory(item: item))
+          handlerActionDeleted?()
+        }
+        cell.onDeleteModeChanged = { [weak self] isDeleteMode in
+          guard let self else { return }
+          if isDeleteMode {
+            self.hideDeleteModeForOtherSaveCells(except: indexPath)
+          }
+        }
+        
+        cell.onChooseItemPlace = {[weak self] item in
+          guard let self else {
+            return
+          }
+          viewModel.action.send(.getSaveRouteItem(index: indexPath.row))
+        }
       }
+            
       return cell
     } else {
       let cell = collectionView.dequeueReusableCell(HistoryCell.self, for: indexPath)
       if let item = viewModel.itemHistory.value?[indexPath.row] {
         cell.configData(item: item)
+        cell.onDeleteTapped = { [weak self]  in
+          guard let self else {
+            return
+          }
+          viewModel.action.send(.removeItemHistory(item: item))
+          handlerActionDeleted?()
+        }
+        
+        cell.onDeleteModeChanged = { [weak self] isDeleteMode in
+          guard let self else { return }
+          if isDeleteMode {
+            self.hideDeleteModeForOtherHistoryCells(except: indexPath)
+          }
+        }
+        
+        cell.onChooseItemPlace = {[weak self] item in
+          guard let self else {
+            return
+          }
+          viewModel.action.send(.getHistoryItem(index: indexPath.row))
+        }
       }
       return cell
+    }
+  }
+  
+  private func hideDeleteModeForOtherHistoryCells(except currentIndexPath: IndexPath) {
+    for indexPath in historyCollectionView.indexPathsForVisibleItems {
+      if indexPath != currentIndexPath {
+        if let cell = historyCollectionView.cellForItem(at: indexPath) as? HistoryCell {
+          cell.hideDeleteModeCell()
+        }
+      }
+    }
+  }
+  
+  private func hideDeleteModeForOtherSaveCells(except currentIndexPath: IndexPath) {
+    for indexPath in collectionView.indexPathsForVisibleItems {
+      if indexPath != currentIndexPath {
+        if let cell = collectionView.cellForItem(at: indexPath) as? ItemFleetCell {
+          cell.hideDeleteModeCell()
+        }
+      }
     }
   }
 }
