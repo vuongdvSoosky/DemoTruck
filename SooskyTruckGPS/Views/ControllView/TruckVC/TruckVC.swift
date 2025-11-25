@@ -100,7 +100,14 @@ class TruckVC: BaseViewController {
     stackView.layer.masksToBounds = true
     return stackView
   }()
-
+  
+  private lazy var customAnnotationCalloutView: CustomAnnotationCalloutView = {
+    let view = CustomAnnotationCalloutView()
+    view.translatesAutoresizingMaskIntoConstraints = false
+    return view
+  }()
+  
+  
   
   private lazy var tableView: UITableView = {
     let tableView = UITableView()
@@ -109,7 +116,7 @@ class TruckVC: BaseViewController {
   }()
   
   // MARK: Tutorial
-
+  
   private lazy var iconTutorialTruck: UIImageView = {
     let icon = UIImageView()
     icon.image = .icTutoriaTruckProfile
@@ -126,7 +133,7 @@ class TruckVC: BaseViewController {
     icon.isHidden = true
     return icon
   }()
-    
+  
   private lazy var arrayPlaces: [Place] = []
   var currentTooltipView: CustomAnnotationView?
   var currentTooltipID: String?
@@ -195,7 +202,7 @@ class TruckVC: BaseViewController {
   }
   
   func showOverlay() {
-      (self.tabBarController as? TabbarVC)?.showTabbarOverlay()
+    (self.tabBarController as? TabbarVC)?.showTabbarOverlay()
   }
   
   func hideOverlay() {
