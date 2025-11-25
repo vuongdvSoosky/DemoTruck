@@ -24,7 +24,7 @@ extension TruckRouter {
     }
     switch route {
     case .viewlist:
-      showListLocation()
+      showListLocation(parameters)
     case .loadingVC:
       let loadingVC = LoadingVC()
       context.push(to: loadingVC, animated: true)
@@ -35,12 +35,18 @@ extension TruckRouter {
 }
 
 extension TruckRouter {
-  private func showListLocation() {
+  private func showListLocation(_ parameters: [String: Any]? = nil) {
     guard let topVC = UIApplication.topViewController() else {
       return
     }
     
+    guard let parameters = parameters,
+          let handler = parameters["Hander"] as? Handler else {
+      return
+    }
+    
     let listView = ListLocationView()
+    listView.handlerActionClose = handler
     listView.showSlideView(view: topVC.view)
   }
   

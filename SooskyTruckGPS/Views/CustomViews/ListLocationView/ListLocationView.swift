@@ -89,6 +89,7 @@ class ListLocationView: BaseView {
   var handlerActionDeleted: Handler?
   private var itemRouter: RouteResponseRealm?
   private var nameRoute: String = ""
+  var handlerActionClose: Handler?
   
   override func addComponents() {
     addSubviews(containerView, closeView)
@@ -164,6 +165,7 @@ class ListLocationView: BaseView {
   
   // MARK: - Action
   @objc private func onTapClose() {
+    handlerActionClose?()
     self.dismissSlideView()
   }
   

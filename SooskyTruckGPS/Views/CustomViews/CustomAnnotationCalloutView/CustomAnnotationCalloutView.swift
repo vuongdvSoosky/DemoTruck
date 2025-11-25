@@ -14,10 +14,19 @@ final class CustomAnnotationCalloutView: BaseView {
   
   private let titleLabel: UILabel = {
     let label = UILabel()
-    label.font = UIFont.boldSystemFont(ofSize: 16)
-    label.textColor = .black
+    label.font = AppFont.font(.mediumText, size: 17)
+    label.textColor = UIColor(rgb: 0x332644)
     label.textAlignment = .center
-    label.numberOfLines = 2
+    label.numberOfLines = 0
+    return label
+  }()
+  
+  private let desLabel: UILabel = {
+    let label = UILabel()
+    label.font = AppFont.font(.lightText, size: 15)
+    label.textColor = UIColor(rgb: 0x909090)
+    label.textAlignment = .center
+    label.numberOfLines = 0
     return label
   }()
   
@@ -39,22 +48,21 @@ final class CustomAnnotationCalloutView: BaseView {
   
   private lazy var buttonView: UIView = {
     let view = UIView()
-    view.translatesAutoresizingMaskIntoConstraints = false
     view.backgroundColor = UIColor(rgb: 0xF26101)
     view.cornerRadius = 12
+    view.isUserInteractionEnabled = true
     
     let stackView = UIStackView(arrangedSubviews: [iconButton, titleButton])
     stackView.axis = .horizontal
     stackView.spacing = 6
     stackView.alignment = .center
-    stackView.distribution = .equalCentering
+    stackView.distribution = .fill
     
     view.addSubview(stackView)
     stackView.snp.makeConstraints { make in
       make.center.equalToSuperview()
     }
     
-    view.isUserInteractionEnabled = true
     view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleButtonTap)))
     return view
   }()
@@ -86,25 +94,40 @@ final class CustomAnnotationCalloutView: BaseView {
     layer.shadowRadius = 8
     tag = 999
     
-    addSubviews(titleLabel, buttonView)
+    addSubviews(titleLabel, desLabel, buttonView)
     
+    // MARK: Constraints
     titleLabel.snp.makeConstraints { make in
       make.top.equalToSuperview().offset(12)
-      make.left.right.equalToSuperview().inset(16)
+      make.centerX.equalToSuperview()
+      make.width.lessThanOrEqualTo(buttonView.snp.width)
+    }
+    
+    desLabel.snp.makeConstraints { make in
+      make.top.equalTo(titleLabel.snp.bottom).offset(2)
+      make.centerX.equalToSuperview()
+      make.width.lessThanOrEqualTo(buttonView.snp.width)
     }
     
     buttonView.snp.makeConstraints { make in
-      make.top.equalTo(titleLabel.snp.bottom).offset(10)
+      make.top.equalTo(desLabel.snp.bottom).offset(10)
       make.centerX.equalToSuperview()
-      make.left.right.equalToSuperview().inset(16)
-      make.bottom.equalToSuperview().inset(23)
+      make.width.equalTo(220)
+      make.height.equalTo(40)
+      make.bottom.equalToSuperview().inset(20)
+    }
+    
+    // MARK: Set width của view chính theo buttonView
+    self.snp.makeConstraints { make in
+      make.width.equalTo(buttonView.snp.width).inset(-17)
     }
   }
   
-  // MARK: - Configuration
+  // MARK: - Config
   
-  func configure(title: String) {
+  func configure(title: String, des: String) {
     titleLabel.text = title
+    desLabel.text = des
   }
   
   func configureButton(title: String, icon: UIImage) {

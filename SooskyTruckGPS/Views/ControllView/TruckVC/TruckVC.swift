@@ -17,14 +17,6 @@ class TruckVC: BaseViewController {
     return view
   }()
   
-  private lazy var tutorialView: UIView = {
-    let view = UIView()
-    view.translatesAutoresizingMaskIntoConstraints = false
-    view.backgroundColor = UIColor(rgb: 0x000000, alpha: 0.7)
-    
-    return view
-  }()
-  
   private lazy var iconTruck: UIImageView = {
     let icon = UIImageView()
     icon.image = .icProfileTruck
@@ -110,6 +102,23 @@ class TruckVC: BaseViewController {
       
       PlaceManager.shared.addLocationToArray(Place)
       
+      if PlaceManager.shared.placeGroup.places.count == 1 {
+        self.view.insertSubview(searchView, aboveSubview: tutorialView)
+        self.view.insertSubview(tableView, aboveSubview: tutorialView)
+        self.iconTutorialSearch.image = .icSearchTutorial2
+        self.iconTutorialSearch.isHidden = false
+        self.hideCalloutAnimated()
+        searchTextField.text = ""
+      } else {
+        self.view.bringSubviewToFront(tutorialView)
+        self.view.insertSubview(viewList, aboveSubview: tutorialView)
+        self.iconTutorialSearch.isHidden = true
+        self.iconTutorialList.isHidden = false
+        self.hideCalloutAnimated()
+        searchTextField.text = ""
+        viewList.isHidden = false
+      }
+     
       if PlaceManager.shared.isExistLocation(Place) {
         view.configureButton(title: "Remove Stop", icon: .icTrash)
       } else {
@@ -128,17 +137,35 @@ class TruckVC: BaseViewController {
   
   // MARK: Tutorial
   
+  private lazy var tutorialView: UIView = {
+    let view = UIView()
+    view.translatesAutoresizingMaskIntoConstraints = false
+    view.backgroundColor = UIColor(rgb: 0x000000, alpha: 0.7)
+    view.isHidden = true
+    return view
+  }()
+  
   private lazy var iconTutorialTruck: UIImageView = {
     let icon = UIImageView()
     icon.image = .icTutoriaTruckProfile
     icon.contentMode = .scaleAspectFit
     icon.isUserInteractionEnabled = true
+    icon.isHidden = true
     return icon
   }()
   
   private lazy var iconTutorialSearch: UIImageView = {
     let icon = UIImageView()
     icon.image = .icSearchTutorial
+    icon.contentMode = .scaleAspectFit
+    icon.isUserInteractionEnabled = true
+    icon.isHidden = true
+    return icon
+  }()
+  
+  private lazy var iconTutorialList: UIImageView = {
+    let icon = UIImageView()
+    icon.image = .icListTutorial
     icon.contentMode = .scaleAspectFit
     icon.isUserInteractionEnabled = true
     icon.isHidden = true
@@ -210,7 +237,15 @@ class TruckVC: BaseViewController {
     setupMap()
     setupTableView()
     setupSearchCompleter()
-    showOverlay()
+    showTutorial()
+  }
+  
+  private func showTutorial() {
+    if UserDefaultsManager.shared.get(of: Bool.self, key: .tutorial) == false {
+      showOverlay()
+      iconTutorialTruck.isHidden = false
+      tutorialView.isHidden = false
+    }
   }
   
   func showOverlay() {
@@ -219,6 +254,83 @@ class TruckVC: BaseViewController {
   
   func hideOverlay() {
     (self.tabBarController as? TabbarVC)?.hideOverlay()
+  }
+  
+  override func addComponents() {
+    self.view.addSubviews(mapView, searchView, viewList, collectionView, tableView,
+                          tutorialView, iconTruck, iconTutorialTruck, iconTutorialSearch, currentCalloutView, iconTutorialList, routeStackView)
+  }
+  
+  override func setConstraints() {
+    mapView.snp.makeConstraints { make in
+      make.edges.equalToSuperview()
+    }
+    
+    tutorialView.snp.makeConstraints { make in
+      make.edges.equalToSuperview()
+    }
+    
+    searchView.snp.makeConstraints { make in
+      make.top.equalTo(self.view.snp.topMargin).inset(15)
+      make.height.equalTo(48)
+      make.left.right.equalToSuperview().inset(20)
+    }
+    
+    currentCalloutView.snp.makeConstraints { make in
+      make.centerX.equalToSuperview()
+      make.centerY.equalToSuperview().offset(-110)
+    }
+    
+    iconTutorialSearch.snp.makeConstraints { make in
+      make.top.equalTo(searchView.snp.bottom).inset(-20)
+      make.centerX.equalTo(searchView.snp.centerX)
+    }
+    
+    collectionView.snp.makeConstraints { make in
+      make.top.equalTo(searchView.snp.bottom).offset(12)
+      make.left.equalToSuperview().inset(16)
+      make.right.equalToSuperview()
+      make.height.equalTo(56)
+    }
+    
+    iconTruck.snp.makeConstraints { make in
+      make.top.equalTo(collectionView.snp.bottom).inset(-18)
+      make.left.equalToSuperview().inset(20)
+      make.width.height.equalTo(48)
+    }
+    
+    iconTutorialTruck.snp.makeConstraints { make in
+      make.centerY.equalTo(iconTruck.snp.centerY)
+      make.left.equalTo(iconTruck.snp.right).inset(-10)
+    }
+    
+    viewList.snp.makeConstraints { make in
+      make.bottom.equalTo(routeStackView.snp.top).inset(-12)
+      make.centerX.equalToSuperview()
+      make.width.equalTo(111)
+      make.height.equalTo(47)
+    }
+    
+    iconTutorialList.snp.makeConstraints { make in
+      make.bottom.equalTo(viewList.snp.top).inset(-20)
+      make.centerX.equalTo(viewList.snp.centerX)
+    }
+    
+    routeStackView.snp.makeConstraints { make in
+      make.bottom.equalToSuperview().inset(110)
+      make.left.right.equalToSuperview().inset(20)
+    }
+    
+    caculatorRouteView.snp.makeConstraints { make in
+      make.height.equalTo(60)
+    }
+    
+    tableView.snp.makeConstraints { make in
+      make.top.equalTo(searchView.snp.bottom).offset(8)
+      make.left.equalToSuperview().offset(20)
+      make.centerX.equalToSuperview()
+      make.height.equalTo(288)
+    }
   }
   
   override func setProperties() {
@@ -287,6 +399,19 @@ class TruckVC: BaseViewController {
         self.view.insertSubview(tableView, aboveSubview: tutorialView)
         iconTutorialSearch.isHidden = false
         showOverlay()
+      }.store(in: &subscriptions)
+    
+    viewModel.showTutorialCaculate
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] in
+        guard let self else {
+          return
+        }
+       
+        tutorialView.isHidden = false
+        showOverlay()
+        self.view.bringSubviewToFront(tutorialView)
+        self.view.insertSubview(routeStackView, aboveSubview: tutorialView)
       }.store(in: &subscriptions)
   }
   
@@ -422,79 +547,6 @@ class TruckVC: BaseViewController {
     viewModel.searchCompleter.resultTypes = .address
   }
   
-  override func addComponents() {
-    self.view.addSubviews(mapView, searchView, viewList,
-                          routeStackView, collectionView, tableView,
-                          tutorialView, iconTruck, iconTutorialTruck, iconTutorialSearch, currentCalloutView)
-  }
-  
-  override func setConstraints() {
-    mapView.snp.makeConstraints { make in
-      make.edges.equalToSuperview()
-    }
-    
-    tutorialView.snp.makeConstraints { make in
-      make.edges.equalToSuperview()
-    }
-    
-    searchView.snp.makeConstraints { make in
-      make.top.equalTo(self.view.snp.topMargin).inset(15)
-      make.height.equalTo(48)
-      make.left.right.equalToSuperview().inset(20)
-    }
-    
-    currentCalloutView.snp.makeConstraints { make in
-      make.centerX.equalToSuperview()
-      make.centerY.equalToSuperview().offset(-110)
-    }
-    
-    iconTutorialSearch.snp.makeConstraints { make in
-      make.top.equalTo(searchView.snp.bottom).inset(-20)
-      make.centerX.equalTo(searchView.snp.centerX)
-    }
-    
-    collectionView.snp.makeConstraints { make in
-      make.top.equalTo(searchView.snp.bottom).offset(12)
-      make.left.equalToSuperview().inset(16)
-      make.right.equalToSuperview()
-      make.height.equalTo(56)
-    }
-    
-    iconTruck.snp.makeConstraints { make in
-      make.top.equalTo(collectionView.snp.bottom).inset(-18)
-      make.left.equalToSuperview().inset(20)
-      make.width.height.equalTo(48)
-    }
-    
-    iconTutorialTruck.snp.makeConstraints { make in
-      make.centerY.equalTo(iconTruck.snp.centerY)
-      make.left.equalTo(iconTruck.snp.right).inset(-10)
-    }
-    
-    viewList.snp.makeConstraints { make in
-      make.bottom.equalTo(routeStackView.snp.top).inset(-12)
-      make.centerX.equalToSuperview()
-      make.width.equalTo(111)
-      make.height.equalTo(47)
-    }
-    
-    routeStackView.snp.makeConstraints { make in
-      make.bottom.equalToSuperview().inset(110)
-      make.left.right.equalToSuperview().inset(20)
-    }
-    
-    caculatorRouteView.snp.makeConstraints { make in
-      make.height.equalTo(60)
-    }
-    
-    tableView.snp.makeConstraints { make in
-      make.top.equalTo(searchView.snp.bottom).offset(8)
-      make.left.equalToSuperview().offset(20)
-      make.centerX.equalToSuperview()
-      make.height.equalTo(288)
-    }
-  }
-  
   @objc private func annotationTapped(_ sender: UITapGestureRecognizer) {
     guard let customView = sender.view as? CustomAnnotationView else { return }
     
@@ -583,11 +635,13 @@ extension TruckVC: MKMapViewDelegate {
       
       if let custom = annotation as? CustomAnnotation {
         switch custom.type {
-        case "parking":
+        case "Location":
           view?.image = .icLocationStop
         default:
           view?.image = .icLocationEmpty
         }
+        view?.centerOffset = CGPoint(x: 0, y: -5)
+        return view
       }
     } else {
       // MARK: - CustomAnnotation
@@ -762,9 +816,10 @@ extension TruckVC: UITextFieldDelegate {
         
         let annotation = CustomAnnotation(coordinate: coordinate, title: title, subtitle: subtitle, type: "parking", id: keyword)
         self.mapView.addAnnotation(annotation)
-        self.currentPlace = Place(address: title, fullAddres: subtitle , coordinate: coordinate, state: nil)
-        
         if UserDefaultsManager.shared.get(of: Bool.self, key: .tutorial) {
+          self.currentPlace = Place(address: title, fullAddres: subtitle , coordinate: coordinate, state: nil)
+          self.desAdress = subtitle
+          self.address = title
           self.currentCalloutView.configureButton(title: "Add Stop", icon: .icPlus)
           self.showCalloutAnimated()
         } else {
@@ -805,17 +860,26 @@ extension TruckVC {
   
   @objc private func onTapViewlist() {
     viewModel.action.send(.viewList)
+    iconTutorialList.isHidden = true
+    tutorialView.isHidden = true
+    hideOverlay()
   }
   
   @objc private func onTapCaculatorRoute() {
     viewModel.action.send(.caculatorRoute)
+    UserDefaultsManager.shared.set(true, key: .tutorial)
+    
+    hideOverlay()
+    tutorialView.isHidden = true
   }
   
   @objc private func onTapIconTruckProfile() {
-    viewModel.action.send(.truckProfile)
-    hideOverlay()
-    iconTutorialTruck.isHidden = true
-    self.view.insertSubview(tutorialView, aboveSubview: iconTruck)
+    if UserDefaultsManager.shared.get(of: Bool.self, key: .tutorial) == false {
+      viewModel.action.send(.truckProfile)
+      hideOverlay()
+      iconTutorialTruck.isHidden = true
+      self.view.insertSubview(tutorialView, aboveSubview: iconTruck)
+    }
   }
 }
 
@@ -871,6 +935,9 @@ extension TruckVC: UITableViewDelegate, UITableViewDataSource {
         
         self.mapView.addAnnotation(annotation)
         if UserDefaultsManager.shared.get(of: Bool.self, key: .tutorial) == false {
+          self.currentPlace = Place(address: dataSuggestion.title, fullAddres: dataSuggestion.subtitle , coordinate: coordinate, state: nil)
+          self.desAdress = dataSuggestion.subtitle
+          self.address = dataSuggestion.title
           self.currentCalloutView.configureButton(title: "Add Stop", icon: .icPlus)
           self.showCalloutAnimated()
         } else {
@@ -1059,7 +1126,7 @@ extension TruckVC {
   
   private func showCalloutAnimated() {
     let adress = self.address
-    currentCalloutView.configure(title: adress)
+    currentCalloutView.configure(title: adress, des: desAdress)
     currentCalloutView.alpha = 0
     currentCalloutView.transform = CGAffineTransform(translationX: 0, y: 20)
     currentCalloutView.isHidden = false
