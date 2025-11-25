@@ -101,13 +101,24 @@ class TruckVC: BaseViewController {
     return stackView
   }()
   
-  private lazy var customAnnotationCalloutView: CustomAnnotationCalloutView = {
+  private lazy var currentCalloutView: CustomAnnotationCalloutView = {
     let view = CustomAnnotationCalloutView()
     view.translatesAutoresizingMaskIntoConstraints = false
+    view.isHidden = true
+    view.onButtonTapped = { [weak self] in
+      guard let self, let Place = self.currentPlace else { return }
+      
+      PlaceManager.shared.addLocationToArray(Place)
+      
+      if PlaceManager.shared.isExistLocation(Place) {
+        view.configureButton(title: "Remove Stop", icon: .icTrash)
+      } else {
+        view.configureButton(title: "Add Stop", icon: .icPlus)
+        hideCalloutAnimated()
+      }
+    }
     return view
   }()
-  
-  
   
   private lazy var tableView: UITableView = {
     let tableView = UITableView()
@@ -135,6 +146,7 @@ class TruckVC: BaseViewController {
   }()
   
   private lazy var arrayPlaces: [Place] = []
+  private var currentPlace: Place?
   var currentTooltipView: CustomAnnotationView?
   var currentTooltipID: String?
   
@@ -413,7 +425,7 @@ class TruckVC: BaseViewController {
   override func addComponents() {
     self.view.addSubviews(mapView, searchView, viewList,
                           routeStackView, collectionView, tableView,
-                          tutorialView, iconTruck, iconTutorialTruck, iconTutorialSearch)
+                          tutorialView, iconTruck, iconTutorialTruck, iconTutorialSearch, currentCalloutView)
   }
   
   override func setConstraints() {
@@ -429,6 +441,11 @@ class TruckVC: BaseViewController {
       make.top.equalTo(self.view.snp.topMargin).inset(15)
       make.height.equalTo(48)
       make.left.right.equalToSuperview().inset(20)
+    }
+    
+    currentCalloutView.snp.makeConstraints { make in
+      make.centerX.equalToSuperview()
+      make.centerY.equalToSuperview().offset(-110)
     }
     
     iconTutorialSearch.snp.makeConstraints { make in
@@ -553,81 +570,48 @@ extension TruckVC: MKMapViewDelegate {
   
   func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
     if annotation is MKUserLocation { return nil }
-    
-    // MARK: - CustomAnnotation
-    if let customAnno = annotation as? CustomAnnotation {
-      let identifier = customAnno.identifier
-      var view = mapView.dequeueReusableAnnotationView(withIdentifier: identifier) as? CustomAnnotationView
+    if UserDefaultsManager.shared.get(of: Bool.self, key: .tutorial) == false {
+      let identifier = "customPinView"
+      var view = mapView.dequeueReusableAnnotationView(withIdentifier: identifier)
       
       if view == nil {
-        view = CustomAnnotationView(annotation: customAnno, reuseIdentifier: identifier)
-        view?.delegate = self
+        view = MKAnnotationView(annotation: annotation, reuseIdentifier: identifier)
+        view?.canShowCallout = false
       } else {
-        view?.annotation = customAnno
+        view?.annotation = annotation
       }
       
-      // Gán ID annotation
-      view?.annotationID = customAnno.id
-      
-      // Configure tooltip đúng dữ liệu của annotation hiện tại
-      view?.configure(title: customAnno.title ?? "", des: customAnno.subtitle ?? "")
-      
-      // Chọn icon dựa vào type
-      switch customAnno.type {
-      case "Location":
-        view?.image = .icLocationStop
-      case "Gas Station":
-        view?.image = .icPinGas
-      case "Bank":
-        view?.image = .icPinBank
-      case "Car Wash":
-        view?.image = .icPinCarWash
-      case "Pharmacy":
-        view?.image = .icPinPharmacy
-      case "Fast Food":
-        view?.image = .icPinFastFood
-      default:
-        view?.image = .icLocationEmpty
+      if let custom = annotation as? CustomAnnotation {
+        switch custom.type {
+        case "parking":
+          view?.image = .icLocationStop
+        default:
+          view?.image = .icLocationEmpty
+        }
       }
-      
-      // Ẩn tooltip mặc định (chỉ hiển thị khi tap)
-      view?.hideTooltip()
-      
-      // Tap gesture
-      if view?.gestureRecognizers?.isEmpty ?? true {
-        let tap = UITapGestureRecognizer(target: self, action: #selector(annotationTapped(_:)))
-        view?.addGestureRecognizer(tap)
-      }
-      
-      return view
-    }
-    
-    // MARK: - CustomServiceAnimation
-    else if let customService = annotation as? CustomServiceAnimation {
-      let identifier = customService.identifier
-      var view = mapView.dequeueReusableAnnotationView(withIdentifier: identifier) as? CustomAnnotationView
-      
-      if view == nil {
-        view = CustomAnnotationView(annotation: customService, reuseIdentifier: identifier)
-        view?.delegate = self
-      } else {
-        view?.annotation = customService
-      }
-      
-      // Gán ID annotation
-      view?.annotationID = customService.id
-      
-      // Configure tooltip đúng dữ liệu của annotation hiện tại
-      view?.configure(title: customService.title ?? "", des: customService.subtitle ?? "")
-      
-      // Kiểm tra xem service đã được thêm vào placeGroup chưa
-      let place = Place(id: customService.id, address: customService.title ?? "", fullAddres: customService.subtitle ?? "", coordinate: customService.coordinate, state: nil, type: customService.type)
-      let isInPlaceGroup = PlaceManager.shared.isExistLocation(place)
-      
-      // Chọn icon: nếu chưa thêm vào placeGroup → icLocationEmpty, nếu đã thêm → icon theo type
-      if isInPlaceGroup {
-        // Đã thêm vào placeGroup → hiển thị icon theo type
-        switch customService.type {
+    } else {
+      // MARK: - CustomAnnotation
+      if let customAnno = annotation as? CustomAnnotation {
+        let identifier = customAnno.identifier
+        var view = mapView.dequeueReusableAnnotationView(withIdentifier: identifier) as? CustomAnnotationView
+        
+        if view == nil {
+          view = CustomAnnotationView(annotation: customAnno, reuseIdentifier: identifier)
+          view?.delegate = self
+        } else {
+          view?.annotation = customAnno
+        }
+        
+        // Gán ID annotation
+        view?.annotationID = customAnno.id
+        
+        // Configure tooltip đúng dữ liệu của annotation hiện tại
+        view?.configure(title: customAnno.title ?? "", des: customAnno.subtitle ?? "")
+        
+        // Chọn icon dựa vào type
+        switch customAnno.type {
+        case "Location":
+          view?.image = .icLocationStop
         case "Gas Station":
           view?.image = .icPinGas
         case "Bank":
@@ -639,25 +623,77 @@ extension TruckVC: MKMapViewDelegate {
         case "Fast Food":
           view?.image = .icPinFastFood
         default:
-          view?.image = .icPinBlank
+          view?.image = .icLocationEmpty
         }
-      } else {
-        // Chưa thêm vào placeGroup → hiển thị icLocationEmpty
-        view?.image = .icLocationEmpty
+        
+        // Ẩn tooltip mặc định (chỉ hiển thị khi tap)
+        view?.hideTooltip()
+        
+        // Tap gesture
+        if view?.gestureRecognizers?.isEmpty ?? true {
+          let tap = UITapGestureRecognizer(target: self, action: #selector(annotationTapped(_:)))
+          view?.addGestureRecognizer(tap)
+        }
+        
+        return view
       }
       
-      // Ẩn tooltip mặc định (chỉ hiển thị khi tap)
-      view?.hideTooltip()
-      
-      // Tap gesture để hiển thị tooltip
-      if view?.gestureRecognizers?.isEmpty ?? true {
-        let tap = UITapGestureRecognizer(target: self, action: #selector(annotationTapped(_:)))
-        view?.addGestureRecognizer(tap)
+      // MARK: - CustomServiceAnimation
+      else if let customService = annotation as? CustomServiceAnimation {
+        let identifier = customService.identifier
+        var view = mapView.dequeueReusableAnnotationView(withIdentifier: identifier) as? CustomAnnotationView
+        
+        if view == nil {
+          view = CustomAnnotationView(annotation: customService, reuseIdentifier: identifier)
+          view?.delegate = self
+        } else {
+          view?.annotation = customService
+        }
+        
+        // Gán ID annotation
+        view?.annotationID = customService.id
+        
+        // Configure tooltip đúng dữ liệu của annotation hiện tại
+        view?.configure(title: customService.title ?? "", des: customService.subtitle ?? "")
+        
+        // Kiểm tra xem service đã được thêm vào placeGroup chưa
+        let place = Place(id: customService.id, address: customService.title ?? "", fullAddres: customService.subtitle ?? "", coordinate: customService.coordinate, state: nil, type: customService.type)
+        let isInPlaceGroup = PlaceManager.shared.isExistLocation(place)
+        
+        // Chọn icon: nếu chưa thêm vào placeGroup → icLocationEmpty, nếu đã thêm → icon theo type
+        if isInPlaceGroup {
+          // Đã thêm vào placeGroup → hiển thị icon theo type
+          switch customService.type {
+          case "Gas Station":
+            view?.image = .icPinGas
+          case "Bank":
+            view?.image = .icPinBank
+          case "Car Wash":
+            view?.image = .icPinCarWash
+          case "Pharmacy":
+            view?.image = .icPinPharmacy
+          case "Fast Food":
+            view?.image = .icPinFastFood
+          default:
+            view?.image = .icPinBlank
+          }
+        } else {
+          // Chưa thêm vào placeGroup → hiển thị icLocationEmpty
+          view?.image = .icLocationEmpty
+        }
+        
+        // Ẩn tooltip mặc định (chỉ hiển thị khi tap)
+        view?.hideTooltip()
+        
+        // Tap gesture để hiển thị tooltip
+        if view?.gestureRecognizers?.isEmpty ?? true {
+          let tap = UITapGestureRecognizer(target: self, action: #selector(annotationTapped(_:)))
+          view?.addGestureRecognizer(tap)
+        }
+        
+        return view
       }
-      
-      return view
     }
-    
     return nil
   }
 }
@@ -726,10 +762,16 @@ extension TruckVC: UITextFieldDelegate {
         
         let annotation = CustomAnnotation(coordinate: coordinate, title: title, subtitle: subtitle, type: "parking", id: keyword)
         self.mapView.addAnnotation(annotation)
+        self.currentPlace = Place(address: title, fullAddres: subtitle , coordinate: coordinate, state: nil)
         
-        // Hiển thị tooltip sau khi tìm kiếm
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-          self.showTooltipForAnnotation(annotation)
+        if UserDefaultsManager.shared.get(of: Bool.self, key: .tutorial) {
+          self.currentCalloutView.configureButton(title: "Add Stop", icon: .icPlus)
+          self.showCalloutAnimated()
+        } else {
+          // Hiển thị tooltip sau khi tìm kiếm
+          DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            self.showTooltipForAnnotation(annotation)
+          }
         }
       }
     }
@@ -828,9 +870,14 @@ extension TruckVC: UITableViewDelegate, UITableViewDataSource {
         let annotation = CustomAnnotation(coordinate: coordinate, title: dataSuggestion.title , subtitle: dataSuggestion.subtitle, type: "", id:  dataSuggestion.title)
         
         self.mapView.addAnnotation(annotation)
-        // Hiển thị tooltip sau khi chọn trong tableView
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-          self.showTooltipForAnnotation(annotation)
+        if UserDefaultsManager.shared.get(of: Bool.self, key: .tutorial) == false {
+          self.currentCalloutView.configureButton(title: "Add Stop", icon: .icPlus)
+          self.showCalloutAnimated()
+        } else {
+          // Hiển thị tooltip sau khi chọn trong tableView
+          DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            self.showTooltipForAnnotation(annotation)
+          }
         }
       }
     }
@@ -990,5 +1037,48 @@ extension TruckVC: CustomAnnotationViewDelagate {
       annotationView.configureButton(title: isInPlaceGroup ? "Remove Stop" : "Add Stop",
                                      icon: isInPlaceGroup ? .icTrash : .icPlus)
     }
+  }
+}
+
+extension TruckVC {
+  private func hideCalloutAnimated() {
+    guard !currentCalloutView.isHidden else { return }
+    
+    UIView.animate(withDuration: 0.25,
+                   delay: 0,
+                   options: .curveEaseIn,
+                   animations: {
+      self.currentCalloutView.alpha = 0
+      self.currentCalloutView.transform = CGAffineTransform(translationX: 0, y: 20)
+    }, completion: { _ in
+      self.currentCalloutView.isHidden = true
+      self.mapView.isUserInteractionEnabled = true
+      self.currentCalloutView.transform = .identity
+    })
+  }
+  
+  private func showCalloutAnimated() {
+    let adress = self.address
+    currentCalloutView.configure(title: adress)
+    currentCalloutView.alpha = 0
+    currentCalloutView.transform = CGAffineTransform(translationX: 0, y: 20)
+    currentCalloutView.isHidden = false
+    
+    // Animation hiện lên
+    UIView.animate(withDuration: 0.5,
+                   delay: 0,
+                   usingSpringWithDamping: 0.8,
+                   initialSpringVelocity: 0.5,
+                   options: .curveEaseOut,
+                   animations: {
+      self.currentCalloutView.alpha = 1
+      self.currentCalloutView.transform = .identity
+    }, completion: { [weak self] _ in
+      guard let self else {
+        return
+      }
+      mapView.isUserInteractionEnabled = false
+      // isProgrammaticRegionChange = true
+    })
   }
 }
