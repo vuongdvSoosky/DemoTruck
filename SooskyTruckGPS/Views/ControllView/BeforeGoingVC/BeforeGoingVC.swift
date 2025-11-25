@@ -30,7 +30,7 @@ class BeforeGoingVC: BaseViewController {
   private lazy var detailRouterView: DetailRouterView = {
     let view = DetailRouterView()
     view.translatesAutoresizingMaskIntoConstraints = false
-    view.backgroundColor = UIColor(rgb: 0xF2F2F2)
+    view.backgroundColor = UIColor(rgb: 0xFCFCFC)
     view.disableButton()
     return view
   }()
@@ -236,7 +236,8 @@ class BeforeGoingVC: BaseViewController {
     }
     
     detailRouterView.snp.makeConstraints { make in
-      make.top.bottom.right.equalToSuperview()
+      make.top.equalToSuperview().inset(29)
+      make.bottom.right.equalToSuperview()
       make.left.equalTo(mapView.snp.right)
       make.width.equalTo(containerView.snp.width)
     }
@@ -288,8 +289,8 @@ class BeforeGoingVC: BaseViewController {
     self.view.backgroundColor = UIColor(rgb: 0xFFFFFF)
     let colors = [UIColor(rgb: 0xF28E01), UIColor(rgb: 0xF26101)]
     goView.addArrayColorGradient(arrayColor: colors, startPoint: CGPoint(x: 0, y: 0.5), endPoint: CGPoint(x: 1, y: 0.5))
+    tabView.addShadow()
   }
-  
   
   override func binding() {
     viewModel.indexForMainScrollView
@@ -436,7 +437,7 @@ class BeforeGoingVC: BaseViewController {
     changeStateDetailRouteTabView(UIColor(rgb: 0xFFECC4), image: .icDetaiRouteSelected)
     changeStateMapTabView(.clear, image: .icMap)
     viewModel.action.send(.getIndexToScroll(index: 1))
-    self.view.backgroundColor = UIColor(rgb: 0xF2F2F2)
+    self.view.backgroundColor = UIColor(rgb: 0xFCFCFC)
   }
   
   @objc private func onTapMapView() {

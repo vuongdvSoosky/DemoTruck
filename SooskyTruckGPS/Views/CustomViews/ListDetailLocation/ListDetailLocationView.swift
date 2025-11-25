@@ -33,7 +33,7 @@ class ListDetailLocationView: BaseView {
   
   private lazy var titleLabel: UILabel = {
     let label = UILabel()
-    label.font = AppFont.font(.semiBoldText, size: 17)
+    label.font = AppFont.font(.bold, size: 17)
     label.text = "Route name"
     label.textColor = UIColor(rgb: 0xF26101)
     label.textAlignment = .left
@@ -116,7 +116,7 @@ class ListDetailLocationView: BaseView {
     }
     
     collectionView.snp.makeConstraints { make in
-      make.top.equalTo(routeNameLabel.snp.bottom).offset(24)
+      make.top.equalTo(routeNameLabel.snp.bottom).offset(0)
       make.left.right.equalToSuperview().inset(12)
       make.bottom.equalToSuperview().offset(-24)
     }
@@ -137,6 +137,7 @@ class ListDetailLocationView: BaseView {
           return
         }
         self.places = places.places
+        routeNameLabel.text = places.nameRouter
         collectionView.reloadData()
       }.store(in: &subscriptions)
   }

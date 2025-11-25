@@ -33,7 +33,7 @@ class ListLocationView: BaseView {
   
   private lazy var titleLabel: UILabel = {
     let label = UILabel()
-    label.font = AppFont.font(.boldText, size: 17)
+    label.font = AppFont.font(.semiBold, size: 17)
     label.text = "Route name"
     label.textColor = UIColor(rgb: 0xF26101)
     label.textAlignment = .left
@@ -88,7 +88,7 @@ class ListLocationView: BaseView {
   private lazy var places: [Place] = []
   var handlerActionDeleted: Handler?
   private var itemRouter: RouteResponseRealm?
-  private var nameRoute: String = ""
+  private var nameRoute: String = "My Route"
   var handlerActionClose: Handler?
   
   override func addComponents() {
@@ -114,7 +114,7 @@ class ListLocationView: BaseView {
     }
     
     iconClose.snp.makeConstraints { make in
-      make.top.equalToSuperview().inset(8)
+      make.top.equalToSuperview().inset(12)
       make.right.equalToSuperview().inset(12)
       make.width.height.equalTo(24)
     }
@@ -137,7 +137,7 @@ class ListLocationView: BaseView {
     }
     
     collectionView.snp.makeConstraints { make in
-      make.top.equalTo(routeNameTextView.snp.bottom).offset(24)
+      make.top.equalTo(routeNameTextView.snp.bottom)
       make.left.right.equalToSuperview().inset(12)
       make.bottom.equalToSuperview().offset(-24)
     }
@@ -229,6 +229,10 @@ extension ListLocationView: UICollectionViewDataSource {
 extension ListLocationView: UICollectionViewDelegateFlowLayout {
   func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
     return CGSize(width: self.collectionView.frame.width, height: 82)
+  }
+  
+  func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {
+    return UIEdgeInsets(top: 16, left: 0, bottom: 16, right: 0)
   }
 }
 

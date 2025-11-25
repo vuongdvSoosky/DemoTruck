@@ -138,6 +138,10 @@ class HistoryDetailVC: BaseViewController {
     }
   }
   
+  override func setColor() {
+    viewList.addShadow()
+  }
+  
   override func binding() {
     PlaceManager.shared.$placesRouter
       .receive(on: DispatchQueue.main)
@@ -314,103 +318,7 @@ extension HistoryDetailVC: MKMapViewDelegate {
     }
     return MKOverlayRenderer(overlay: overlay)
   }
-  
-//  func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
-//    if annotation is MKUserLocation { return nil }
-//    
-//    // MARK: - CustomAnnotation
-//    if let customAnno = annotation as? CustomAnnotation {
-//      let identifier = customAnno.identifier
-//      var view = mapView.dequeueReusableAnnotationView(withIdentifier: identifier) as? CustomAnnotationView
-//      
-//      if view == nil {
-//        view = CustomAnnotationView(annotation: customAnno, reuseIdentifier: identifier)
-//        view?.hideButton()
-//      } else {
-//        view?.annotation = customAnno
-//        view?.hideButton()
-//      }
-//      
-//      // Gán ID annotation
-//      view?.annotationID = customAnno.id
-//      
-//      // Configure tooltip đúng dữ liệu của annotation hiện tại
-//      view?.configure(title: customAnno.title ?? "", des: customAnno.subtitle ?? "")
-//      
-//      // Chọn icon dựa vào type
-//      switch customAnno.type {
-//      case "Location":
-//        view?.image = .icLocationStop
-//      default:
-//        view?.image = .icLocationEmpty
-//      }
-//      view?.hideTooltip()
-//      
-//      // Tap gesture
-//      if view?.gestureRecognizers?.isEmpty ?? true {
-//        let tap = UITapGestureRecognizer(target: self, action: #selector(annotationTapped(_:)))
-//        view?.addGestureRecognizer(tap)
-//      }
-//      
-//      return view
-//    }
-//    // MARK: - CustomServiceAnimation
-//    else if let customService = annotation as? CustomServiceAnimation {
-//      let identifier = customService.identifier
-//      var view = mapView.dequeueReusableAnnotationView(withIdentifier: identifier) as? CustomAnnotationView
-//      
-//      if view == nil {
-//        view = CustomAnnotationView(annotation: customService, reuseIdentifier: identifier)
-//      } else {
-//        view?.annotation = customService
-//      }
-//      
-//      // Gán ID annotation
-//      view?.annotationID = customService.id
-//      
-//      // Configure tooltip đúng dữ liệu của annotation hiện tại
-//      view?.configure(title: customService.title ?? "", des: customService.subtitle ?? "")
-//      
-//      // Kiểm tra xem service đã được thêm vào placeGroup chưa
-//      let place = Place(id: customService.id, address: customService.title ?? "", fullAddres: customService.subtitle ?? "", coordinate: customService.coordinate, state: nil, type: customService.type)
-//      let isInPlaceGroup = PlaceManager.shared.isExistLocation(place)
-//      
-//      // Chọn icon: nếu chưa thêm vào placeGroup → icLocationEmpty, nếu đã thêm → icon theo type
-//      if isInPlaceGroup {
-//        // Đã thêm vào placeGroup → hiển thị icon theo type
-//        switch customService.type {
-//        case "Gas Station":
-//          view?.image = .icPinGas
-//        case "Bank":
-//          view?.image = .icPinBank
-//        case "Car Wash":
-//          view?.image = .icPinCarWash
-//        case "Pharmacy":
-//          view?.image = .icPinPharmacy
-//        case "Fast Food":
-//          view?.image = .icPinFastFood
-//        default:
-//          view?.image = .icPinBlank
-//        }
-//      } else {
-//        // Chưa thêm vào placeGroup → hiển thị icLocationEmpty
-//        view?.image = .icLocationEmpty
-//      }
-//      
-//      // Ẩn tooltip mặc định (chỉ hiển thị khi tap)
-//      view?.hideTooltip()
-//      
-//      // Tap gesture để hiển thị tooltip
-//      if view?.gestureRecognizers?.isEmpty ?? true {
-//        let tap = UITapGestureRecognizer(target: self, action: #selector(annotationTapped(_:)))
-//        view?.addGestureRecognizer(tap)
-//      }
-//      
-//      return view
-//    }
-//    return nil
-//  }
-  
+    
   func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
     if annotation is MKUserLocation { return nil }
     

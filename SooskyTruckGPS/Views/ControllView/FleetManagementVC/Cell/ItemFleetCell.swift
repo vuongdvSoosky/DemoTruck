@@ -40,7 +40,7 @@ class ItemFleetCell: BaseCollectionViewCell {
   
   private lazy var dateLabel: UILabel = {
     let label = UILabel()
-    label.text = "Apr,2025"
+    label.text = "Apr 2,2025"
     label.textColor = UIColor(rgb: 0x909090)
     label.font = AppFont.font(.mediumText, size: 15)
     label.textAlignment = .left

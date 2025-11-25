@@ -61,6 +61,6 @@ extension TruckRouter {
     
     let listView = TruckProfileView()
     listView.handler = handler
-    listView.showView(view: topVC.view)
+    listView.showSlideView(view: topVC.view)
   }
 }

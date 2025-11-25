@@ -40,7 +40,7 @@ class CustomAnnotationView: MKAnnotationView {
     let label = UILabel()
     label.font = AppFont.font(.lightText, size: 15)
     label.textColor = UIColor(rgb: 0x909090)
-    label.textAlignment = .left
+    label.textAlignment = .center
     label.numberOfLines = 0
     return label
   }()
@@ -95,7 +95,7 @@ class CustomAnnotationView: MKAnnotationView {
     containerView.snp.makeConstraints { make in
       make.centerX.equalToSuperview()
       make.bottom.equalToSuperview().offset(-80)
-      make.width.greaterThanOrEqualTo(250)
+      make.width.equalTo(220)
     }
     
     containerView.addSubview(titleLabel)

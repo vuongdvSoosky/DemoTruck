@@ -699,6 +699,7 @@ extension EditGoingVC: UITextFieldDelegate {
 
 extension EditGoingVC {
   @objc private func onTapCloseCalloutView(_ gesture: UITapGestureRecognizer) {
+    view.endEditing(true)
     let location = gesture.location(in: mapView)
     
     // Nếu tap nằm trong tooltip => bỏ qua

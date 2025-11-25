@@ -32,11 +32,12 @@ class DetailRouteCell: BaseCollectionViewCell {
     view.borderColor = UIColor(rgb: 0xC4C4C4, alpha: 0.25)
     view.borderWidth = 0.5
     
+    // MARK: - State stack
     let stateStackView = UIStackView()
     stateStackView.axis = .horizontal
     stateStackView.spacing = 4
     stateStackView.distribution = .fill
-    stateStackView.alignment = .fill
+    stateStackView.alignment = .center
     
     stateView.setContentHuggingPriority(.required, for: .horizontal)
     stateView.setContentCompressionResistancePriority(.required, for: .horizontal)
@@ -44,7 +45,7 @@ class DetailRouteCell: BaseCollectionViewCell {
     stateStackView.addArrangedSubview(stateView)
     stateStackView.addArrangedSubview(emtyView)
     
-    // Horizontal stack
+    // MARK: - Horizontal stack (label + spacer)
     let horizontalStackView = UIStackView()
     horizontalStackView.axis = .horizontal
     horizontalStackView.spacing = 4
@@ -59,23 +60,22 @@ class DetailRouteCell: BaseCollectionViewCell {
     spacerView.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
     
     horizontalStackView.addArrangedSubview(labelView)
-    horizontalStackView.addArrangedSubview(spacerView)
     
+    // MARK: - Main vertical stack
     let mainStackView = UIStackView()
     mainStackView.axis = .vertical
     mainStackView.spacing = 4
     mainStackView.distribution = .fill
+    mainStackView.alignment = .fill
     
-    [stateStackView, horizontalStackView].forEach({mainStackView.addArrangedSubview($0)})
+    [stateStackView, horizontalStackView].forEach { mainStackView.addArrangedSubview($0) }
     
     view.addSubview(mainStackView)
     
     mainStackView.snp.makeConstraints { make in
-      make.top.equalToSuperview().inset(12)
-      make.left.equalToSuperview().inset(8)
-      make.right.equalToSuperview().inset(8)
-      make.bottom.lessThanOrEqualToSuperview().inset(12)
+      make.edges.equalToSuperview().inset(4)
     }
+    
     return view
   }()
   
@@ -83,6 +83,7 @@ class DetailRouteCell: BaseCollectionViewCell {
     let view = UIView()
     view.translatesAutoresizingMaskIntoConstraints = false
     view.setContentHuggingPriority(.defaultLow, for: .horizontal)
+    view.backgroundColor = .black
     return view
   }()
   
@@ -93,9 +94,13 @@ class DetailRouteCell: BaseCollectionViewCell {
     view.backgroundColor = UIColor(rgb: 0xE1F1E5)
     view.isHidden = true
     
+    // Ưu tiên trạng thái giữ kích thước theo content
+    view.setContentHuggingPriority(.required, for: .horizontal)
+    view.setContentCompressionResistancePriority(.required, for: .horizontal)
+    
     let stackView = UIStackView()
     stackView.axis = .horizontal
-    stackView.spacing = 6
+    stackView.spacing = 10
     stackView.distribution = .fill
     stackView.alignment = .center
     
@@ -165,20 +170,16 @@ class DetailRouteCell: BaseCollectionViewCell {
   // MARK: - UILabel
   private lazy var addressTitle: UILabel = {
     let label = UILabel()
-    label.font = AppFont.font(.mediumText, size: 15)
+    label.font = AppFont.font(.mediumText, size: 17)
     label.textColor = UIColor(rgb: 0x332644)
-    label.text = "762 Evergreen Terrace"
     label.textAlignment = .left
-    label.numberOfLines = 0
     return label
   }()
   private lazy var addressContent: UILabel = {
     let label = UILabel()
-    label.font = AppFont.font(.lightText, size: 10)
-    label.textColor = UIColor(rgb: 0x332644)
-    label.text = "762 Evergreen Terrace, Springfield, IL 62704, USA"
+    label.font = AppFont.font(.lightText, size: 15)
+    label.textColor = UIColor(rgb: 0x909090)
     label.textAlignment = .left
-    label.numberOfLines = 0
     return label
   }()
   private lazy var stateLabel: UILabel = {
@@ -254,6 +255,9 @@ extension DetailRouteCell {
     self.itemPlace = place
     self.addressTitle.text = place.address
     self.addressContent.text = place.fullAddres
+    LogManager.show(place.address)
+    LogManager.show(place.fullAddres)
+    hideStateView()
     
     guard let state = place.state else {
       return

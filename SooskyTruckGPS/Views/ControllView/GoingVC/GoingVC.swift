@@ -58,7 +58,7 @@ class GoingVC: BaseViewController {
     
     view.addSubviews(speedView, image)
     image.snp.makeConstraints { make in
-      make.edges.equalToSuperview()
+      make.edges.equalToSuperview().inset(2)
     }
     
     speedView.snp.makeConstraints { make in
@@ -79,7 +79,6 @@ class GoingVC: BaseViewController {
     stackView.spacing = 8
     stackView.distribution = .fill
     
-    statusTrackingLabel.text = "Go"
     statusTrackingLabel.font = AppFont.font(.bold, size: 20)
     statusTrackingLabel.textColor = UIColor(rgb: 0xFFFFFF)
     
@@ -124,6 +123,7 @@ class GoingVC: BaseViewController {
     
     return view
   }()
+  
   private lazy var goingDetailView: GoingDetailView = {
     let view = GoingDetailView()
     view.translatesAutoresizingMaskIntoConstraints = false
@@ -134,7 +134,7 @@ class GoingVC: BaseViewController {
   // MARK: - UILabel
   private lazy var statusTrackingLabel: UILabel = {
     let label = UILabel()
-    label.text = "Go"
+    label.text = "Pause"
     label.textColor = UIColor(rgb: 0xFFFFFF)
     label.font = AppFont.font(.semiBoldText, size: 20)
     label.textAlignment = .center
@@ -147,7 +147,7 @@ class GoingVC: BaseViewController {
     let icon = UIImageView()
     icon.image = .icPauseTrackVC
     icon.contentMode = .scaleAspectFill
-    icon.isHidden = true
+    icon.isHidden = false
     icon.snp.makeConstraints { make in
       make.width.height.equalTo(24)
     }
@@ -205,6 +205,13 @@ class GoingVC: BaseViewController {
   override func viewDidLoad() {
     super.viewDidLoad()
     setupMapView()
+    
+    DispatchQueue.main.async { [weak self] in
+      guard let self else {
+        return
+      }
+      onTapGoView()
+    }
   }
   
   override func setProperties() {
@@ -777,6 +784,7 @@ extension GoingVC {
   }
   
   @objc private func onTapCloseCalloutView(_ gesture: UITapGestureRecognizer) {
+    view.endEditing(true)
     let location = gesture.location(in: mapView)
     
     // Nếu tap nằm trong tooltip => bỏ qua

@@ -9,8 +9,8 @@ import UIKit
 
 extension UITextField {
   func setPlaceholder(_ text: String,
-                      font: UIFont = AppFont.font(.regularText, size: 20),
-                      color: UIColor = UIColor(rgb: 0xAEAAAA)) {
+                      font: UIFont = AppFont.font(.regularText, size: 17),
+                      color: UIColor = UIColor(rgb: 0xB4B4B4)) {
     
     let attributes: [NSAttributedString.Key: Any] = [
       .font: font,

@@ -177,6 +177,12 @@ class TruckProfileView: BaseView {
     containerView.addSubviews(titleLabel, iconClose, stackView)
   }
   
+  override func setProperties() {
+    if UserDefaultsManager.shared.get(of: Bool.self, key: .tutorial) {
+      iconTutorialTruckProfile.isHidden = true
+    }
+  }
+  
   override func setConstraints() {
     iconTutorialTruckProfile.snp.makeConstraints { make in
       make.centerX.equalToSuperview()
@@ -221,8 +227,10 @@ class TruckProfileView: BaseView {
   }
   
   @objc private func onTapClose() {
-    handler?()
-    self.removeFromSuperview()
+    if UserDefaultsManager.shared.get(of: Bool.self, key: .tutorial) == false {
+      handler?()
+    }
+    self.dismissSlideView()
   }
   
   @objc private func onTapBigTruckView() {
@@ -244,8 +252,10 @@ class TruckProfileView: BaseView {
   }
   
   @objc private func onTapSave() {
-    handler?()
-    self.removeFromSuperview()
+    if UserDefaultsManager.shared.get(of: Bool.self, key: .tutorial) == false {
+      handler?()
+    }
+    self.dismissSlideView()
   }
   
   private func enableSaveView() {

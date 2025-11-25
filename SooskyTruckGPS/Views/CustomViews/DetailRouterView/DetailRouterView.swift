@@ -181,11 +181,13 @@ class DetailRouterView: BaseView {
   override func binding() {
     PlaceManager.shared.$placeGroup
       .receive(on: DispatchQueue.main)
-      .sink { [weak self] Places in
+      .sink { [weak self] places in
         guard let self else {
           return
         }
+        titleRoute.text = places.nameRouter
         collectionView.reloadData()
+        
       }.store(in: &subscriptions)
     
     PlaceManager.shared.$placesRouter

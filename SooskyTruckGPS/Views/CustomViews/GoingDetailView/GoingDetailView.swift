@@ -103,7 +103,6 @@ class GoingDetailView: BaseView {
     layout.scrollDirection = .vertical
     layout.estimatedItemSize = .zero
     layout.minimumLineSpacing = 16
-    layout.estimatedItemSize = UICollectionViewFlowLayout.automaticSize
     let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
     collectionView.showsVerticalScrollIndicator = false
     collectionView.isScrollEnabled = true
@@ -131,32 +130,32 @@ class GoingDetailView: BaseView {
     
     editView.snp.makeConstraints { make in
       make.right.equalToSuperview().inset(12)
-      make.top.equalTo(lineView.snp.bottom).inset(-28)
+      make.top.equalTo(self.lineView.snp.bottom).inset(-28)
       make.width.equalTo(102)
       make.height.equalTo(30)
     }
     
     titleRoute.snp.makeConstraints { make in
-      make.top.equalTo(lineView.snp.bottom).inset(-19)
+      make.top.equalTo(self.lineView.snp.bottom).inset(-19)
       make.left.equalToSuperview().inset(12)
-      make.right.equalTo(editView.snp.left).inset(-10)
+      make.right.equalTo(self.editView.snp.left).inset(-10)
     }
     
     stopStackView.snp.makeConstraints { make in
-      make.top.equalTo(titleRoute.snp.bottom).inset(-8)
+      make.top.equalTo(self.titleRoute.snp.bottom).inset(-8)
       make.left.right.equalToSuperview().inset(12)
     }
     
     totalDistanceView.snp.makeConstraints { make in
-      make.top.equalTo(stopStackView.snp.bottom).inset(-16)
-      make.left.equalToSuperview().inset(12)
+      make.top.equalTo(self.stopStackView.snp.bottom).inset(-16)
+      make.left.equalToSuperview().inset(30)
       make.height.equalTo(36)
       make.width.equalTo(143)
     }
     
     timeEstimateView.snp.makeConstraints { make in
-      make.top.equalTo(stopStackView.snp.bottom).inset(-16)
-      make.right.equalToSuperview().inset(12)
+      make.top.equalTo(self.stopStackView.snp.bottom).inset(-16)
+      make.right.equalToSuperview().inset(30)
       make.height.equalTo(37)
       make.width.equalTo(117)
     }
@@ -178,6 +177,7 @@ class GoingDetailView: BaseView {
           return
         }
         stopLabel.text = "\(place.places.count) more waypoint"
+        titleRoute.text = place.nameRouter
         collectionView.reloadData()
       }.store(in: &subscriptions)
     
@@ -213,10 +213,11 @@ extension GoingDetailView {
     
     stackCollectionView.snp.makeConstraints { make in
       make.top.equalTo(timeEstimateView.snp.bottom).inset(-20)
-      make.left.equalToSuperview().inset(12)
-      make.right.equalToSuperview().inset(12)
+      make.left.equalToSuperview()
+      make.right.equalToSuperview()
       make.bottom.equalToSuperview().inset(32)
     }
+    self.layoutIfNeeded()
   }
   
   func showStopLabel() {
