@@ -300,6 +300,7 @@ extension ItemFleetCell {
     departurePointValue.text = item.places.first?.address
     titleRouteName.text = item.nameRouter ?? "My Route"
     destinationValue.text = item.places.last?.address
+    dateLabel.text = item.creatDate.asString(format: "MMM d, yyyy")
     
     if item.places.count < 3 {
       numberOfStop.isHidden = true

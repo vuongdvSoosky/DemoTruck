@@ -21,12 +21,31 @@ class BeforeGoingVC: BaseViewController {
   private lazy var mapView: UIView = {
     let view = UIView()
     view.translatesAutoresizingMaskIntoConstraints = false
-    view.addSubview(mapKitView)
+    view.addSubviews(mapKitView, icDirection)
     mapKitView.snp.makeConstraints { make in
       make.edges.equalToSuperview()
     }
+    
+    icDirection.snp.makeConstraints { make in
+      make.bottom.equalToSuperview().inset(168)
+      make.width.height.equalTo(48)
+      make.right.equalToSuperview().inset(20)
+    }
+    
+    let compassButton = MKCompassButton(mapView: mapKitView)
+    compassButton.compassVisibility = .visible
+    
+    mapKitView.addSubview(compassButton)
+    
+    compassButton.snp.makeConstraints { make in
+      make.bottom.equalTo(icDirection.snp.top).inset(-30)
+      make.right.equalToSuperview().inset(20)
+      make.width.height.equalTo(48)
+    }
+    
     return view
   }()
+
   private lazy var detailRouterView: DetailRouterView = {
     let view = DetailRouterView()
     view.translatesAutoresizingMaskIntoConstraints = false
@@ -160,6 +179,15 @@ class BeforeGoingVC: BaseViewController {
     return icon
   }()
   
+  private lazy var icDirection: UIImageView = {
+    let image = UIImageView()
+    image.translatesAutoresizingMaskIntoConstraints = false
+    image.image = .icDirection
+    image.isUserInteractionEnabled = true
+    image.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapDirection)))
+    return image
+  }()
+  
   
   // MARK: - UILabel
   private lazy var titleVC: UILabel = {
@@ -250,7 +278,7 @@ class BeforeGoingVC: BaseViewController {
     }
     
     stateStackView.snp.makeConstraints { make in
-      make.bottom.equalTo(self.view.snp.bottomMargin).offset(-20)
+      make.bottom.equalToSuperview().offset(-20)
       make.left.right.equalToSuperview().inset(20)
       make.height.equalTo(60)
     }
@@ -490,6 +518,10 @@ class BeforeGoingVC: BaseViewController {
     UIView.animate(withDuration: 0.25) {
       self.currentTooltipView?.hideTooltip()
     }
+  }
+  
+  @objc private func onTapDirection() {
+    self.showCurrentLocation(mapKitView)
   }
 }
 

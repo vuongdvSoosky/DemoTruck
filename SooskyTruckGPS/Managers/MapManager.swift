@@ -33,6 +33,7 @@ final class MapManager: NSObject {
     self.mapView = mapView
     mapView.showsUserLocation = true
     mapView.setUserTrackingMode(.followWithHeading, animated: true)
+    mapView.showsCompass = false
   }
   
   // MARK: - Request Location

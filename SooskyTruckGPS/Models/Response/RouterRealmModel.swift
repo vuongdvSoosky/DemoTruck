@@ -21,6 +21,7 @@ class RouteResponseRealm: BaseObject {
   @Persisted var trackingRecords = List<TrackingRouterModel>()
   @Persisted var history: Bool = false
   @Persisted var nameRouter: String?
+  @Persisted var creatDate = Date()
   
   convenience init(from model: RouteResponse) {
     self.init()

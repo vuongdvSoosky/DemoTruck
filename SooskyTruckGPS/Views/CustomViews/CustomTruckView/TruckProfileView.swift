@@ -202,7 +202,7 @@ class TruckProfileView: BaseView {
     iconClose.snp.makeConstraints { make in
       make.top.equalToSuperview().inset(10)
       make.right.equalToSuperview().inset(10)
-      make.width.height.equalTo(18)
+      make.width.height.equalTo(28)
     }
     
     stackView.snp.makeConstraints { make in

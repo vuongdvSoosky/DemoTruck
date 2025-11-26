@@ -83,7 +83,7 @@ extension LoadingVM {
           guard let self else {
             return
           }
-          guard let data = data else { return }
+          
           showConfirmView.send(())
           PlaceManager.shared.updateRoute(data)
         }

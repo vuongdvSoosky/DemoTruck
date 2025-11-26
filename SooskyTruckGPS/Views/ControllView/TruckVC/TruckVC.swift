@@ -203,9 +203,17 @@ class TruckVC: BaseViewController {
     icon.isHidden = true
     return icon
   }()
+  private lazy var icDirection: UIImageView = {
+    let image = UIImageView()
+    image.translatesAutoresizingMaskIntoConstraints = false
+    image.image = .icDirection
+    image.isUserInteractionEnabled = true
+    image.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapDirection)))
+    return image
+  }()
   
   // MARK: - UIStackView
-  private lazy var routeStackView: UIStackView = {
+  private lazy var caculatorRouteStackView: UIStackView = {
     let stackView = UIStackView()
     stackView.translatesAutoresizingMaskIntoConstraints = false
     stackView.addArrangedSubview(caculatorRouteView)
@@ -284,8 +292,8 @@ class TruckVC: BaseViewController {
   }
   
   override func addComponents() {
-    self.view.addSubviews(mapView, searchView, viewList, collectionView,
-                          tutorialView, iconTruck, iconTutorialTruck, iconTutorialSearch, currentCalloutView, iconTutorialList, routeStackView, iconTutorialAddStop, iconTutorialCaculate, tableView)
+    self.view.addSubviews(mapView, searchView, viewList, collectionView, icDirection,
+                          tutorialView, iconTruck, iconTutorialTruck, iconTutorialSearch, currentCalloutView, iconTutorialList, caculatorRouteStackView, iconTutorialAddStop, iconTutorialCaculate, tableView)
   }
   
   override func setConstraints() {
@@ -337,7 +345,7 @@ class TruckVC: BaseViewController {
     }
     
     viewList.snp.makeConstraints { make in
-      make.bottom.equalTo(routeStackView.snp.top).inset(-12)
+      make.bottom.equalTo(caculatorRouteStackView.snp.top).inset(-12)
       make.centerX.equalToSuperview()
       make.width.equalTo(111)
       make.height.equalTo(47)
@@ -348,14 +356,14 @@ class TruckVC: BaseViewController {
       make.centerX.equalTo(viewList.snp.centerX)
     }
     
-    routeStackView.snp.makeConstraints { make in
+    caculatorRouteStackView.snp.makeConstraints { make in
       make.bottom.equalToSuperview().inset(110)
       make.left.right.equalToSuperview().inset(20)
     }
     
     iconTutorialCaculate.snp.makeConstraints { make in
-      make.bottom.equalTo(routeStackView.snp.top).inset(-20)
-      make.centerX.equalTo(routeStackView.snp.centerX)
+      make.bottom.equalTo(caculatorRouteStackView.snp.top).inset(-20)
+      make.centerX.equalTo(caculatorRouteStackView.snp.centerX)
     }
     
     caculatorRouteView.snp.makeConstraints { make in
@@ -367,6 +375,23 @@ class TruckVC: BaseViewController {
       make.left.equalToSuperview().offset(20)
       make.centerX.equalToSuperview()
       make.height.equalTo(288)
+    }
+    
+    icDirection.snp.makeConstraints { make in
+      make.bottom.equalTo(caculatorRouteStackView.snp.top).inset(-12)
+      make.width.height.equalTo(48)
+      make.right.equalToSuperview().inset(20)
+    }
+    
+    let compassButton = MKCompassButton(mapView: mapView)
+    compassButton.compassVisibility = .visible
+    
+    mapView.addSubview(compassButton)
+    
+    compassButton.snp.makeConstraints { make in
+      make.bottom.equalTo(icDirection.snp.top).inset(-30)
+      make.right.equalToSuperview().inset(20)
+      make.width.height.equalTo(48)
     }
   }
   
@@ -412,9 +437,9 @@ class TruckVC: BaseViewController {
             guard let self else {
               return
             }
-            routeStackView.layoutIfNeeded()
+            caculatorRouteStackView.layoutIfNeeded()
             let colors = [UIColor(rgb: 0xF28E01), UIColor(rgb: 0xF26101)]
-            routeStackView.addArrayColorGradient(arrayColor: colors, startPoint: CGPoint(x: 0, y: 0.5), endPoint: CGPoint(x: 1, y: 0.5))
+            caculatorRouteStackView.addArrayColorGradient(arrayColor: colors, startPoint: CGPoint(x: 0, y: 0.5), endPoint: CGPoint(x: 1, y: 0.5))
           }
         }
         
@@ -461,7 +486,7 @@ class TruckVC: BaseViewController {
           tutorialView.isHidden = false
           showOverlay()
           self.view.bringSubviewToFront(tutorialView)
-          self.view.insertSubview(routeStackView, aboveSubview: tutorialView)
+          self.view.insertSubview(caculatorRouteStackView, aboveSubview: tutorialView)
           self.view.insertSubview(iconTutorialCaculate, aboveSubview: tutorialView)
         }
       }.store(in: &subscriptions)
@@ -1023,6 +1048,10 @@ extension TruckVC {
     self.searchTextField.text = ""
     self.tableView.isHidden = true
     self.iconRemoveText.isHidden = true
+  }
+  
+  @objc private func onTapDirection() {
+    self.showCurrentLocation(mapView)
   }
 }
 

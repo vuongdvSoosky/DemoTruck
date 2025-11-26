@@ -72,7 +72,7 @@ class HistoryDetailVC: BaseViewController {
     return icon
   }()
   
-  private lazy var statusStackView: UIStackView = {
+  private lazy var viewListStackView: UIStackView = {
     let stackView = UIStackView()
     stackView.translatesAutoresizingMaskIntoConstraints = false
     stackView.axis = .horizontal
@@ -82,6 +82,15 @@ class HistoryDetailVC: BaseViewController {
     [viewList].forEach({stackView.addArrangedSubview($0)})
     
     return stackView
+  }()
+  
+  private lazy var icDirection: UIImageView = {
+    let image = UIImageView()
+    image.translatesAutoresizingMaskIntoConstraints = false
+    image.image = .icDirection
+    image.isUserInteractionEnabled = true
+    image.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapDirection)))
+    return image
   }()
   
   // MARK: - MapView
@@ -112,7 +121,7 @@ class HistoryDetailVC: BaseViewController {
   
   override func addComponents() {
     self.view.addSubview(containerView)
-    self.containerView.addSubviews(mapView, iconBack, statusStackView)
+    self.containerView.addSubviews(mapView, iconBack, viewListStackView, icDirection)
   }
   
   override func setConstraints() {
@@ -130,11 +139,28 @@ class HistoryDetailVC: BaseViewController {
       make.edges.equalToSuperview()
     }
   
-    statusStackView.snp.makeConstraints { make in
+    viewListStackView.snp.makeConstraints { make in
       make.centerX.equalToSuperview()
       make.width.equalTo(111)
       make.height.equalTo(47)
       make.bottom.equalTo(self.containerView.snp.bottomMargin)
+    }
+    
+    icDirection.snp.makeConstraints { make in
+      make.bottom.equalTo(viewListStackView.snp.top).inset(-40)
+      make.width.height.equalTo(48)
+      make.right.equalToSuperview().inset(20)
+    }
+    
+    let compassButton = MKCompassButton(mapView: mapView)
+    compassButton.compassVisibility = .visible
+    
+    mapView.addSubview(compassButton)
+    
+    compassButton.snp.makeConstraints { make in
+      make.bottom.equalTo(icDirection.snp.top).inset(-30)
+      make.right.equalToSuperview().inset(20)
+      make.width.height.equalTo(48)
     }
   }
   
@@ -286,6 +312,10 @@ extension HistoryDetailVC {
   
   @objc private func onTapViewlist() {
     viewModel.action.send(.viewList)
+  }
+  
+  @objc private func onTapDirection() {
+    self.showCurrentLocation(mapView)
   }
 }
 

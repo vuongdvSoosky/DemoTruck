@@ -79,6 +79,15 @@ class SaveRouteDetailVC: BaseViewController {
     return icon
   }()
   
+  private lazy var icDirection: UIImageView = {
+    let image = UIImageView()
+    image.translatesAutoresizingMaskIntoConstraints = false
+    image.image = .icDirection
+    image.isUserInteractionEnabled = true
+    image.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapDirection)))
+    return image
+  }()
+  
   private lazy var iconRemoveText: UIImageView = {
     let icon = UIImageView()
     icon.contentMode = .scaleAspectFit
@@ -97,7 +106,7 @@ class SaveRouteDetailVC: BaseViewController {
     return label
   }()
   
-  private lazy var routeStackView: UIStackView = {
+  private lazy var caculatorRouteStackView: UIStackView = {
     let stackView = UIStackView()
     stackView.translatesAutoresizingMaskIntoConstraints = false
     stackView.addArrangedSubview(caculatorRouteView)
@@ -223,9 +232,9 @@ class SaveRouteDetailVC: BaseViewController {
             guard let self else {
               return
             }
-            routeStackView.layoutIfNeeded()
+                caculatorRouteStackView.layoutIfNeeded()
             let colors = [UIColor(rgb: 0xF28E01), UIColor(rgb: 0xF26101)]
-            routeStackView.addArrayColorGradient(arrayColor: colors, startPoint: CGPoint(x: 0, y: 0.5), endPoint: CGPoint(x: 1, y: 0.5))
+                caculatorRouteStackView.addArrayColorGradient(arrayColor: colors, startPoint: CGPoint(x: 0, y: 0.5), endPoint: CGPoint(x: 1, y: 0.5))
           }
         }
         self.updateAnnotations(for:  places.places)
@@ -385,7 +394,7 @@ class SaveRouteDetailVC: BaseViewController {
   }
   
   override func addComponents() {
-    self.view.addSubviews(mapView, searchView, viewList, routeStackView, collectionView, tableView, icBack)
+    self.view.addSubviews(mapView, searchView, viewList, caculatorRouteStackView, collectionView, tableView, icBack, icDirection)
   }
   
   override func setConstraints() {
@@ -415,13 +424,13 @@ class SaveRouteDetailVC: BaseViewController {
     }
     
     viewList.snp.makeConstraints { make in
-      make.bottom.equalTo(routeStackView.snp.top).inset(-12)
+      make.bottom.equalTo(    caculatorRouteStackView.snp.top).inset(-12)
       make.centerX.equalToSuperview()
       make.width.equalTo(111)
       make.height.equalTo(47)
     }
     
-    routeStackView.snp.makeConstraints { make in
+        caculatorRouteStackView.snp.makeConstraints { make in
       make.bottom.equalToSuperview().inset(20)
       make.left.right.equalToSuperview().inset(20)
     }
@@ -435,6 +444,23 @@ class SaveRouteDetailVC: BaseViewController {
       make.left.equalToSuperview().offset(20)
       make.centerX.equalToSuperview()
       make.height.equalTo(288)
+    }
+    
+    icDirection.snp.makeConstraints { make in
+      make.bottom.equalTo(caculatorRouteStackView.snp.top).inset(-12)
+      make.width.height.equalTo(48)
+      make.right.equalToSuperview().inset(20)
+    }
+    
+    let compassButton = MKCompassButton(mapView: mapView)
+    compassButton.compassVisibility = .visible
+    
+    mapView.addSubview(compassButton)
+    
+    compassButton.snp.makeConstraints { make in
+      make.bottom.equalTo(icDirection.snp.top).inset(-30)
+      make.right.equalToSuperview().inset(20)
+      make.width.height.equalTo(48)
     }
   }
   
@@ -523,6 +549,7 @@ extension SaveRouteDetailVC: MKMapViewDelegate {
       
       if view == nil {
         view = CustomAnnotationView(annotation: customAnno, reuseIdentifier: identifier)
+        view?.delegate = self
 //        view?.hideButton()
       } else {
         view?.annotation = customAnno
@@ -596,10 +623,11 @@ extension SaveRouteDetailVC: MKMapViewDelegate {
       
       if view == nil {
         view = CustomAnnotationView(annotation: customService, reuseIdentifier: identifier)
-        view?.hideButton()
+        view?.delegate = self
+//        view?.hideButton()
       } else {
         view?.annotation = customService
-        view?.hideButton()
+//        view?.hideButton()
       }
       
       // Gán ID annotation
@@ -796,6 +824,10 @@ extension SaveRouteDetailVC {
     self.searchTextField.text = ""
     self.tableView.isHidden = true
     self.iconRemoveText.isHidden = true
+  }
+  
+  @objc private func onTapDirection() {
+    self.showCurrentLocation(mapView)
   }
 }
 
