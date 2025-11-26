@@ -43,9 +43,6 @@ class FleetManagementVM: BaseViewModel {
     
     self.saveRouteItems.value = itemNormal.reversed()
     self.itemHistory.value = itemHistory.reversed()
-    
-    LogManager.show("items", itemNormal.count)
-    LogManager.show("itemHistory", itemHistory.count)
   }
 }
 

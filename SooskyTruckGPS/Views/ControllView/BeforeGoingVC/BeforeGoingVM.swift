@@ -61,6 +61,6 @@ extension BeforeGoingVM {
     RealmService.shared.add(routeRealm)
     self.router.route(to: .save)
     
-    PlaceManager.shared.setPlaceGroup([], nameGroup: "")
+    PlaceManager.shared.setPlaceGroup([], name: "My Route")
   }
 }

@@ -11,21 +11,19 @@ import MapKit
 import Toast
 
 class TruckVC: BaseViewController {
+  // MARK: - UIView
   private lazy var mapView: MKMapView = {
     let view = MKMapView()
     view.translatesAutoresizingMaskIntoConstraints = false
     return view
   }()
-  
-  private lazy var iconTruck: UIImageView = {
-    let icon = UIImageView()
-    icon.image = .icProfileTruck
-    icon.contentMode = .scaleAspectFit
-    icon.isUserInteractionEnabled = true
-    icon.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapIconTruckProfile)))
-    return icon
+  private lazy var tutorialView: UIView = {
+    let view = UIView()
+    view.translatesAutoresizingMaskIntoConstraints = false
+    view.backgroundColor = UIColor(rgb: 0x000000, alpha: 0.7)
+    view.isHidden = true
+    return view
   }()
-  
   private lazy var searchView: UIView = {
     let view = UIView()
     view.translatesAutoresizingMaskIntoConstraints = false
@@ -37,7 +35,7 @@ class TruckVC: BaseViewController {
     iconSearch.contentMode = .scaleAspectFit
     iconSearch.image = .icSearch
     
-    [iconSearch, searchTextField].forEach({view.addSubview($0)})
+    [iconSearch, searchTextField, iconRemoveText].forEach({view.addSubview($0)})
     
     iconSearch.snp.makeConstraints { make in
       make.width.height.equalTo(24)
@@ -48,12 +46,17 @@ class TruckVC: BaseViewController {
     searchTextField.snp.makeConstraints { make in
       make.left.equalTo(iconSearch.snp.right).offset(8)
       make.centerY.equalToSuperview()
-      make.right.equalToSuperview().offset(-12)
+    }
+    
+    iconRemoveText.snp.makeConstraints { make in
+      make.width.height.equalTo(12)
+      make.centerY.equalTo(searchTextField.snp.centerY)
+      make.left.equalTo(searchTextField.snp.right).offset(-12)
+      make.right.equalToSuperview().inset(18)
     }
     
     return view
   }()
-  
   private lazy var caculatorRouteView: UIView = {
     let view = UIView()
     view.translatesAutoresizingMaskIntoConstraints = false
@@ -83,16 +86,6 @@ class TruckVC: BaseViewController {
     
     return view
   }()
-  
-  private lazy var routeStackView: UIStackView = {
-    let stackView = UIStackView()
-    stackView.translatesAutoresizingMaskIntoConstraints = false
-    stackView.addArrangedSubview(caculatorRouteView)
-    stackView.cornerRadius = 20
-    stackView.layer.masksToBounds = true
-    return stackView
-  }()
-  
   private lazy var currentCalloutView: CustomAnnotationCalloutView = {
     let view = CustomAnnotationCalloutView()
     view.translatesAutoresizingMaskIntoConstraints = false
@@ -100,7 +93,7 @@ class TruckVC: BaseViewController {
     view.onButtonTapped = { [weak self] in
       guard let self, let Place = self.currentPlace else { return }
       
-      PlaceManager.shared.addLocationToArray(Place)
+      PlaceManager.shared.addLocation(Place)
       
       if PlaceManager.shared.placeGroup.places.count == 1 {
         self.view.insertSubview(searchView, aboveSubview: tutorialView)
@@ -121,7 +114,7 @@ class TruckVC: BaseViewController {
         self.iconTutorialAddStop.isHidden = true
       }
      
-      if PlaceManager.shared.isExistLocation(Place) {
+      if PlaceManager.shared.exists(Place) {
         view.configureButton(title: "Remove Stop", icon: .icTrash)
       } else {
         view.configureButton(title: "Add Stop", icon: .icPlus)
@@ -130,93 +123,6 @@ class TruckVC: BaseViewController {
     }
     return view
   }()
-  
-  private lazy var tableView: UITableView = {
-    let tableView = UITableView()
-    
-    return tableView
-  }()
-  
-  // MARK: Tutorial
-  private lazy var tutorialView: UIView = {
-    let view = UIView()
-    view.translatesAutoresizingMaskIntoConstraints = false
-    view.backgroundColor = UIColor(rgb: 0x000000, alpha: 0.7)
-    view.isHidden = true
-    return view
-  }()
-  
-  private lazy var iconTutorialTruck: UIImageView = {
-    let icon = UIImageView()
-    icon.image = .icTutoriaTruckProfile
-    icon.contentMode = .scaleAspectFit
-    icon.isUserInteractionEnabled = true
-    icon.isHidden = true
-    return icon
-  }()
-  
-  private lazy var iconTutorialSearch: UIImageView = {
-    let icon = UIImageView()
-    icon.image = .icSearchTutorial
-    icon.contentMode = .scaleAspectFit
-    icon.isUserInteractionEnabled = true
-    icon.isHidden = true
-    return icon
-  }()
-  
-  private lazy var iconTutorialList: UIImageView = {
-    let icon = UIImageView()
-    icon.image = .icListTutorial
-    icon.contentMode = .scaleAspectFit
-    icon.isUserInteractionEnabled = true
-    icon.isHidden = true
-    return icon
-  }()
-  
-  private lazy var iconTutorialAddStop: UIImageView = {
-    let icon = UIImageView()
-    icon.image = .icTutorialAddStop
-    icon.contentMode = .scaleAspectFit
-    icon.isUserInteractionEnabled = true
-    icon.isHidden = true
-    return icon
-  }()
-  
-  private lazy var iconTutorialCaculate: UIImageView = {
-    let icon = UIImageView()
-    icon.image = .icTutorialCaculate
-    icon.contentMode = .scaleAspectFit
-    icon.isUserInteractionEnabled = true
-    icon.isHidden = true
-    return icon
-  }()
-  
-  private lazy var arrayPlaces: [Place] = []
-  private var currentPlace: Place?
-  var currentTooltipView: CustomAnnotationView?
-  var currentTooltipID: String?
-  
-  private lazy var searchTextField: UITextField = {
-    let textField = UITextField()
-    textField.translatesAutoresizingMaskIntoConstraints = false
-    return textField
-  }()
-  
-  // MARK: - UICollectionView
-  private lazy var collectionView: UICollectionView = {
-    let layout = UICollectionViewFlowLayout()
-    layout.scrollDirection = .horizontal
-    layout.minimumInteritemSpacing = 1
-    layout.minimumLineSpacing = 1
-    layout.estimatedItemSize = UICollectionViewFlowLayout.automaticSize
-    
-    let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
-    collectionView.translatesAutoresizingMaskIntoConstraints = false
-    collectionView.showsHorizontalScrollIndicator = false
-    collectionView.backgroundColor = .clear
-    return collectionView
-  }()
-  
   private lazy var viewList: UIView = {
     let view = UIView()
     view.translatesAutoresizingMaskIntoConstraints = false
@@ -239,14 +145,117 @@ class TruckVC: BaseViewController {
     return view
   }()
   
+  // MARK: UIImageView
+  private lazy var iconTruck: UIImageView = {
+    let icon = UIImageView()
+    icon.image = .icProfileTruck
+    icon.contentMode = .scaleAspectFit
+    icon.isUserInteractionEnabled = true
+    icon.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapIconTruckProfile)))
+    return icon
+  }()
+  private lazy var iconTutorialTruck: UIImageView = {
+    let icon = UIImageView()
+    icon.image = .icTutoriaTruckProfile
+    icon.contentMode = .scaleAspectFit
+    icon.isUserInteractionEnabled = true
+    icon.isHidden = true
+    return icon
+  }()
+  private lazy var iconTutorialSearch: UIImageView = {
+    let icon = UIImageView()
+    icon.image = .icSearchTutorial
+    icon.contentMode = .scaleAspectFit
+    icon.isUserInteractionEnabled = true
+    icon.isHidden = true
+    return icon
+  }()
+  private lazy var iconTutorialList: UIImageView = {
+    let icon = UIImageView()
+    icon.image = .icListTutorial
+    icon.contentMode = .scaleAspectFit
+    icon.isUserInteractionEnabled = true
+    icon.isHidden = true
+    return icon
+  }()
+  private lazy var iconTutorialAddStop: UIImageView = {
+    let icon = UIImageView()
+    icon.image = .icTutorialAddStop
+    icon.contentMode = .scaleAspectFit
+    icon.isUserInteractionEnabled = true
+    icon.isHidden = true
+    return icon
+  }()
+  private lazy var iconTutorialCaculate: UIImageView = {
+    let icon = UIImageView()
+    icon.image = .icTutorialCaculate
+    icon.contentMode = .scaleAspectFit
+    icon.isUserInteractionEnabled = true
+    icon.isHidden = true
+    return icon
+  }()
+  private lazy var iconRemoveText: UIImageView = {
+    let icon = UIImageView()
+    icon.contentMode = .scaleAspectFit
+    icon.image = .icClearText
+    icon.isUserInteractionEnabled = true
+    icon.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapRemoveText)))
+    icon.isHidden = true
+    return icon
+  }()
+  
+  // MARK: - UIStackView
+  private lazy var routeStackView: UIStackView = {
+    let stackView = UIStackView()
+    stackView.translatesAutoresizingMaskIntoConstraints = false
+    stackView.addArrangedSubview(caculatorRouteView)
+    stackView.cornerRadius = 20
+    stackView.layer.masksToBounds = true
+    return stackView
+  }()
+  
+  // MARK: - UITableView
+  private lazy var tableView: UITableView = {
+    let tableView = UITableView()
+    
+    return tableView
+  }()
+  
+  // MARK: UICollectionView
+  private lazy var collectionView: UICollectionView = {
+    let layout = UICollectionViewFlowLayout()
+    layout.scrollDirection = .horizontal
+    layout.minimumInteritemSpacing = 1
+    layout.minimumLineSpacing = 1
+    layout.estimatedItemSize = UICollectionViewFlowLayout.automaticSize
+    
+    let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
+    collectionView.translatesAutoresizingMaskIntoConstraints = false
+    collectionView.showsHorizontalScrollIndicator = false
+    collectionView.backgroundColor = .clear
+    return collectionView
+  }()
+  
+  // MARK: - UITextField
+  private lazy var searchTextField: UITextField = {
+    let textField = UITextField()
+    textField.translatesAutoresizingMaskIntoConstraints = false
+    return textField
+  }()
+  
+  // MARK: Properties
+  private lazy var arrayPlaces: [Place] = []
+  private var currentPlace: Place?
   private var address: String = ""
   private var desAdress: String = ""
-  
   private var currentQuery = ""
   private var currentType = ""
   private var searchDelayTimer: Timer?
   private var pendingAnnotation: MKAnnotation?
   private var isProgrammaticRegionChange = false
+  private var currentTooltipView: CustomAnnotationView?
+  private var currentAnnotation: CustomAnnotation?
+  private var currentTooltipID: String?
   
   private let viewModel = TruckViewModel()
   
@@ -468,7 +477,7 @@ class TruckVC: BaseViewController {
       
       // Kiểm tra xem service đã có trong placeGroup chưa (so sánh bằng coordinate và type)
       let place = Place(id: serviceAnnotation.id, address: serviceAnnotation.title ?? "", fullAddres: serviceAnnotation.subtitle ?? "", coordinate: serviceAnnotation.coordinate, state: nil, type: serviceAnnotation.type)
-      let isInPlaceGroup = PlaceManager.shared.isExistLocation(place)
+      let isInPlaceGroup = PlaceManager.shared.exists(place)
       
       // Cập nhật icon
       if isInPlaceGroup {
@@ -611,6 +620,7 @@ class TruckVC: BaseViewController {
   private func searchNearby(with nameService: String = "", type: String = "") {
     MapManager.shared.searchServiceAroundVisibleRegion(nameService, type: type)
   }
+  
   private func setupTableView() {
     tableView.delegate = self
     tableView.dataSource = self
@@ -628,6 +638,7 @@ class TruckVC: BaseViewController {
     )
     tableView.setRoundCorners(corners: .allCorners, radius: 12)
   }
+  
   private func setupSearchCompleter() {
     viewModel.searchCompleter.delegate = self
     viewModel.searchCompleter.region = MKCoordinateRegion()
@@ -665,7 +676,7 @@ class TruckVC: BaseViewController {
     // Kiểm tra xem đã có trong placeGroup chưa
     let place = Place(id: annotation.id, address: annotation.title ?? "", fullAddres: annotation.subtitle ?? "", coordinate: annotation.coordinate, state: nil, type: annotation.type)
    
-    if PlaceManager.shared.isExistLocation(place) {
+    if PlaceManager.shared.exists(place) {
       annotation.type = "Location"
       DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
         self.updateAnnotationPlace(for: place)
@@ -695,7 +706,7 @@ class TruckVC: BaseViewController {
     
     // Kiểm tra xem đã có trong placeGroup chưa
     let place = Place(id: annotation.id, address: annotation.title ?? "", fullAddres: annotation.subtitle ?? "", coordinate: annotation.coordinate, state: nil, type: annotation.type)
-    if PlaceManager.shared.isExistLocation(place) {
+    if PlaceManager.shared.exists(place) {
       annotationView.configureButton(title: "Remove Stop", icon: .icTrash)
     } else {
       annotationView.configureButton(title: "Add Stop", icon: .icPlus)
@@ -738,6 +749,7 @@ extension TruckVC: MKMapViewDelegate {
     } else {
       // MARK: - CustomAnnotation
       if let customAnno = annotation as? CustomAnnotation {
+        self.currentAnnotation = customAnno
         let identifier = customAnno.identifier
         var view = mapView.dequeueReusableAnnotationView(withIdentifier: identifier) as? CustomAnnotationView
         
@@ -771,8 +783,6 @@ extension TruckVC: MKMapViewDelegate {
         default:
           view?.image = .icLocationEmpty
         }
-        LogManager.show(customAnno.type ?? "None")
-        
         // Ẩn tooltip mặc định (chỉ hiển thị khi tap)
         view?.hideTooltip()
         
@@ -805,7 +815,7 @@ extension TruckVC: MKMapViewDelegate {
         
         // Kiểm tra xem service đã được thêm vào placeGroup chưa
         let place = Place(id: customService.id, address: customService.title ?? "", fullAddres: customService.subtitle ?? "", coordinate: customService.coordinate, state: nil, type: customService.type)
-        let isInPlaceGroup = PlaceManager.shared.isExistLocation(place)
+        let isInPlaceGroup = PlaceManager.shared.exists(place)
         
         // Chọn icon: nếu chưa thêm vào placeGroup → icLocationEmpty, nếu đã thêm → icon theo type
         if isInPlaceGroup {
@@ -856,8 +866,11 @@ extension TruckVC: UITextFieldDelegate {
       
       viewModel.searchSuggestions.removeAll()
       tableView.reloadData()
+      iconRemoveText.isHidden = true
       return
     }
+    
+    iconRemoveText.isHidden = false
     self.address = text
     viewModel.searchCompleter.queryFragment = text
     tableView.isHidden = false
@@ -919,7 +932,7 @@ extension TruckVC: UITextFieldDelegate {
         
         let place = Place(address: title, fullAddres: subtitle , coordinate: coordinate, state: nil)
         
-        if PlaceManager.shared.isExistLocation(place) {
+        if PlaceManager.shared.exists(place) {
           annotation.type = "Location"
         } else {
           annotation.type = ""
@@ -968,6 +981,16 @@ extension TruckVC {
     UIView.animate(withDuration: 0.25) {
       self.currentTooltipView?.hideTooltip()
     }
+    
+    guard let annotation = currentAnnotation else { return }
+    
+    let place = Place(address: annotation.title ?? "", fullAddres: annotation.subtitle ?? "", coordinate: annotation.coordinate)
+    if !PlaceManager.shared.exists(place) {
+      if let annotation = currentAnnotation {
+              mapView.removeAnnotation(annotation)
+              currentAnnotation = nil
+      }
+    }
   }
   
   @objc private func onTapViewlist() {
@@ -994,6 +1017,12 @@ extension TruckVC {
     viewModel.action.send(.truckProfile)
     iconTutorialCaculate.isHidden = true
     hideOverlay()
+  }
+  
+  @objc private func onTapRemoveText() {
+    self.searchTextField.text = ""
+    self.tableView.isHidden = true
+    self.iconRemoveText.isHidden = true
   }
 }
 
@@ -1048,7 +1077,7 @@ extension TruckVC: UITableViewDelegate, UITableViewDataSource {
         let annotation = CustomAnnotation(coordinate: coordinate, title: dataSuggestion.title , subtitle: dataSuggestion.subtitle, type: "", id:  dataSuggestion.title)
         let place = Place(address: dataSuggestion.title, fullAddres: dataSuggestion.subtitle , coordinate: coordinate, state: nil)
         
-        if PlaceManager.shared.isExistLocation(place) {
+        if PlaceManager.shared.exists(place) {
           annotation.type = "Location"
         } else {
           annotation.type = ""
@@ -1180,9 +1209,9 @@ extension TruckVC: CustomAnnotationViewDelagate {
   }
   
   private func addPlaceToPlaceGourp(_ annotationView: CustomAnnotationView, place: Place) {
-    let wasInPlaceGroup = PlaceManager.shared.isExistLocation(place)
-    PlaceManager.shared.addLocationToArray(place)
-    let isInPlaceGroup = PlaceManager.shared.isExistLocation(place)
+    let wasInPlaceGroup = PlaceManager.shared.exists(place)
+    PlaceManager.shared.addLocation(place)
+    let isInPlaceGroup = PlaceManager.shared.exists(place)
     
     // Cập nhật lại button state sau khi thêm/xóa
     if isInPlaceGroup {

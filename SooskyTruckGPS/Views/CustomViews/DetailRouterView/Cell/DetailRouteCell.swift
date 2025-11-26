@@ -100,7 +100,7 @@ class DetailRouteCell: BaseCollectionViewCell {
     
     let stackView = UIStackView()
     stackView.axis = .horizontal
-    stackView.spacing = 10
+    stackView.spacing = 4
     stackView.distribution = .fill
     stackView.alignment = .center
     
@@ -260,6 +260,8 @@ extension DetailRouteCell {
     hideStateView()
     
     guard let state = place.state else {
+      addressTitle.textColor = UIColor(rgb: 0x332644)
+      addressContent.textColor = UIColor(rgb: 0x332644)
       return
     }
     stateLabel.text = state ? "Success" : "Failed"
@@ -276,6 +278,8 @@ extension DetailRouteCell {
     self.addressContent.text = place.fullAddres
     
     guard let state = place.state else {
+      addressTitle.textColor = UIColor(rgb: 0x332644)
+      addressContent.textColor = UIColor(rgb: 0x332644)
       hideStateView()
       return
     }

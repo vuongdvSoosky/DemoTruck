@@ -599,10 +599,10 @@ extension BeforeGoingVC: MKMapViewDelegate {
       
       if view == nil {
         view = CustomAnnotationView(annotation: customService, reuseIdentifier: identifier)
-        view?.hideButton()
+//        view?.hideButton()
       } else {
         view?.annotation = customService
-        view?.hideButton()
+//        view?.hideButton()
       }
       
       // Gán ID annotation
@@ -613,7 +613,7 @@ extension BeforeGoingVC: MKMapViewDelegate {
       
       // Kiểm tra xem service đã được thêm vào placeGroup chưa
       let place = Place(id: customService.id, address: customService.title ?? "", fullAddres: customService.subtitle ?? "", coordinate: customService.coordinate, state: nil, type: customService.type)
-      let isInPlaceGroup = PlaceManager.shared.isExistLocation(place)
+      let isInPlaceGroup = PlaceManager.shared.exists(place)
       
       // Chọn icon: nếu chưa thêm vào placeGroup → icLocationEmpty, nếu đã thêm → icon theo type
       if isInPlaceGroup {
@@ -690,7 +690,7 @@ extension BeforeGoingVC {
     
     // Kiểm tra xem đã có trong placeGroup chưa
     let place = Place(id: annotation.id, address: annotation.title ?? "", fullAddres: annotation.subtitle ?? "", coordinate: annotation.coordinate, state: nil, type: annotation.type)
-    if PlaceManager.shared.isExistLocation(place) {
+    if PlaceManager.shared.exists(place) {
       annotationView.configureButton(title: "Remove Stop", icon: .icTrash)
     } else {
       annotationView.configureButton(title: "Add Stop", icon: .icPlus)

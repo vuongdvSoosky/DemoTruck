@@ -31,8 +31,8 @@ class SaveRouteDetailVM: BaseViewModel {
   
   init(with item: RouteResponseRealm) {
     self.item.value = item
-    PlaceManager.shared.setPlaceGroup(item.places.toPlaces(), nameGroup: item.nameRouter ?? "My Route")
-    PlaceManager.shared.getRouterPlace(item.toModel())
+    PlaceManager.shared.setPlaceGroup(item.places.toPlaces(), name: item.nameRouter ?? "My Route")
+    PlaceManager.shared.updateRoute(item.toModel())
     super.init()
     action.sink(receiveValue: {[weak self] action in
       guard let self else {

@@ -34,6 +34,7 @@ extension EditGoingRouter {
         loadingVC.filteredPlaces = filteredPlaces
       }
       context.push(to: loadingVC, animated: true)
+      
     case .go:
       let goingVC = GoingVC()
       context.push(to: goingVC, animated: true)

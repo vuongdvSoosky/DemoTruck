@@ -66,6 +66,7 @@ class SettingsVC: BaseViewController {
     collectionView.delegate = self
     collectionView.dataSource = self
     collectionView.register(cell: SettingCell.self)
+    collectionView.backgroundColor = .clear
   }
   
   override func addComponents() {
@@ -73,6 +74,10 @@ class SettingsVC: BaseViewController {
     self.view.addSubviews(collectionView)
     self.view.addSubviews(icPremium)
     self.view.addSubviews(bannerView)
+  }
+  
+  override func setColor() {
+    self.view.backgroundColor = UIColor(rgb: 0xFCFCFC)
   }
   
   override func setConstraints() {

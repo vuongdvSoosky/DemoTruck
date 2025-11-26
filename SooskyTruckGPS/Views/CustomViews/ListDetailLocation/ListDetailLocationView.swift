@@ -166,7 +166,7 @@ extension ListDetailLocationView: UICollectionViewDataSource {
       guard let self else {
         return
       }
-      PlaceManager.shared.removePlace(item)
+      PlaceManager.shared.remove(item)
       handlerActionDeleted?()
     }
     cell.onDeleteModeChanged = { [weak self] isDeleteMode in

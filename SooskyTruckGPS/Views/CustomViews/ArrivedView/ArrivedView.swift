@@ -8,6 +8,12 @@
 import UIKit
 import SnapKit
 
+enum PlaceState {
+  case none
+  case success
+  case failed
+}
+
 class ArrivedView: BaseView {
   private lazy var containerView: UIView = {
     let view = UIView()
@@ -55,6 +61,7 @@ class ArrivedView: BaseView {
     view.clipsToBounds = true
     view.backgroundColor = UIColor(rgb: 0x299F46, alpha: 0.14)
     view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapSuccess)))
+    view.borderColor = UIColor(rgb: 0x299F46)
     
     let icon = UIImageView()
     icon.image = .icDoneArrived
@@ -63,7 +70,7 @@ class ArrivedView: BaseView {
     let label = UILabel()
     label.text = "Success"
     label.textColor = UIColor(rgb: 0x299F46)
-    label.font = AppFont.font(.semiBoldText, size: 15)
+    label.font = AppFont.font(.boldText, size: 15)
     
     let stackView = UIStackView()
     stackView.axis = .horizontal
@@ -84,6 +91,7 @@ class ArrivedView: BaseView {
     view.clipsToBounds = true
     view.backgroundColor = UIColor(rgb: 0xDC2E24, alpha: 0.14)
     view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapFailed)))
+    view.borderColor = UIColor(rgb: 0xDC2E24)
     
     let icon = UIImageView()
     icon.image = .icFailedArrived
@@ -92,7 +100,7 @@ class ArrivedView: BaseView {
     let label = UILabel()
     label.text = "Failed"
     label.textColor = UIColor(rgb: 0xDC2E24)
-    label.font = AppFont.font(.semiBoldText, size: 15)
+    label.font = AppFont.font(.boldText, size: 15)
     
     let stackView = UIStackView()
     stackView.axis = .horizontal
@@ -153,7 +161,9 @@ class ArrivedView: BaseView {
     return label
   }()
   
-  private var Place: Place?
+  private var place: Place?
+  private var isSuccessSelected = false
+  private var isFailedSelected = false
   
   override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
     super.touchesBegan(touches, with: event)
@@ -192,25 +202,73 @@ class ArrivedView: BaseView {
     }
   }
   
+  override func setColor() {
+    inforView.addShadow()
+  }
+  
   @objc private func onTapSuccess() {
-    guard let Place = Place else {
-      return
+    guard let place = place else { return }
+    
+    if isSuccessSelected {
+      // Bỏ chọn
+      isSuccessSelected = false
+      successView.borderWidth = 0
+      PlaceManager.shared.changeState(for: place, isSuccess: true)
+    } else {
+      // Chọn
+      isSuccessSelected = true
+      isFailedSelected = false
+      
+      successView.borderWidth = 2
+      failedView.borderWidth = 0
+      PlaceManager.shared.changeState(for: place, isSuccess: true)
     }
-    PlaceManager.shared.changStatePlace(with: Place, isSuccess: true)
   }
   
   @objc private func onTapFailed() {
-    guard let Place = Place else {
-      return
+    guard let place = place else { return }
+    
+    if isFailedSelected {
+      // Bỏ chọn
+      isFailedSelected = false
+      failedView.borderWidth = 0
+      PlaceManager.shared.changeState(for: place, isSuccess: false)
+    } else {
+      // Chọn
+      isFailedSelected = true
+      isSuccessSelected = false
+      
+      failedView.borderWidth = 2
+      successView.borderWidth = 0
+      PlaceManager.shared.changeState(for: place, isSuccess: false)
     }
-    PlaceManager.shared.changStatePlace(with: Place, isSuccess: false)
   }
 }
 
 extension ArrivedView {
-  func bindingData(Place: Place) {
-    self.Place = Place
-    addressTitle.text = Place.address
-    addressContent.text = Place.fullAddres
+  func bindingData(place: Place) {
+    self.place = place
+    addressTitle.text = place.address
+    addressContent.text = place.fullAddres
+    
+    guard let state = place.state else {
+      isSuccessSelected = false
+      isFailedSelected = false
+      successView.borderWidth = 0
+      failedView.borderWidth = 0
+      return
+    }
+    
+    if state {
+      isSuccessSelected = true
+      isFailedSelected = false
+      successView.borderWidth = 2
+      failedView.borderWidth = 0
+    } else {
+      isSuccessSelected = false
+      isFailedSelected = true
+      successView.borderWidth = 0
+      failedView.borderWidth = 2
+    }
   }
 }

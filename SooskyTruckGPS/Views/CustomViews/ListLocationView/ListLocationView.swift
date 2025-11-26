@@ -159,6 +159,7 @@ class ListLocationView: BaseView {
         }
         self.places = places.places
         self.routeNameTextView.text = places.nameRouter
+        LogManager.show(places.nameRouter)
         collectionView.reloadData()
       }.store(in: &subscriptions)
   }
@@ -197,7 +198,7 @@ extension ListLocationView: UICollectionViewDataSource {
       guard let self else {
         return
       }
-      PlaceManager.shared.removePlace(item)
+      PlaceManager.shared.remove(item)
       handlerActionDeleted?()
     }
     cell.onDeleteModeChanged = { [weak self] isDeleteMode in
@@ -262,6 +263,6 @@ extension ListLocationView: UITextViewDelegate {
   
   func textViewDidChange(_ textView: UITextView) {
     nameRoute = textView.text ?? ""
-    PlaceManager.shared.setNamePlaceGroup(nameRoute.trimmingSpacesOnly())
+    PlaceManager.shared.renamePlaceGroup(nameRoute.trimmingSpacesOnly())
   }
 }

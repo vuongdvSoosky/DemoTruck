@@ -294,7 +294,7 @@ class GoingVC: BaseViewController {
         displayRouteOnMap(route: router, mapView: mapView)
       }.store(in: &subscriptions)
     
-    PlaceManager.shared.$placeGroup
+    PlaceManager.shared.$goingPlaceGroup
       .receive(on: DispatchQueue.main)
       .map { $0.places }
       .removeDuplicates { oldPlaces, newPlaces in
@@ -952,7 +952,7 @@ extension GoingVC: MKMapViewDelegate {
       
       // Kiểm tra xem service đã được thêm vào placeGroup chưa
       let place = Place(id: customService.id, address: customService.title ?? "", fullAddres: customService.subtitle ?? "", coordinate: customService.coordinate, state: nil, type: customService.type)
-      let isInPlaceGroup = PlaceManager.shared.isExistLocation(place)
+      let isInPlaceGroup = PlaceManager.shared.goingExists(place)
       
       // Chọn icon: nếu chưa thêm vào placeGroup → icLocationEmpty, nếu đã thêm → icon theo type
       if isInPlaceGroup {
@@ -1039,7 +1039,7 @@ extension GoingVC {
     
     // Kiểm tra xem đã có trong placeGroup chưa
     let place = Place(id: annotation.id, address: annotation.title ?? "", fullAddres: annotation.subtitle ?? "", coordinate: annotation.coordinate, state: nil, type: annotation.type)
-    if PlaceManager.shared.isExistLocation(place) {
+    if PlaceManager.shared.goingExists(place) {
       annotationView.configureButton(title: "Remove Stop", icon: .icTrash)
     } else {
       annotationView.configureButton(title: "Add Stop", icon: .icPlus)

@@ -48,7 +48,7 @@ extension GoingRouter {
     }
     
     let arrivedView = ArrivedView()
-    arrivedView.bindingData(Place: itemPlace)
+    arrivedView.bindingData(place: itemPlace)
     arrivedView.showSlideView(view: topVC.view)
   }
   

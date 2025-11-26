@@ -85,7 +85,7 @@ extension LoadingVM {
           }
           guard let data = data else { return }
           showConfirmView.send(())
-          PlaceManager.shared.getRouterPlace(data)
+          PlaceManager.shared.updateRoute(data)
         }
       } catch let error {
         LogManager.show(error)

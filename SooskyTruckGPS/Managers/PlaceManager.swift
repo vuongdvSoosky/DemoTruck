@@ -10,62 +10,93 @@ import MapKit
 
 class PlaceManager {
   static let shared = PlaceManager()
-  
+
   @Published var placeGroup: PlaceGroup = .init(nameRouter: "My Route", places: [])
+  @Published var goingPlaceGroup: PlaceGroup = .init(nameRouter: "My Route", places: [])
   @Published var placesRouter: RouteResponse?
   @Published var currentPlace: Place?
-  
+
   private init() {}
 }
 
 extension PlaceManager {
-  func addLocationToArray(_ place: Place) {
-    if !self.placeGroup.places.contains(place) {
-      var newPlace = place
-      // Nếu không phải service type (Gas Station, Bank, etc.) thì set type = "Location"
-      // Giữ nguyên type nếu là service type
-      let serviceTypes = ["Gas Station", "Bank", "Car Wash", "Pharmacy", "Fast Food"]
-      if let placeType = newPlace.type, serviceTypes.contains(placeType) {
-        // Giữ nguyên type của service
-      } else {
-        // Location bình thường hoặc type không hợp lệ → set "Location"
-      newPlace.type = "Location"
-      }
-      self.placeGroup.places.append(newPlace)
-      currentPlace = newPlace
+
+  // MARK: - Add Place
+  func addLocation(_ place: Place, toGoing: Bool = false) {
+    var group = toGoing ? goingPlaceGroup : placeGroup
+
+    if let index = group.places.firstIndex(of: place) {
+      group.places.remove(at: index)
     } else {
-      self.placeGroup.places.removeAll(where: {$0.address == place.address})
+      var newPlace = place
+      normalizeType(&newPlace)
+      group.places.append(newPlace)
+      currentPlace = newPlace
+    }
+
+    if toGoing {
+      goingPlaceGroup = group
+    } else {
+      placeGroup = group
+      goingPlaceGroup = placeGroup
+    }
+  }
+
+  // MARK: - Remove Place
+  func remove(_ place: Place) {
+    placeGroup.places.removeAll { $0.address == place.address }
+    goingPlaceGroup.places.removeAll { $0.address == place.address }
+  }
+
+  // MARK: - Check exist
+  func exists(_ place: Place) -> Bool {
+    return placeGroup.places.contains(place)
+  }
+
+  func goingExists(_ place: Place) -> Bool {
+    return goingPlaceGroup.places.contains(place)
+  }
+
+  // MARK: - Toggle State (nil, true, false)
+  func changeState(for place: Place, isSuccess: Bool) {
+    if let index = goingPlaceGroup.places.firstIndex(where: { $0.address == place.address }) {
+      let current = goingPlaceGroup.places[index].state
+      goingPlaceGroup.places[index].state = (current == isSuccess) ? nil : isSuccess
+    }
+    
+    if let index = placeGroup.places.firstIndex(where: { $0.address == place.address }) {
+      let current = placeGroup.places[index].state
+      placeGroup.places[index].state = (current == isSuccess) ? nil : isSuccess
+    }
+  }
+
+  // MARK: - Router
+  func updateRoute(_ response: RouteResponse) {
+    self.placesRouter = response
+  }
+
+  func setPlaceGroup(_ places: [Place], name: String) {
+    placeGroup = .init(nameRouter: name, places: places)
+    goingPlaceGroup = placeGroup
+  }
+
+  func renamePlaceGroup(_ name: String) {
+    placeGroup.nameRouter = name
+  }
+
+  // MARK: - Private
+  private func normalizeType(_ place: inout Place) {
+    let serviceTypes = ["Gas Station", "Bank", "Car Wash", "Pharmacy", "Fast Food"]
+    if !(place.type.map { serviceTypes.contains($0) } ?? false) {
+      place.type = "Location"
     }
   }
   
-  func isExistLocation(_ place: Place) -> Bool {
-    return self.placeGroup.places.contains(place)
+  func syncPlaceGroupFromGoing() {
+      placeGroup = goingPlaceGroup
   }
   
-  func removePlace(_ place: Place) {
-    self.placeGroup.places.removeAll(where: {$0.address == place.address})
-  }
-  
-  func changStatePlace(with place: Place, isSuccess: Bool) {
-    if let index = self.placeGroup.places.firstIndex(where: { $0.address == place.address }) {
-      if self.placeGroup.places[index].state == isSuccess {
-        self.placeGroup.places[index].state = nil
-      } else {
-        self.placeGroup.places[index].state = isSuccess
-      }
-    }
-  }
-  
-  func getRouterPlace(_ placesRouter: RouteResponse) {
-    self.placesRouter = placesRouter
-  }
-  
-  func setPlaceGroup(_ places: [Place], nameGroup: String) {
-    self.placeGroup.places = places
-    self.placeGroup.nameRouter = nameGroup
-  }
-  
-  func setNamePlaceGroup(_ nameGroup: String) {
-    self.placeGroup.nameRouter = nameGroup
+  func syncGoingGroupFromPlace() {
+    goingPlaceGroup = placeGroup
   }
 }

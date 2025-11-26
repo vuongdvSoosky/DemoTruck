@@ -27,7 +27,7 @@ class EditGoingVC: BaseViewController {
     iconSearch.contentMode = .scaleAspectFit
     iconSearch.image = .icSearch
     
-    [iconSearch, searchTextField].forEach({view.addSubview($0)})
+    [iconSearch, searchTextField, iconRemoveText].forEach({view.addSubview($0)})
     
     iconSearch.snp.makeConstraints { make in
       make.width.height.equalTo(24)
@@ -38,7 +38,13 @@ class EditGoingVC: BaseViewController {
     searchTextField.snp.makeConstraints { make in
       make.left.equalTo(iconSearch.snp.right).offset(8)
       make.centerY.equalToSuperview()
-      make.right.equalToSuperview().offset(-12)
+    }
+    
+    iconRemoveText.snp.makeConstraints { make in
+      make.width.height.equalTo(12)
+      make.centerY.equalTo(searchTextField.snp.centerY)
+      make.left.equalTo(searchTextField.snp.right).offset(-12)
+      make.right.equalToSuperview().inset(18)
     }
     
     return view
@@ -70,6 +76,16 @@ class EditGoingVC: BaseViewController {
     icon.contentMode = .scaleAspectFit
     icon.image = .icCaculatoRoute
     icon.isHidden = false
+    return icon
+  }()
+  
+  private lazy var iconRemoveText: UIImageView = {
+    let icon = UIImageView()
+    icon.contentMode = .scaleAspectFit
+    icon.image = .icClearText
+    icon.isUserInteractionEnabled = true
+    icon.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapRemoveText)))
+    icon.isHidden = true
     return icon
   }()
   
@@ -164,6 +180,7 @@ class EditGoingVC: BaseViewController {
   private var currentQuery = ""
   private var currentType = ""
   private var searchDelayTimer: Timer?
+  private var currentAnnotation: CustomAnnotation?
   
   private var viewModel = EditGoingVM()
   
@@ -199,7 +216,7 @@ class EditGoingVC: BaseViewController {
   }
   
   override func binding() {
-    PlaceManager.shared.$placeGroup
+    PlaceManager.shared.$goingPlaceGroup
       .receive(on: DispatchQueue.main)
       .map { $0.places }
       .removeDuplicates { oldPlaces, newPlaces in
@@ -255,7 +272,7 @@ class EditGoingVC: BaseViewController {
       
       // Kiểm tra xem service đã có trong placeGroup chưa (so sánh bằng coordinate và type)
       let place = Place(id: serviceAnnotation.id, address: serviceAnnotation.title ?? "", fullAddres: serviceAnnotation.subtitle ?? "", coordinate: serviceAnnotation.coordinate, state: nil, type: serviceAnnotation.type)
-      let isInPlaceGroup = PlaceManager.shared.isExistLocation(place)
+      let isInPlaceGroup = PlaceManager.shared.goingExists(place)
       
       // Cập nhật icon
       if isInPlaceGroup {
@@ -280,70 +297,61 @@ class EditGoingVC: BaseViewController {
       }
     }
   }
-  
+
   private func updateAnnotations(for places: [Place]) {
-    guard !isUpdatingAnnotations else { return }
-    isUpdatingAnnotations = true
-    defer { isUpdatingAnnotations = false }
-    
-    // Tạo id unique từ coordinate nếu place.id là nil
-    let placesWithIds = places.map { place -> Place in
-      var updatedPlace = place
-      if updatedPlace.id == nil {
-        // Tạo id unique dựa trên coordinate
-        updatedPlace.id = "\(place.coordinate.latitude)_\(place.coordinate.longitude)"
-      }
-      return updatedPlace
-    }
-    
-    let placeIds = Set(placesWithIds.compactMap { $0.id })
-    
-    // Kiểm tra xem có thay đổi không
-    if placeIds == lastPlaceIds && placesWithIds.count == lastPlaceIds.count {
-      // Không có thay đổi về số lượng và ids, chỉ update nếu cần
-      return
-    }
-    lastPlaceIds = placeIds
+    let placeIds = Set(places.map { $0.id })
     
     // Lọc các annotation hiện tại
     let annotationsToRemove = mapView.annotations.compactMap { ann -> MKAnnotation? in
       guard let customAnn = ann as? CustomAnnotation else { return nil }
       // Nếu annotation không nằm trong placeIds → remove
-      return placeIds.contains(customAnn.id ?? "") ? nil : customAnn
+      return placeIds.contains(customAnn.id) ? nil : customAnn
     }
-    
-    if !annotationsToRemove.isEmpty {
-      mapView.removeAnnotations(annotationsToRemove)
-    }
-    
-    // Thêm hoặc update annotations
-    for place in placesWithIds {
-      // Tìm annotation đã tồn tại bằng id hoặc coordinate
+    mapView.removeAnnotations(annotationsToRemove)
+    for place in places {
       if let existingAnnotation = mapView.annotations.first(where: {
         guard let ann = $0 as? CustomAnnotation else { return false }
-        // So sánh bằng id nếu có, nếu không thì so sánh bằng coordinate
-        if let placeId = place.id, let annId = ann.id {
-          return annId == placeId
-        } else {
-          // So sánh bằng coordinate với độ chính xác epsilon
-          let epsilon = 1e-6
-          return abs(ann.coordinate.latitude - place.coordinate.latitude) < epsilon &&
-                 abs(ann.coordinate.longitude - place.coordinate.longitude) < epsilon
-        }
+        return ann.id == place.id
       }) as? CustomAnnotation {
-        // Chỉ update nếu có thay đổi
-        let needsUpdate = existingAnnotation.coordinate.latitude != place.coordinate.latitude ||
-                         existingAnnotation.coordinate.longitude != place.coordinate.longitude ||
-                         existingAnnotation.title != place.address ||
-                         existingAnnotation.subtitle != place.fullAddres ||
-                         existingAnnotation.type != (place.type ?? "Location")
+        // Update dữ liệu annotation
+        existingAnnotation.coordinate = place.coordinate
+        existingAnnotation.title = place.address
+        existingAnnotation.subtitle = place.fullAddres
+        // Giữ type từ place nếu có, nếu không thì set "Location"
+        existingAnnotation.type = place.type ?? "Location"
         
-        if needsUpdate {
-          existingAnnotation.coordinate = place.coordinate
-          existingAnnotation.title = place.address
-          existingAnnotation.subtitle = place.fullAddres
-          existingAnnotation.type = place.type ?? "Location"
-          existingAnnotation.id = place.id
+        // Force update view để đảm bảo icon được cập nhật
+        if let annotationView = mapView.view(for: existingAnnotation) as? CustomAnnotationView {
+          // Chọn icon dựa vào type (có thể là Location hoặc Service type)
+          switch existingAnnotation.type {
+          case "Location":
+            annotationView.image = .icLocationStop
+          case "Gas Station":
+            annotationView.image = .icPinGas
+          case "Bank":
+            annotationView.image = .icPinBank
+          case "Car Wash":
+            annotationView.image = .icPinCarWash
+          case "Pharmacy":
+            annotationView.image = .icPinPharmacy
+          case "Fast Food":
+            annotationView.image = .icPinFastFood
+          default:
+            // Nếu type không hợp lệ, kiểm tra lại từ place
+            if place.type == "Location" {
+              annotationView.image = .icLocationStop
+            } else {
+              annotationView.image = .icLocationEmpty
+            }
+          }
+          
+          if currentTooltipView?.annotationID == existingAnnotation.id {
+            annotationView.configure(title: existingAnnotation.title ?? "", des: existingAnnotation.subtitle ?? "")
+          }
+        } else {
+          // Nếu view chưa tồn tại, remove và add lại annotation để force tạo view mới
+          mapView.removeAnnotation(existingAnnotation)
+          mapView.addAnnotation(existingAnnotation)
         }
       } else {
         // Thêm mới annotation - giữ type từ place nếu có
@@ -470,7 +478,9 @@ class EditGoingVC: BaseViewController {
     
     // Kiểm tra xem đã có trong placeGroup chưa
     let place = Place(id: annotation.id, address: annotation.title ?? "", fullAddres: annotation.subtitle ?? "", coordinate: annotation.coordinate, state: nil, type: annotation.type)
-    if PlaceManager.shared.isExistLocation(place) {
+    
+    if PlaceManager.shared.goingExists(place) {
+      annotation.type = "Location"
       annotationView.configureButton(title: "Remove Stop", icon: .icTrash)
     } else {
       annotationView.configureButton(title: "Add Stop", icon: .icPlus)
@@ -496,7 +506,7 @@ class EditGoingVC: BaseViewController {
     
     // Kiểm tra xem đã có trong placeGroup chưa
     let place = Place(id: annotation.id, address: annotation.title ?? "", fullAddres: annotation.subtitle ?? "", coordinate: annotation.coordinate, state: nil, type: annotation.type)
-    if PlaceManager.shared.isExistLocation(place) {
+    if PlaceManager.shared.goingExists(place) {
       annotationView.configureButton(title: "Remove Stop", icon: .icTrash)
     } else {
       annotationView.configureButton(title: "Add Stop", icon: .icPlus)
@@ -519,6 +529,7 @@ extension EditGoingVC: MKMapViewDelegate {
     
     // MARK: - CustomAnnotation
     if let customAnno = annotation as? CustomAnnotation {
+      self.currentAnnotation = customAnno
       let identifier = customAnno.identifier
       var view = mapView.dequeueReusableAnnotationView(withIdentifier: identifier) as? CustomAnnotationView
       
@@ -535,22 +546,46 @@ extension EditGoingVC: MKMapViewDelegate {
       // Configure tooltip đúng dữ liệu của annotation hiện tại
       view?.configure(title: customAnno.title ?? "", des: customAnno.subtitle ?? "")
       
-      // Chọn icon dựa vào type
-      switch customAnno.type {
-      case "Location":
-        view?.image = .icLocationStop
-      case "Gas Station":
-        view?.image = .icPinGas
-      case "Bank":
-        view?.image = .icPinBank
-      case "Car Wash":
-        view?.image = .icPinCarWash
-      case "Pharmacy":
-        view?.image = .icPinPharmacy
-      case "Fast Food":
-        view?.image = .icPinFastFood
-      default:
-        view?.image = .icLocationEmpty
+      // Tìm Place tương ứng từ arrayPlaces để lấy state
+      let correspondingPlace = arrayPlaces.first { place in
+        if let placeId = place.id, let annoId = customAnno.id {
+          return placeId == annoId
+        } else {
+          // So sánh bằng coordinate nếu id không có
+          let epsilon = 1e-6
+          return abs(place.coordinate.latitude - customAnno.coordinate.latitude) < epsilon &&
+                 abs(place.coordinate.longitude - customAnno.coordinate.longitude) < epsilon
+        }
+      }
+      
+      // Chọn icon dựa vào state nếu có, nếu không thì dựa vào type
+      if let place = correspondingPlace, let state = place.state {
+        // Hiển thị icon dựa trên state (true/false)
+        if state {
+          // state == true → hiển thị icFinish
+          view?.image = .icLocationFinish
+        } else {
+          // state == false → hiển thị icFailedRoute
+          view?.image = .icLocationFailed
+        }
+      } else {
+        // Nếu state là nil, hiển thị icon dựa vào type
+        switch customAnno.type {
+        case "Location":
+          view?.image = .icLocationStop
+        case "Gas Station":
+          view?.image = .icPinGas
+        case "Bank":
+          view?.image = .icPinBank
+        case "Car Wash":
+          view?.image = .icPinCarWash
+        case "Pharmacy":
+          view?.image = .icPinPharmacy
+        case "Fast Food":
+          view?.image = .icPinFastFood
+        default:
+          view?.image = .icLocationEmpty
+        }
       }
       
       // Ẩn tooltip mặc định (chỉ hiển thị khi tap)
@@ -585,7 +620,7 @@ extension EditGoingVC: MKMapViewDelegate {
       
       // Kiểm tra xem service đã được thêm vào placeGroup chưa
       let place = Place(id: customService.id, address: customService.title ?? "", fullAddres: customService.subtitle ?? "", coordinate: customService.coordinate, state: nil, type: customService.type)
-      let isInPlaceGroup = PlaceManager.shared.isExistLocation(place)
+      let isInPlaceGroup = PlaceManager.shared.goingExists(place)
       
       // Chọn icon: nếu chưa thêm vào placeGroup → icLocationEmpty, nếu đã thêm → icon theo type
       if isInPlaceGroup {
@@ -623,6 +658,12 @@ extension EditGoingVC: MKMapViewDelegate {
     
     return nil
   }
+  
+  @objc private func onTapRemoveText() {
+    self.searchTextField.text = ""
+    self.tableView.isHidden = true
+    self.iconRemoveText.isHidden = true
+  }
 }
 
 // MARK: UITextFieldDelegate
@@ -632,71 +673,87 @@ extension EditGoingVC: UITextFieldDelegate {
       tableView.isHidden = true
       viewModel.searchSuggestions.removeAll()
       tableView.reloadData()
+      self.iconRemoveText.isHidden = true
       return
     }
+    self.iconRemoveText.isHidden = false
     self.address = text
-    // 410 ATLANTIC AVE, BROOKLYN
     viewModel.searchCompleter.queryFragment = text
     tableView.isHidden = false
   }
   
-    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-      textField.resignFirstResponder()
-      guard let keyword = textField.text, !keyword.isEmpty else { return true }
-      tableView.isHidden = true
-  
-      let request = MKLocalSearch.Request()
-      request.naturalLanguageQuery = keyword
-      let search = MKLocalSearch(request: request)
-      request.region = mapView.region
-  
-      search.start { [weak self] response, error in
-        guard let self = self,
-              let mapItem = response?.mapItems.first else { return }
-        let coordinate = mapItem.placemark.coordinate
-        DispatchQueue.main.async {
-          let region = MKCoordinateRegion(
-            center: coordinate,
-            latitudinalMeters: 200,
-            longitudinalMeters: 200
-          )
-          self.mapView.setRegion(region, animated: true)
-  
-          // Lấy thông tin đầy đủ từ mapItem giống như tableView
-          let placemark = mapItem.placemark
-          let title = mapItem.name ?? keyword
-          
-          // Format địa chỉ đầy đủ từ placemark
-          var addressParts: [String] = []
+  func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+    textField.resignFirstResponder()
+    guard let keyword = textField.text, !keyword.isEmpty else { return true }
+    tableView.isHidden = true
 
-          if let city = placemark.locality {
-            addressParts.append(city)
-          }
-          if let state = placemark.administrativeArea {
-            addressParts.append(state)
-          }
+    let request = MKLocalSearch.Request()
+    request.naturalLanguageQuery = keyword
+    let search = MKLocalSearch(request: request)
+    request.region = mapView.region
 
-          if let country = placemark.country {
-            addressParts.append(country)
-          }
-          
-          let subtitle = addressParts.isEmpty ? (placemark.title ?? "") : addressParts.joined(separator: ", ")
-          
-          let annotation = CustomAnnotation(coordinate: coordinate, title: title, subtitle: subtitle, type: "parking", id: keyword)
-          self.mapView.addAnnotation(annotation)
-  
-          // Hiển thị tooltip sau khi tìm kiếm
-          DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            self.showTooltipForAnnotation(annotation)
-          }
+    search.start { [weak self] response, error in
+      guard let self = self,
+            let mapItem = response?.mapItems.first else { return }
+      let coordinate = mapItem.placemark.coordinate
+      DispatchQueue.main.async {
+        let region = MKCoordinateRegion(
+          center: coordinate,
+          latitudinalMeters: 200,
+          longitudinalMeters: 200
+        )
+        self.mapView.setRegion(region, animated: true)
+
+        // Lấy thông tin đầy đủ từ mapItem giống như tableView
+        let placemark = mapItem.placemark
+        let title = mapItem.name ?? keyword
+        
+        // Format địa chỉ đầy đủ từ placemark
+        var addressParts: [String] = []
+
+        if let city = placemark.locality {
+          addressParts.append(city)
+        }
+        if let state = placemark.administrativeArea {
+          addressParts.append(state)
+        }
+
+        if let country = placemark.country {
+          addressParts.append(country)
+        }
+        
+        let subtitle = addressParts.isEmpty ? (placemark.title ?? "") : addressParts.joined(separator: ", ")
+        
+        let annotation = CustomAnnotation(coordinate: coordinate, title: title, subtitle: subtitle, type: "Location", id: keyword)
+        
+        // Xoá annotation cũ nếu tồn tại
+        if let existingAnnotation = self.mapView.annotations.first(where: {
+            guard let ann = $0 as? CustomAnnotation else { return false }
+            return ann.id == keyword
+        }) as? CustomAnnotation {
+            self.mapView.removeAnnotation(existingAnnotation)
+        }
+        
+        let place = Place(address: title, fullAddres: subtitle , coordinate: coordinate, state: nil)
+        
+        if PlaceManager.shared.goingExists(place) {
+          annotation.type = "Location"
+        } else {
+          annotation.type = ""
+        }
+        self.mapView.addAnnotation(annotation)
+
+        // Hiển thị tooltip sau khi tìm kiếm
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+          self.showTooltipForAnnotation(annotation)
         }
       }
-      return true
     }
+    return true
+  }
 }
 
 // MARK: - Action
-
 extension EditGoingVC {
   @objc private func onTapCloseCalloutView(_ gesture: UITapGestureRecognizer) {
     view.endEditing(true)
@@ -719,6 +776,16 @@ extension EditGoingVC {
     UIView.animate(withDuration: 0.25) {
       self.currentTooltipView?.hideTooltip()
     }
+    
+    guard let annotation = currentAnnotation else { return }
+    
+    let place = Place(address: annotation.title ?? "", fullAddres: annotation.subtitle ?? "", coordinate: annotation.coordinate)
+    if !PlaceManager.shared.goingExists(place) {
+      if let annotation = currentAnnotation {
+              mapView.removeAnnotation(annotation)
+              currentAnnotation = nil
+      }
+    }
   }
   
   @objc private func onTapViewlist() {
@@ -735,6 +802,7 @@ extension EditGoingVC {
   
   @objc private func onTapBack() {
     viewModel.action.send(.back)
+    PlaceManager.shared.syncGoingGroupFromPlace()
   }
 }
 
@@ -787,6 +855,13 @@ extension EditGoingVC: UITableViewDelegate, UITableViewDataSource {
         self.mapView.setRegion(region, animated: true)
         
         let annotation = CustomAnnotation(coordinate: coordinate, title: dataSuggestion.title , subtitle: dataSuggestion.subtitle, type: "", id:  dataSuggestion.title)
+        let place = Place(address: dataSuggestion.title, fullAddres: dataSuggestion.subtitle , coordinate: coordinate, state: nil)
+        
+        if PlaceManager.shared.goingExists(place) {
+          annotation.type = "Location"
+        } else {
+          annotation.type = ""
+        }
         self.mapView.addAnnotation(annotation)
         
         // Hiển thị tooltip sau khi chọn trong tableView
@@ -875,10 +950,10 @@ extension EditGoingVC: UICollectionViewDataSource {
 extension EditGoingVC: CustomAnnotationViewDelagate {
   func customAnnotationView(_ annotationView: CustomAnnotationView, place: Place?) {
     guard let place = place else { return }
-    let wasInPlaceGroup = PlaceManager.shared.isExistLocation(place)
-    PlaceManager.shared.addLocationToArray(place)
+    let wasInPlaceGroup = PlaceManager.shared.goingExists(place)
+    PlaceManager.shared.addLocation(place, toGoing: true)
     viewModel.action.send(.actionEditLocation)
-    let isInPlaceGroup = PlaceManager.shared.isExistLocation(place)
+    let isInPlaceGroup = PlaceManager.shared.goingExists(place)
     
     // Cập nhật lại button state sau khi thêm/xóa
     if isInPlaceGroup {
@@ -921,7 +996,6 @@ extension EditGoingVC: CustomAnnotationViewDelagate {
     }
   }
 }
-
 
 extension EditGoingVC {
   func displayRouteOnMap(route: RouteResponse, mapView: MKMapView) {

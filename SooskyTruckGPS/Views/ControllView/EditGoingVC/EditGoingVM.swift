@@ -51,16 +51,22 @@ extension EditGoingVM {
         isEditLocation = true
       }
       router.route(to: .viewlist, parameters: ["Handler": handler])
+      
     case .caculatorRoute:
+      PlaceManager.shared.syncPlaceGroupFromGoing()
       let filteredPlaces = getFilteredPlacesForAPI()
       router.route(to: .loadingVC, parameters: ["filteredPlaces": filteredPlaces])
+      
     case .getIndex(int: let int):
       self.index.value = int
+      
     case .actionEditLocation:
       actionEditLocation.send(())
       isEditLocation = true
+      
     case .go:
       router.route(to: .go)
+      
     case .back:
       router.route(to: .back)
     }
@@ -70,6 +76,6 @@ extension EditGoingVM {
   // Tạo mảng tạm thời, không chỉnh sửa mảng gốc
   func getFilteredPlacesForAPI() -> [Place] {
     // Lọc ra những place có state == nil (chỉ gửi những place này lên API)
-    return PlaceManager.shared.placeGroup.places.filter { $0.state == nil }
+    return PlaceManager.shared.goingPlaceGroup.places.filter { $0.state == nil }
   }
 }

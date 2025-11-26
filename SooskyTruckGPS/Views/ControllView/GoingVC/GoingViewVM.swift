@@ -74,7 +74,7 @@ extension GoingViewVM {
       routeRealm.addPlaces(PlaceManager.shared.placeGroup.places)
       RealmService.shared.add(routeRealm)
       
-      PlaceManager.shared.setPlaceGroup([], nameGroup: "")
+      PlaceManager.shared.setPlaceGroup([], name: "My Route")
       self.router.route(to: .finish)
       
     case .getDuration(time: let time):

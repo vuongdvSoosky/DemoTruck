@@ -27,7 +27,7 @@ class SaveRouteDetailVC: BaseViewController {
     iconSearch.contentMode = .scaleAspectFit
     iconSearch.image = .icSearch
     
-    [iconSearch, searchTextField].forEach({view.addSubview($0)})
+    [iconSearch, searchTextField, iconRemoveText].forEach({view.addSubview($0)})
     
     iconSearch.snp.makeConstraints { make in
       make.width.height.equalTo(24)
@@ -38,7 +38,13 @@ class SaveRouteDetailVC: BaseViewController {
     searchTextField.snp.makeConstraints { make in
       make.left.equalTo(iconSearch.snp.right).offset(8)
       make.centerY.equalToSuperview()
-      make.right.equalToSuperview().offset(-12)
+    }
+    
+    iconRemoveText.snp.makeConstraints { make in
+      make.width.height.equalTo(12)
+      make.centerY.equalTo(searchTextField.snp.centerY)
+      make.left.equalTo(searchTextField.snp.right).offset(-12)
+      make.right.equalToSuperview().inset(18)
     }
     
     return view
@@ -73,6 +79,16 @@ class SaveRouteDetailVC: BaseViewController {
     return icon
   }()
   
+  private lazy var iconRemoveText: UIImageView = {
+    let icon = UIImageView()
+    icon.contentMode = .scaleAspectFit
+    icon.image = .icClearText
+    icon.isUserInteractionEnabled = true
+    icon.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapRemoveText)))
+    icon.isHidden = true
+    return icon
+  }()
+  
   private lazy var titleButtonView: UILabel = {
     let label = UILabel()
     label.text = "GO"
@@ -103,14 +119,13 @@ class SaveRouteDetailVC: BaseViewController {
   
   private lazy var tableView: UITableView = {
     let tableView = UITableView()
-    
     return tableView
   }()
   
   private lazy var arrayPlaces: [Place] = []
-  var currentTooltipView: CustomAnnotationView?
-  var currentTooltipID: String?
-  
+  private var currentTooltipView: CustomAnnotationView?
+  private var currentTooltipID: String?
+  private var currentAnnotation: CustomAnnotation?
   private lazy var searchTextField: UITextField = {
     let textField = UITextField()
     textField.translatesAutoresizingMaskIntoConstraints = false
@@ -132,7 +147,6 @@ class SaveRouteDetailVC: BaseViewController {
     collectionView.backgroundColor = .clear
     return collectionView
   }()
-  
   private lazy var viewList: UIView = {
     let view = UIView()
     view.translatesAutoresizingMaskIntoConstraints = false
@@ -153,10 +167,8 @@ class SaveRouteDetailVC: BaseViewController {
     }
     return view
   }()
-  // gas station, bank, car wash, supermarket, pharmacy, fast food
   private var address: String = ""
   private var desAdress: String = ""
-  
   private var currentQuery = ""
   private var currentType = ""
   private var searchDelayTimer: Timer?
@@ -249,7 +261,7 @@ class SaveRouteDetailVC: BaseViewController {
       
       // Kiểm tra xem service đã có trong placeGroup chưa (so sánh bằng coordinate và type)
       let place = Place(id: serviceAnnotation.id, address: serviceAnnotation.title ?? "", fullAddres: serviceAnnotation.subtitle ?? "", coordinate: serviceAnnotation.coordinate, state: nil, type: serviceAnnotation.type)
-      let isInPlaceGroup = PlaceManager.shared.isExistLocation(place)
+      let isInPlaceGroup = PlaceManager.shared.exists(place)
       
       // Cập nhật icon
       if isInPlaceGroup {
@@ -365,6 +377,7 @@ class SaveRouteDetailVC: BaseViewController {
     )
     tableView.setRoundCorners(corners: .allCorners, radius: 12)
   }
+  
   private func setupSearchCompleter() {
     viewModel.searchCompleter.delegate = self
     viewModel.searchCompleter.region = MKCoordinateRegion()
@@ -455,7 +468,7 @@ class SaveRouteDetailVC: BaseViewController {
     
     // Kiểm tra xem đã có trong placeGroup chưa
     let place = Place(id: annotation.id, address: annotation.title ?? "", fullAddres: annotation.subtitle ?? "", coordinate: annotation.coordinate, state: nil, type: annotation.type)
-    if PlaceManager.shared.isExistLocation(place) {
+    if PlaceManager.shared.exists(place) {
       annotationView.configureButton(title: "Remove Stop", icon: .icTrash)
     } else {
       annotationView.configureButton(title: "Add Stop", icon: .icPlus)
@@ -481,7 +494,7 @@ class SaveRouteDetailVC: BaseViewController {
     
     // Kiểm tra xem đã có trong placeGroup chưa
     let place = Place(id: annotation.id, address: annotation.title ?? "", fullAddres: annotation.subtitle ?? "", coordinate: annotation.coordinate, state: nil, type: annotation.type)
-    if PlaceManager.shared.isExistLocation(place) {
+    if PlaceManager.shared.exists(place) {
       annotationView.configureButton(title: "Remove Stop", icon: .icTrash)
     } else {
       annotationView.configureButton(title: "Add Stop", icon: .icPlus)
@@ -504,15 +517,16 @@ extension SaveRouteDetailVC: MKMapViewDelegate {
     
     // MARK: - CustomAnnotation
     if let customAnno = annotation as? CustomAnnotation {
+      self.currentAnnotation = customAnno
       let identifier = customAnno.identifier
       var view = mapView.dequeueReusableAnnotationView(withIdentifier: identifier) as? CustomAnnotationView
       
       if view == nil {
         view = CustomAnnotationView(annotation: customAnno, reuseIdentifier: identifier)
-        view?.hideButton()
+//        view?.hideButton()
       } else {
         view?.annotation = customAnno
-        view?.hideButton()
+//        view?.hideButton()
       }
       
       // Gán ID annotation
@@ -596,7 +610,7 @@ extension SaveRouteDetailVC: MKMapViewDelegate {
       
       // Kiểm tra xem service đã được thêm vào placeGroup chưa
       let place = Place(id: customService.id, address: customService.title ?? "", fullAddres: customService.subtitle ?? "", coordinate: customService.coordinate, state: nil, type: customService.type)
-      let isInPlaceGroup = PlaceManager.shared.isExistLocation(place)
+      let isInPlaceGroup = PlaceManager.shared.exists(place)
       
       // Chọn icon: nếu chưa thêm vào placeGroup → icLocationEmpty, nếu đã thêm → icon theo type
       if isInPlaceGroup {
@@ -643,10 +657,11 @@ extension SaveRouteDetailVC: UITextFieldDelegate {
       tableView.isHidden = true
       viewModel.searchSuggestions.removeAll()
       tableView.reloadData()
+      self.iconRemoveText.isHidden = true
       return
     }
+    self.iconRemoveText.isHidden = false
     self.address = text
-    // 410 ATLANTIC AVE, BROOKLYN
     viewModel.searchCompleter.queryFragment = text
     tableView.isHidden = false
   }
@@ -693,7 +708,24 @@ extension SaveRouteDetailVC: UITextFieldDelegate {
           
           let subtitle = addressParts.isEmpty ? (placemark.title ?? "") : addressParts.joined(separator: ", ")
           
-          let annotation = CustomAnnotation(coordinate: coordinate, title: title, subtitle: subtitle, type: "parking", id: keyword)
+          let annotation = CustomAnnotation(coordinate: coordinate, title: title, subtitle: subtitle, type: "Location", id: keyword)
+          
+          // Xoá annotation cũ nếu tồn tại
+          if let existingAnnotation = self.mapView.annotations.first(where: {
+              guard let ann = $0 as? CustomAnnotation else { return false }
+              return ann.id == keyword
+          }) as? CustomAnnotation {
+              self.mapView.removeAnnotation(existingAnnotation)
+          }
+          
+          let place = Place(address: title, fullAddres: subtitle , coordinate: coordinate, state: nil)
+          
+          if PlaceManager.shared.exists(place) {
+            annotation.type = "Location"
+          } else {
+            annotation.type = ""
+          }
+          
           self.mapView.addAnnotation(annotation)
   
           // Hiển thị tooltip sau khi tìm kiếm
@@ -730,6 +762,16 @@ extension SaveRouteDetailVC {
     UIView.animate(withDuration: 0.25) {
       self.currentTooltipView?.hideTooltip()
     }
+    
+    guard let annotation = currentAnnotation else { return }
+    
+    let place = Place(address: annotation.title ?? "", fullAddres: annotation.subtitle ?? "", coordinate: annotation.coordinate)
+    if !PlaceManager.shared.exists(place) {
+      if let annotation = currentAnnotation {
+              mapView.removeAnnotation(annotation)
+              currentAnnotation = nil
+      }
+    }
   }
   
   @objc private func onTapViewlist() {
@@ -747,7 +789,13 @@ extension SaveRouteDetailVC {
   @objc private func onTapBack() {
     viewModel.action.send(.back)
     // Reset PlaceGroup
-    PlaceManager.shared.setPlaceGroup([], nameGroup: "")
+    PlaceManager.shared.setPlaceGroup([], name: "My Route")
+  }
+  
+  @objc private func onTapRemoveText() {
+    self.searchTextField.text = ""
+    self.tableView.isHidden = true
+    self.iconRemoveText.isHidden = true
   }
 }
 
@@ -800,6 +848,13 @@ extension SaveRouteDetailVC: UITableViewDelegate, UITableViewDataSource {
         self.mapView.setRegion(region, animated: true)
         
         let annotation = CustomAnnotation(coordinate: coordinate, title: dataSuggestion.title , subtitle: dataSuggestion.subtitle, type: "", id:  dataSuggestion.title)
+        let place = Place(address: dataSuggestion.title, fullAddres: dataSuggestion.subtitle , coordinate: coordinate, state: nil)
+        
+        if PlaceManager.shared.exists(place) {
+          annotation.type = "Location"
+        } else {
+          annotation.type = ""
+        }
         self.mapView.addAnnotation(annotation)
         
         // Hiển thị tooltip sau khi chọn trong tableView
@@ -887,11 +942,13 @@ extension SaveRouteDetailVC: UICollectionViewDataSource {
 
 extension SaveRouteDetailVC: CustomAnnotationViewDelagate {
   func customAnnotationView(_ annotationView: CustomAnnotationView, place: Place?) {
-    guard let place = place else { return }
-    let wasInPlaceGroup = PlaceManager.shared.isExistLocation(place)
-    PlaceManager.shared.addLocationToArray(place)
+    guard let place = place else {
+      return
+    }
+    let wasInPlaceGroup = PlaceManager.shared.exists(place)
+    PlaceManager.shared.addLocation(place)
     viewModel.action.send(.actionEditLocation)
-    let isInPlaceGroup = PlaceManager.shared.isExistLocation(place)
+    let isInPlaceGroup = PlaceManager.shared.exists(place)
     
     // Cập nhật lại button state sau khi thêm/xóa
     if isInPlaceGroup {

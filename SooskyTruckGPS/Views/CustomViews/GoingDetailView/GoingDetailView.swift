@@ -38,6 +38,7 @@ class GoingDetailView: BaseView {
     view.backgroundColor = UIColor(rgb: 0x909090)
     view.isUserInteractionEnabled = false
     view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapEdit)))
+    view.isHidden = true
     
     let label = UILabel()
     label.text = "Edit Route"
@@ -170,7 +171,7 @@ class GoingDetailView: BaseView {
   }
   
   override func binding() {
-    PlaceManager.shared.$placeGroup
+    PlaceManager.shared.$goingPlaceGroup
       .receive(on: DispatchQueue.main)
       .sink { [weak self] place in
         guard let self else {
@@ -237,13 +238,13 @@ extension GoingDetailView {
 
 extension GoingDetailView: UICollectionViewDataSource {
   func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-    return PlaceManager.shared.placeGroup.places.count
+    return PlaceManager.shared.goingPlaceGroup.places.count
   }
   
   func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
     let cell = collectionView.dequeueReusableCell(DetailRouteCell.self, for: indexPath)
-    let item = PlaceManager.shared.placeGroup.places[indexPath.row]
-    let lastIndex = PlaceManager.shared.placeGroup.places.count - 1
+    let item = PlaceManager.shared.goingPlaceGroup.places[indexPath.row]
+    let lastIndex = PlaceManager.shared.goingPlaceGroup.places.count - 1
     cell.configData(item)
     cell.onChooseItemPlace = {[weak self] Place in
       self?.delegate?.didChooseItem(item: Place)
@@ -268,7 +269,7 @@ extension GoingDetailView: UICollectionViewDelegateFlowLayout {
                       layout collectionViewLayout: UICollectionViewLayout,
                       sizeForItemAt indexPath: IndexPath) -> CGSize {
     let width = collectionView.frame.width
-    let item = PlaceManager.shared.placeGroup.places[indexPath.row]
+    let item = PlaceManager.shared.goingPlaceGroup.places[indexPath.row]
     return CGSize(width: width, height: item.state != nil ? 86 : 64)
   }
   
@@ -286,11 +287,11 @@ extension GoingDetailView {
   func enabelEditView() {
     editView.isUserInteractionEnabled = true
     editView.backgroundColor = UIColor(rgb: 0xF26101)
+    editView.isHidden = false
   }
   
   func didsaabelEditView() {
-    editView.isUserInteractionEnabled = false
-    editView.backgroundColor = UIColor(rgb: 0x909090)
+    editView.isHidden = true
   }
   
   @objc private func onTapEdit() {
