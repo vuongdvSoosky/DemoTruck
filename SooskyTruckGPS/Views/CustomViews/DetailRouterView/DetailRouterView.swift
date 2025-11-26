@@ -124,7 +124,7 @@ class DetailRouterView: BaseView {
   private lazy var collectionView: UICollectionView = {
     let layout = UICollectionViewFlowLayout()
     layout.scrollDirection = .vertical
-    layout.minimumInteritemSpacing = 16
+    layout.estimatedItemSize = .zero
     layout.minimumLineSpacing = 16
     
     let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
@@ -166,7 +166,7 @@ class DetailRouterView: BaseView {
     
     collectionView.snp.makeConstraints { make in
       make.top.equalTo(timeEstimateView.snp.bottom).inset(-20)
-      make.left.right.equalToSuperview().inset(20)
+      make.left.right.equalToSuperview()
       make.bottom.equalToSuperview().inset(132)
     }
   }
@@ -230,7 +230,18 @@ extension DetailRouterView: UICollectionViewDataSource {
 
 extension DetailRouterView: UICollectionViewDelegateFlowLayout {
   func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-    return CGSize(width: self.collectionView.frame.width, height: 58)
+    let item = PlaceManager.shared.placeGroup.places[indexPath.row]
+    return CGSize(width: width, height: item.state != nil ? 86 : 64)
+  }
+  
+  func collectionView(_ collectionView: UICollectionView,
+                      layout collectionViewLayout: UICollectionViewLayout,
+                      minimumLineSpacingForSectionAt section: Int) -> CGFloat {
+    return 16
+  }
+  
+  func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {
+    return UIEdgeInsets(top: 16, left: 0, bottom: 16, right: 0)
   }
 }
 

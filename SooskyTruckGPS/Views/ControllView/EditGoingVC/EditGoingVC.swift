@@ -583,6 +583,10 @@ extension EditGoingVC: MKMapViewDelegate {
           view?.image = .icPinPharmacy
         case "Fast Food":
           view?.image = .icPinFastFood
+        case "true":
+          view?.image = .icLocationFinish
+        case "false":
+          view?.image = .icLocationFailed
         default:
           view?.image = .icLocationEmpty
         }
@@ -734,15 +738,38 @@ extension EditGoingVC: UITextFieldDelegate {
             self.mapView.removeAnnotation(existingAnnotation)
         }
         
-        let place = Place(address: title, fullAddres: subtitle , coordinate: coordinate, state: nil)
-        
-        if PlaceManager.shared.goingExists(place) {
-          annotation.type = "Location"
-        } else {
-          annotation.type = ""
+        // Tìm Place tương ứng từ arrayPlaces để lấy state
+        let correspondingPlace = self.arrayPlaces.first { place in
+          if let placeId = place.id, let annoId = annotation.id {
+            return placeId == annoId
+          } else {
+            // So sánh bằng coordinate nếu id không có
+            let epsilon = 1e-6
+            return abs(place.coordinate.latitude - annotation.coordinate.latitude) < epsilon &&
+                   abs(place.coordinate.longitude - annotation.coordinate.longitude) < epsilon
+          }
         }
-        self.mapView.addAnnotation(annotation)
-
+        
+        if let place = correspondingPlace, let state = place.state {
+          // Hiển thị icon dựa trên state (true/false)
+          if state {
+            // state == true → hiển thị icFinish
+            annotation.type = "true"
+          } else {
+            // state == false → hiển thị icFailedRoute
+            annotation.type = "false"
+          }
+        } else {
+          let place = Place(address: title, fullAddres: subtitle , coordinate: coordinate, state: nil)
+          
+          if PlaceManager.shared.goingExists(place) {
+            annotation.type = "Location"
+          } else {
+            annotation.type = ""
+          }
+          self.mapView.addAnnotation(annotation)
+        }
+        
         // Hiển thị tooltip sau khi tìm kiếm
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
           self.showTooltipForAnnotation(annotation)

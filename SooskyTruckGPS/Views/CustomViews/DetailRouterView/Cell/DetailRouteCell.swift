@@ -255,13 +255,10 @@ extension DetailRouteCell {
     self.itemPlace = place
     self.addressTitle.text = place.address
     self.addressContent.text = place.fullAddres
-    LogManager.show(place.address)
-    LogManager.show(place.fullAddres)
-    hideStateView()
-    
     guard let state = place.state else {
       addressTitle.textColor = UIColor(rgb: 0x332644)
       addressContent.textColor = UIColor(rgb: 0x332644)
+      hideStateView()
       return
     }
     stateLabel.text = state ? "Success" : "Failed"
@@ -270,6 +267,7 @@ extension DetailRouteCell {
     iconState.image = state ? .icSuccess : .icFailed
     addressTitle.textColor = UIColor(rgb: 0xBDBDBD)
     addressContent.textColor = UIColor(rgb: 0xBDBDBD)
+    showStateView()
   }
   
   func configData(_ place: Place, itemRoute: RouteResponseRealm?) {
