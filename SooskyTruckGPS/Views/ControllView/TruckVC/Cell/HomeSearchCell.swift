@@ -67,4 +67,16 @@ extension HomeSearchCell {
     titleSearchLbl.text = data.title
     descriptionSearchLbl.text = data.subtitle
   }
+  
+  func configDataManual(data: String) {
+    descriptionSearchLbl.isHidden = true
+    
+    titleSearchLbl.snp.remakeConstraints { make in
+      make.centerY.equalToSuperview()
+      make.left.equalTo(iconTruck.snp.right).offset(8)
+      make.right.equalToSuperview().offset(-8)
+    }
+    
+    titleSearchLbl.text = data
+  }
 }

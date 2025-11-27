@@ -43,7 +43,7 @@ class SaveRouteDetailVC: BaseViewController {
     iconRemoveText.snp.makeConstraints { make in
       make.width.height.equalTo(22)
       make.centerY.equalTo(searchTextField.snp.centerY)
-      make.left.equalTo(searchTextField.snp.right).offset(-12)
+      make.left.equalTo(searchTextField.snp.right).offset(12)
       make.right.equalToSuperview().inset(18)
     }
     
@@ -725,6 +725,7 @@ extension SaveRouteDetailVC: UITextFieldDelegate {
     }
     self.iconRemoveText.isHidden = false
     self.address = text
+    tableContainer.isHidden = false
     viewModel.searchCompleter.queryFragment = text
   }
   
@@ -857,6 +858,7 @@ extension SaveRouteDetailVC {
   @objc private func onTapRemoveText() {
     self.searchTextField.text = ""
     self.tableContainer.isHidden = true
+    self.address = ""
     self.iconRemoveText.isHidden = true
   }
   
@@ -883,6 +885,10 @@ extension SaveRouteDetailVC: UITableViewDelegate, UITableViewDataSource {
       cell.selectionStyle = .none
       cell.configData(data: data)
       return cell
+    case .manual(title: let title):
+      let cell = tableView.dequeueReusableCell(HomeSearchCell.self, for: indexPath)
+      cell.configDataManual(data: title)
+      return cell
     }
   }
   
@@ -894,7 +900,6 @@ extension SaveRouteDetailVC: UITableViewDelegate, UITableViewDataSource {
     searchTextField.resignFirstResponder()
     
     switch item {
-      
       // MARK: - USER LOCATION
     case .userLocation(_, _):
       MapManager.shared.requestUserLocation { [weak self] location in
@@ -904,19 +909,14 @@ extension SaveRouteDetailVC: UITableViewDelegate, UITableViewDataSource {
         geocoder.reverseGeocodeLocation(location) { placemarks, error in
           guard let placemark = placemarks?.first, error == nil else { return }
           
-          let number = placemark.subThoroughfare ?? ""   // Số nhà
-          let street = placemark.thoroughfare ?? ""       // Tên đường
+          let number = placemark.subThoroughfare ?? ""
+          let street = placemark.thoroughfare ?? ""
           let city = placemark.locality ?? ""
           let state = placemark.administrativeArea ?? ""
           let country = placemark.country ?? ""
           
-          let houseAddress = [number, street]
-            .filter { !$0.isEmpty }
-            .joined(separator: " ")  // VD: "123 Nguyen Trai"
-          
-          let fullAddress = [city, state, country]
-            .filter { !$0.isEmpty }
-            .joined(separator: ", ")
+          let houseAddress = [number, street].filter { !$0.isEmpty }.joined(separator: " ")
+          let fullAddress = [city, state, country].filter { !$0.isEmpty }.joined(separator: ", ")
           
           DispatchQueue.main.async {
             self.handleLocationSelection(
@@ -931,19 +931,41 @@ extension SaveRouteDetailVC: UITableViewDelegate, UITableViewDataSource {
       // MARK: - APPLE SUGGESTION
     case .suggestion(let dataSuggestion):
       searchTextField.text = dataSuggestion.title
+      performSearch(query: dataSuggestion.title, subtitle: dataSuggestion.subtitle)
       
-      let request = MKLocalSearch.Request()
-      request.naturalLanguageQuery = dataSuggestion.title
-      let search = MKLocalSearch(request: request)
-      search.start { [weak self] response, error in
-        guard
-          let self = self,
-          let coordinate = response?.mapItems.first?.placemark.coordinate
-        else { return }
-        
-        self.handleLocationSelection(title: dataSuggestion.title,
-                                     subtitle: dataSuggestion.subtitle,
-                                     coordinate: coordinate)
+      // MARK: - MANUAL INPUT
+    case .manual(let title):
+      searchTextField.text = title
+      performSearch(query: title, subtitle: nil)
+    }
+  }
+  
+  // MARK: - Perform MKLocalSearch and only act if real result exists
+  private func performSearch(query: String, subtitle: String?) {
+    let request = MKLocalSearch.Request()
+    request.naturalLanguageQuery = query
+    
+    let search = MKLocalSearch(request: request)
+    search.start { [weak self] response, error in
+      guard let self = self else { return }
+      
+      guard let firstItem = response?.mapItems.first else {
+        // Không có kết quả → không làm gì
+        return
+      }
+      
+      let placemarkTitle = firstItem.placemark.title ?? ""
+      
+      // Optional: kiểm tra title có liên quan đến query
+      guard placemarkTitle.lowercased().contains(query.lowercased()) else {
+        return
+      }
+      
+      let coordinate = firstItem.placemark.coordinate
+      let resolvedSubtitle = subtitle ?? placemarkTitle
+      
+      DispatchQueue.main.async {
+        self.handleLocationSelection(title: query, subtitle: resolvedSubtitle, coordinate: coordinate)
       }
     }
   }
@@ -982,10 +1004,16 @@ extension SaveRouteDetailVC: MKLocalSearchCompleterDelegate {
   func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
     var items: [SearchItem] = []
     
-    // Always add first
     items.append(.userLocation(title: "My Location", subtitle: "Current Position"))
-    // Append Apple search results
-    items.append(contentsOf: completer.results.map { SearchItem.suggestion($0) })
+    
+    let results = completer.results
+    
+    if results.isEmpty {
+      items.append(.manual(title: completer.queryFragment))
+    } else {
+      items.append(contentsOf: results.map { SearchItem.suggestion($0) })
+    }
+    
     viewModel.searchSuggestions.value = items
   }
   
@@ -993,6 +1021,7 @@ extension SaveRouteDetailVC: MKLocalSearchCompleterDelegate {
     LogManager.show("Completer error: \(error.localizedDescription)")
   }
 }
+
 
 extension SaveRouteDetailVC {
   func geocodeAndFormatAddress(_ address: String, completion: @escaping (String) -> Void) {
