@@ -22,13 +22,13 @@ class CurrentLocationCell: BaseTableViewCell {
   
   override func layoutSubviews() {
     super.layoutSubviews()
+    contentView.frame = bounds
     let padding: CGFloat = 20
     contentView.frame = contentView.frame.inset(by: UIEdgeInsets(top: 0, left: padding, bottom: 0, right: padding))
   }
   
   override func setColor() {
-    contentView.backgroundColor = .clear
-    
+    contentView.backgroundColor = .clear    
     titleSearchLbl.textColor = UIColor(rgb: 0x332644)
     titleSearchLbl.font = AppFont.font(.boldText, size: 16)
     titleSearchLbl.text = "Use your location"
@@ -47,7 +47,7 @@ class CurrentLocationCell: BaseTableViewCell {
     
     titleSearchLbl.snp.makeConstraints { make in
       make.left.equalTo(iconTruck.snp.right).offset(8)
-      make.centerY.equalToSuperview()
+      make.top.bottom.equalToSuperview()
       make.right.equalToSuperview().offset(-8)
     }
   }

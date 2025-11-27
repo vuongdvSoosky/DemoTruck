@@ -152,6 +152,16 @@ class TruckVC: BaseViewController {
     return view
   }()
   
+  private let tableContainer: UIView = {
+    let view = UIView()
+    view.backgroundColor = .clear
+    view.layer.shadowColor = UIColor(rgb: 0x000000).cgColor
+    view.layer.shadowOpacity = 0.4
+    view.layer.shadowRadius = 8
+    view.layer.shadowOffset = CGSize(width: 0, height: 4)
+    return view
+  }()
+  
   // MARK: UIImageView
   private lazy var iconTruck: UIImageView = {
     let icon = UIImageView()
@@ -302,7 +312,7 @@ class TruckVC: BaseViewController {
   
   override func addComponents() {
     self.view.addSubviews(mapView, searchView, viewList, collectionView, icDirection,
-                          tutorialView, iconTruck, iconTutorialTruck, iconTutorialSearch, currentCalloutView, iconTutorialList, caculatorRouteStackView, iconTutorialAddStop, iconTutorialCaculate, tableView)
+                          tutorialView, iconTruck, iconTutorialTruck, iconTutorialSearch, currentCalloutView, iconTutorialList, caculatorRouteStackView, iconTutorialAddStop, iconTutorialCaculate, tableContainer)
   }
   
   override func setConstraints() {
@@ -379,11 +389,15 @@ class TruckVC: BaseViewController {
       make.height.equalTo(60)
     }
     
-    tableView.snp.makeConstraints { make in
+    tableContainer.snp.makeConstraints { make in
       make.top.equalTo(searchView.snp.bottom).offset(8)
-      make.left.equalToSuperview()
-      make.centerX.equalToSuperview()
-      make.height.equalTo(288)
+      make.left.right.equalToSuperview().inset(20)
+      make.height.equalTo(66)
+    }
+    tableContainer.addSubview(tableView)
+    
+    tableView.snp.makeConstraints { make in
+      make.edges.equalToSuperview().inset(2)
     }
     
     icDirection.snp.makeConstraints { make in
@@ -478,7 +492,7 @@ class TruckVC: BaseViewController {
         }
         tutorialView.isHidden = false
         self.view.insertSubview(searchView, aboveSubview: tutorialView)
-        self.view.insertSubview(tableView, aboveSubview: tutorialView)
+        self.view.insertSubview(tableContainer, aboveSubview: tutorialView)
         iconTutorialSearch.isHidden = false
         showOverlay()
       }.store(in: &subscriptions)
@@ -499,6 +513,32 @@ class TruckVC: BaseViewController {
           self.view.insertSubview(iconTutorialCaculate, aboveSubview: tutorialView)
         }
       }.store(in: &subscriptions)
+    
+    viewModel.searchSuggestions
+      .sink { [weak self] _ in
+        self?.tableView.reloadData()
+        self?.updateTableHeight()
+      }
+      .store(in: &subscriptions)
+  }
+  
+  func updateTableHeight() {
+    let count = viewModel.searchSuggestions.value.count
+    let height: CGFloat
+    
+    if count >= 4 {
+      height = 288
+    } else {
+      height = CGFloat(66 * count)
+    }
+    
+    tableContainer.snp.updateConstraints { make in
+      make.height.equalTo(height)
+    }
+    
+    UIView.animate(withDuration: 0.1) {
+      self.view.layoutIfNeeded()
+    }
   }
   
   // MARK: - Helper: Cập nhật icon của service annotations dựa trên placeGroup
@@ -663,15 +703,17 @@ class TruckVC: BaseViewController {
     tableView.backgroundColor = .clear
     tableView.showsVerticalScrollIndicator = false
     tableView.showsHorizontalScrollIndicator = false
-    tableView.isHidden = true
     tableView.separatorInset = UIEdgeInsets(top: 0, left: 21, bottom: 0, right: 21)
+    tableView.clipsToBounds = true
+    tableView.layer.cornerRadius = 12
+    tableView.layer.masksToBounds = true
     
-    tableView.setShadow(
-      radius: 6,
-      opacity: 1,
-      offset: CGSize(width: 0, height: 3)
-    )
-    tableView.setRoundCorners(corners: .allCorners, radius: 12)
+  }
+  
+  override func setColor() {
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+      self.searchView.addShadow()
+    }
   }
   
   private func setupSearchCompleter() {
@@ -894,13 +936,12 @@ extension TruckVC: MKMapViewDelegate {
 extension TruckVC: UITextFieldDelegate {
   @objc private func textFieldDidChange(_ textField: UITextField) {
     guard let text = textField.text, !text.isEmpty else {
-      tableView.isHidden = true
+      tableContainer.isHidden = true
       if UserDefaultsManager.shared.get(of: Bool.self, key: .tutorial) == false {
         iconTutorialSearch.isHidden = false
       }
       
       viewModel.searchSuggestions.value.removeAll()
-      tableView.reloadData()
       iconRemoveText.isHidden = true
       return
     }
@@ -908,14 +949,14 @@ extension TruckVC: UITextFieldDelegate {
     iconRemoveText.isHidden = false
     self.address = text
     viewModel.searchCompleter.queryFragment = text
-    tableView.isHidden = false
+    tableContainer.isHidden = false
     iconTutorialSearch.isHidden = true
   }
   
   func textFieldShouldReturn(_ textField: UITextField) -> Bool {
     textField.resignFirstResponder()
     guard let keyword = textField.text, !keyword.isEmpty else { return true }
-    tableView.isHidden = true
+    tableContainer.isHidden = true
     
     let request = MKLocalSearch.Request()
     request.naturalLanguageQuery = keyword
@@ -1056,7 +1097,7 @@ extension TruckVC {
   
   @objc private func onTapRemoveText() {
     self.searchTextField.text = ""
-    self.tableView.isHidden = true
+    self.tableContainer.isHidden = true
     self.iconRemoveText.isHidden = true
   }
   
@@ -1082,26 +1123,15 @@ extension TruckVC: UITableViewDelegate, UITableViewDataSource {
       cell.backgroundColor = .white
       cell.selectionStyle = .none
       cell.configData(data: data)
-      tableView.snp.updateConstraints { make in
-        make.top.equalTo(searchView.snp.bottom).offset(8)
-        make.left.equalToSuperview().offset(20)
-        make.centerX.equalToSuperview()
-        if viewModel.searchSuggestions.value.count >= 4 {
-          make.height.equalTo(288)
-        } else {
-          make.height.equalTo(666 * viewModel.searchSuggestions.value.count)
-        }
-      }
-      
       return cell
     }
   }
-
+  
   func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
     guard indexPath.row < viewModel.searchSuggestions.value.count else { return }
     let item = viewModel.searchSuggestions.value[indexPath.row]
     
-    tableView.isHidden = true
+    tableContainer.isHidden = true
     searchTextField.resignFirstResponder()
     
     switch item {
@@ -1194,7 +1224,7 @@ extension TruckVC: UITableViewDelegate, UITableViewDataSource {
   }
   
   func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-    return 60
+    return 66
   }
 }
 
@@ -1207,8 +1237,6 @@ extension TruckVC: MKLocalSearchCompleterDelegate {
     // Append Apple search results
     items.append(contentsOf: completer.results.map { SearchItem.suggestion($0) })
     viewModel.searchSuggestions.value = items
-    
-    tableView.reloadData()
   }
   
   func completer(_ completer: MKLocalSearchCompleter, didFailWithError error: Error) {

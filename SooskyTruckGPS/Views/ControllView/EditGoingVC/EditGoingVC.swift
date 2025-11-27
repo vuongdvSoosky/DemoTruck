@@ -71,6 +71,16 @@ class EditGoingVC: BaseViewController {
     return view
   }()
   
+  private let tableContainer: UIView = {
+    let view = UIView()
+    view.backgroundColor = .clear
+    view.layer.shadowColor = UIColor(rgb: 0x000000).cgColor
+    view.layer.shadowOpacity = 0.4
+    view.layer.shadowRadius = 8
+    view.layer.shadowOffset = CGSize(width: 0, height: 4)
+    return view
+  }()
+  
   private lazy var iconButtonView: UIImageView = {
     let icon = UIImageView()
     icon.contentMode = .scaleAspectFit
@@ -269,6 +279,32 @@ class EditGoingVC: BaseViewController {
           caculatorRouteStackView.addArrayColorGradient(arrayColor: colors, startPoint: CGPoint(x: 0, y: 0.5), endPoint: CGPoint(x: 1, y: 0.5))
         }
       }.store(in: &subscriptions)
+    
+    viewModel.searchSuggestions
+      .sink { [weak self] _ in
+        self?.tableView.reloadData()
+        self?.updateTableHeight()
+      }
+      .store(in: &subscriptions)
+  }
+  
+  func updateTableHeight() {
+    let count = viewModel.searchSuggestions.value.count
+    let height: CGFloat
+    
+    if count >= 4 {
+      height = 288
+    } else {
+      height = CGFloat(66 * count)
+    }
+    
+    tableContainer.snp.updateConstraints { make in
+      make.height.equalTo(height)
+    }
+    
+    UIView.animate(withDuration: 0.1) {
+      self.view.layoutIfNeeded()
+    }
   }
   
   // MARK: - Helper: Cập nhật icon của service annotations dựa trên placeGroup
@@ -388,15 +424,9 @@ class EditGoingVC: BaseViewController {
     tableView.backgroundColor = .clear
     tableView.showsVerticalScrollIndicator = false
     tableView.showsHorizontalScrollIndicator = false
-    tableView.isHidden = true
-    tableView.separatorInset = UIEdgeInsets(top: 0, left: 21, bottom: 0, right: 21)
-    
-    tableView.setShadow(
-      radius: 6,
-      opacity: 1,
-      offset: CGSize(width: 0, height: 3)
-    )
-    tableView.setRoundCorners(corners: .allCorners, radius: 12)
+    tableView.clipsToBounds = true
+    tableView.layer.cornerRadius = 12
+    tableView.layer.masksToBounds = true
   }
   private func setupSearchCompleter() {
     viewModel.searchCompleter.delegate = self
@@ -405,7 +435,7 @@ class EditGoingVC: BaseViewController {
   }
   
   override func addComponents() {
-    self.view.addSubviews(mapView, searchView, viewList, caculatorRouteStackView, collectionView, tableView, icBack, icDirection)
+    self.view.addSubviews(mapView, searchView, viewList, caculatorRouteStackView, collectionView, tableContainer, icBack, icDirection)
   }
   
   override func setConstraints() {
@@ -449,11 +479,16 @@ class EditGoingVC: BaseViewController {
       make.height.equalTo(60)
     }
     
-    tableView.snp.makeConstraints { make in
+    tableContainer.snp.makeConstraints { make in
       make.top.equalTo(searchView.snp.bottom).offset(8)
-      make.left.equalToSuperview().offset(20)
-      make.centerX.equalToSuperview()
-      make.height.equalTo(288)
+      make.left.right.equalToSuperview().inset(20)
+      make.height.equalTo(66)
+    }
+    
+    tableContainer.addSubview(tableView)
+    
+    tableView.snp.makeConstraints { make in
+      make.edges.equalToSuperview().inset(2)
     }
     
     icDirection.snp.makeConstraints { make in
@@ -691,7 +726,7 @@ extension EditGoingVC: MKMapViewDelegate {
   
   @objc private func onTapRemoveText() {
     self.searchTextField.text = ""
-    self.tableView.isHidden = true
+    self.tableContainer.isHidden = true
     self.iconRemoveText.isHidden = true
   }
   
@@ -704,22 +739,21 @@ extension EditGoingVC: MKMapViewDelegate {
 extension EditGoingVC: UITextFieldDelegate {
   @objc private func textFieldDidChange(_ textField: UITextField) {
     guard let text = textField.text else {
-      tableView.isHidden = true
+      tableContainer.isHidden = true
       viewModel.searchSuggestions.value.removeAll()
-      tableView.reloadData()
       self.iconRemoveText.isHidden = true
       return
     }
     self.iconRemoveText.isHidden = false
     self.address = text
     viewModel.searchCompleter.queryFragment = text
-    tableView.isHidden = false
+    tableContainer.isHidden = false
   }
   
   func textFieldShouldReturn(_ textField: UITextField) -> Bool {
     textField.resignFirstResponder()
     guard let keyword = textField.text, !keyword.isEmpty else { return true }
-    tableView.isHidden = true
+    tableContainer.isHidden = true
 
     let request = MKLocalSearch.Request()
     request.naturalLanguageQuery = keyword
@@ -880,17 +914,6 @@ extension EditGoingVC: UITableViewDelegate, UITableViewDataSource {
       cell.backgroundColor = .white
       cell.selectionStyle = .none
       cell.configData(data: data)
-      tableView.snp.updateConstraints { make in
-        make.top.equalTo(searchView.snp.bottom).offset(8)
-        make.left.equalToSuperview().offset(20)
-        make.centerX.equalToSuperview()
-        if viewModel.searchSuggestions.value.count >= 4 {
-          make.height.equalTo(288)
-        } else {
-          make.height.equalTo(666 * viewModel.searchSuggestions.value.count)
-        }
-      }
-      
       return cell
     }
   }
@@ -899,7 +922,7 @@ extension EditGoingVC: UITableViewDelegate, UITableViewDataSource {
     guard indexPath.row < viewModel.searchSuggestions.value.count else { return }
     let item = viewModel.searchSuggestions.value[indexPath.row]
     
-    tableView.isHidden = true
+    tableContainer.isHidden = true
     searchTextField.resignFirstResponder()
     
     switch item {
@@ -995,8 +1018,6 @@ extension EditGoingVC: MKLocalSearchCompleterDelegate {
     // Append Apple search results
     items.append(contentsOf: completer.results.map { SearchItem.suggestion($0) })
     viewModel.searchSuggestions.value = items
-    
-    tableView.reloadData()
   }
   
   func completer(_ completer: MKLocalSearchCompleter, didFailWithError error: Error) {
