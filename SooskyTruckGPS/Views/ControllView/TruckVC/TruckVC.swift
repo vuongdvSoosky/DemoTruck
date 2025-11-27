@@ -49,7 +49,7 @@ class TruckVC: BaseViewController {
     }
     
     iconRemoveText.snp.makeConstraints { make in
-      make.width.height.equalTo(12)
+      make.width.height.equalTo(22)
       make.centerY.equalTo(searchTextField.snp.centerY)
       make.left.equalTo(searchTextField.snp.right).offset(-12)
       make.right.equalToSuperview().inset(18)
@@ -113,7 +113,7 @@ class TruckVC: BaseViewController {
         viewList.isHidden = false
         self.iconTutorialAddStop.isHidden = true
       }
-     
+      
       if PlaceManager.shared.exists(Place) {
         view.configureButton(title: "Remove Stop", icon: .icTrash)
       } else {
@@ -142,6 +142,13 @@ class TruckVC: BaseViewController {
     label.snp.makeConstraints { make in
       make.center.equalToSuperview()
     }
+    return view
+  }()
+  
+  private lazy var noFindAddressView: NoFindAddressView = {
+    let view = NoFindAddressView()
+    view.translatesAutoresizingMaskIntoConstraints = false
+    
     return view
   }()
   
@@ -265,6 +272,8 @@ class TruckVC: BaseViewController {
   private var currentAnnotation: CustomAnnotation?
   private var currentTooltipID: String?
   
+  var currentUserCoordinate: CLLocationCoordinate2D?
+  
   private let viewModel = TruckViewModel()
   
   override func viewDidLoad() {
@@ -372,7 +381,7 @@ class TruckVC: BaseViewController {
     
     tableView.snp.makeConstraints { make in
       make.top.equalTo(searchView.snp.bottom).offset(8)
-      make.left.equalToSuperview().offset(20)
+      make.left.equalToSuperview()
       make.centerX.equalToSuperview()
       make.height.equalTo(288)
     }
@@ -391,7 +400,7 @@ class TruckVC: BaseViewController {
     compassButton.snp.makeConstraints { make in
       make.bottom.equalTo(icDirection.snp.top).inset(-30)
       make.right.equalToSuperview().inset(20)
-      make.width.height.equalTo(48)
+      make.width.height.equalTo(44)
     }
   }
   
@@ -432,7 +441,7 @@ class TruckVC: BaseViewController {
           caculatorRouteView.isHidden = true
         } else {
           caculatorRouteView.isHidden = false
-         
+          
           DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {[weak self] in
             guard let self else {
               return
@@ -597,49 +606,49 @@ class TruckVC: BaseViewController {
   }
   
   func updateAnnotationPlace(for place: Place) {
-      // Tìm annotation có id tương ứng
-      if let existingAnnotation = mapView.annotations.first(where: {
-          guard let ann = $0 as? CustomAnnotation else { return false }
-          return ann.id == place.id
-      }) as? CustomAnnotation {
-
-          // Update thông tin annotation
-          existingAnnotation.coordinate = place.coordinate
-          existingAnnotation.title = place.address
-          existingAnnotation.subtitle = place.fullAddres
-          existingAnnotation.type = place.type ?? "Location"
-
-          // Update giao diện
-          if let annotationView = mapView.view(for: existingAnnotation) as? CustomAnnotationView {
-              // update icon
-              annotationView.image = icon(for: "Location")
-
-              if currentTooltipView?.annotationID == existingAnnotation.id {
-                  annotationView.configure(title: existingAnnotation.title ?? "",
-                                           des: existingAnnotation.subtitle ?? "")
-              }
-          } else {
-              // Force reload view
-              mapView.removeAnnotation(existingAnnotation)
-              mapView.addAnnotation(existingAnnotation)
-          }
-
+    // Tìm annotation có id tương ứng
+    if let existingAnnotation = mapView.annotations.first(where: {
+      guard let ann = $0 as? CustomAnnotation else { return false }
+      return ann.id == place.id
+    }) as? CustomAnnotation {
+      
+      // Update thông tin annotation
+      existingAnnotation.coordinate = place.coordinate
+      existingAnnotation.title = place.address
+      existingAnnotation.subtitle = place.fullAddres
+      existingAnnotation.type = place.type ?? "Location"
+      
+      // Update giao diện
+      if let annotationView = mapView.view(for: existingAnnotation) as? CustomAnnotationView {
+        // update icon
+        annotationView.image = icon(for: "Location")
+        
+        if currentTooltipView?.annotationID == existingAnnotation.id {
+          annotationView.configure(title: existingAnnotation.title ?? "",
+                                   des: existingAnnotation.subtitle ?? "")
+        }
       } else {
-          // Nếu chưa có, thì thêm mới
-          let newAnnotation = CustomAnnotation(coordinate: place.coordinate,
-                                               title: place.address,
-                                               subtitle: place.fullAddres,
-                                               type: place.type ?? "Location",
-                                               id: place.id)
-          mapView.addAnnotation(newAnnotation)
+        // Force reload view
+        mapView.removeAnnotation(existingAnnotation)
+        mapView.addAnnotation(existingAnnotation)
       }
+      
+    } else {
+      // Nếu chưa có, thì thêm mới
+      let newAnnotation = CustomAnnotation(coordinate: place.coordinate,
+                                           title: place.address,
+                                           subtitle: place.fullAddres,
+                                           type: place.type ?? "Location",
+                                           id: place.id)
+      mapView.addAnnotation(newAnnotation)
+    }
   }
   
   private func icon(for type: String?) -> UIImage? {
-      switch type {
-      case "Location": return .icLocationStop
-      default: return .icLocationEmpty
-      }
+    switch type {
+    case "Location": return .icLocationStop
+    default: return .icLocationEmpty
+    }
   }
   
   private func searchNearby(with nameService: String = "", type: String = "") {
@@ -650,6 +659,7 @@ class TruckVC: BaseViewController {
     tableView.delegate = self
     tableView.dataSource = self
     tableView.registerCell(HomeSearchCell.self)
+    tableView.registerCell(CurrentLocationCell.self)
     tableView.backgroundColor = .clear
     tableView.showsVerticalScrollIndicator = false
     tableView.showsHorizontalScrollIndicator = false
@@ -700,7 +710,7 @@ class TruckVC: BaseViewController {
     
     // Kiểm tra xem đã có trong placeGroup chưa
     let place = Place(id: annotation.id, address: annotation.title ?? "", fullAddres: annotation.subtitle ?? "", coordinate: annotation.coordinate, state: nil, type: annotation.type)
-   
+    
     if PlaceManager.shared.exists(place) {
       annotation.type = "Location"
       DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
@@ -889,7 +899,7 @@ extension TruckVC: UITextFieldDelegate {
         iconTutorialSearch.isHidden = false
       }
       
-      viewModel.searchSuggestions.removeAll()
+      viewModel.searchSuggestions.value.removeAll()
       tableView.reloadData()
       iconRemoveText.isHidden = true
       return
@@ -949,10 +959,10 @@ extension TruckVC: UITextFieldDelegate {
         
         // Xoá annotation cũ nếu tồn tại
         if let existingAnnotation = self.mapView.annotations.first(where: {
-            guard let ann = $0 as? CustomAnnotation else { return false }
-            return ann.id == keyword
+          guard let ann = $0 as? CustomAnnotation else { return false }
+          return ann.id == keyword
         }) as? CustomAnnotation {
-            self.mapView.removeAnnotation(existingAnnotation)
+          self.mapView.removeAnnotation(existingAnnotation)
         }
         
         let place = Place(address: title, fullAddres: subtitle , coordinate: coordinate, state: nil)
@@ -1012,8 +1022,8 @@ extension TruckVC {
     let place = Place(address: annotation.title ?? "", fullAddres: annotation.subtitle ?? "", coordinate: annotation.coordinate)
     if !PlaceManager.shared.exists(place) {
       if let annotation = currentAnnotation {
-              mapView.removeAnnotation(annotation)
-              currentAnnotation = nil
+        mapView.removeAnnotation(annotation)
+        currentAnnotation = nil
       }
     }
   }
@@ -1058,72 +1068,127 @@ extension TruckVC {
 // MARK: - UITableView
 extension TruckVC: UITableViewDelegate, UITableViewDataSource {
   func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-    return viewModel.searchSuggestions.count
+    return viewModel.searchSuggestions.value.count
   }
   
   func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-    let cell = tableView.dequeueReusableCell(HomeSearchCell.self, for: indexPath)
-    cell.backgroundColor = .white
-    cell.selectionStyle = .none
-    
-    let data = viewModel.searchSuggestions[indexPath.row]
-    cell.configData(data: data)
-    tableView.snp.updateConstraints { make in
-      make.top.equalTo(searchView.snp.bottom).offset(8)
-      make.left.equalToSuperview().offset(20)
-      make.centerX.equalToSuperview()
-      if viewModel.searchSuggestions.count >= 4 {
-        make.height.equalTo(288)
-      } else {
-        make.height.equalTo(60 * viewModel.searchSuggestions.count)
-      }
-    }
-    
-    return cell
-  }
-  
-  func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-    guard indexPath.row < viewModel.searchSuggestions.count else { return }
-    let dataSuggestion = viewModel.searchSuggestions[indexPath.row]
-    searchTextField.text = dataSuggestion.title
-    searchTextField.resignFirstResponder()
-    tableView.isHidden = true
-    
-    let request = MKLocalSearch.Request()
-    request.naturalLanguageQuery = dataSuggestion.title
-    let search = MKLocalSearch(request: request)
-    search.start { [weak self] response, error in
-      guard let self = self,
-            let coordinate = response?.mapItems.first?.placemark.coordinate else { return }
-      DispatchQueue.main.async {
-        let region = MKCoordinateRegion(
-          center: coordinate,
-          latitudinalMeters: 200,
-          longitudinalMeters: 200
-        )
-        self.mapView.setRegion(region, animated: true)
-        
-        let annotation = CustomAnnotation(coordinate: coordinate, title: dataSuggestion.title , subtitle: dataSuggestion.subtitle, type: "", id:  dataSuggestion.title)
-        let place = Place(address: dataSuggestion.title, fullAddres: dataSuggestion.subtitle , coordinate: coordinate, state: nil)
-        
-        if PlaceManager.shared.exists(place) {
-          annotation.type = "Location"
+    let item = viewModel.searchSuggestions.value[indexPath.row]
+    switch item {
+    case .userLocation(title: _, subtitle: _):
+      let cell = tableView.dequeueReusableCell(CurrentLocationCell.self, for: indexPath)
+      return cell
+    case .suggestion(let data):
+      let cell = tableView.dequeueReusableCell(HomeSearchCell.self, for: indexPath)
+      cell.backgroundColor = .white
+      cell.selectionStyle = .none
+      cell.configData(data: data)
+      tableView.snp.updateConstraints { make in
+        make.top.equalTo(searchView.snp.bottom).offset(8)
+        make.left.equalToSuperview().offset(20)
+        make.centerX.equalToSuperview()
+        if viewModel.searchSuggestions.value.count >= 4 {
+          make.height.equalTo(288)
         } else {
-          annotation.type = ""
+          make.height.equalTo(666 * viewModel.searchSuggestions.value.count)
         }
-        self.mapView.addAnnotation(annotation)
-        if UserDefaultsManager.shared.get(of: Bool.self, key: .tutorial) == false {
-          self.currentPlace = Place(address: dataSuggestion.title, fullAddres: dataSuggestion.subtitle , coordinate: coordinate, state: nil)
-          self.desAdress = dataSuggestion.subtitle
-          self.address = dataSuggestion.title
-          self.currentCalloutView.configureButton(title: "Add Stop", icon: .icPlus)
-          self.showCalloutAnimated()
-        } else {
-          // Hiển thị tooltip sau khi chọn trong tableView
-          DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            self.showTooltipForAnnotation(annotation)
+      }
+      
+      return cell
+    }
+  }
+
+  func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+    guard indexPath.row < viewModel.searchSuggestions.value.count else { return }
+    let item = viewModel.searchSuggestions.value[indexPath.row]
+    
+    tableView.isHidden = true
+    searchTextField.resignFirstResponder()
+    
+    switch item {
+      
+      // MARK: - USER LOCATION
+    case .userLocation(_, _):
+      MapManager.shared.requestUserLocation { [weak self] location in
+        guard let self = self, let location = location else { return }
+        
+        let geocoder = CLGeocoder()
+        geocoder.reverseGeocodeLocation(location) { placemarks, error in
+          guard let placemark = placemarks?.first, error == nil else { return }
+          
+          let number = placemark.subThoroughfare ?? ""   // Số nhà
+          let street = placemark.thoroughfare ?? ""       // Tên đường
+          let city = placemark.locality ?? ""
+          let state = placemark.administrativeArea ?? ""
+          let country = placemark.country ?? ""
+          
+          let houseAddress = [number, street]
+            .filter { !$0.isEmpty }
+            .joined(separator: " ")  // VD: "123 Nguyen Trai"
+          
+          let fullAddress = [city, state, country]
+            .filter { !$0.isEmpty }
+            .joined(separator: ", ")
+          
+          DispatchQueue.main.async {
+            self.handleLocationSelection(
+              title: houseAddress.isEmpty ? "My Location" : houseAddress,
+              subtitle: fullAddress,
+              coordinate: location.coordinate
+            )
           }
         }
+      }
+      
+      // MARK: - APPLE SUGGESTION
+    case .suggestion(let dataSuggestion):
+      searchTextField.text = dataSuggestion.title
+      
+      let request = MKLocalSearch.Request()
+      request.naturalLanguageQuery = dataSuggestion.title
+      let search = MKLocalSearch(request: request)
+      search.start { [weak self] response, error in
+        guard
+          let self = self,
+          let coordinate = response?.mapItems.first?.placemark.coordinate
+        else { return }
+        
+        self.handleLocationSelection(title: dataSuggestion.title,
+                                     subtitle: dataSuggestion.subtitle,
+                                     coordinate: coordinate)
+      }
+    }
+  }
+  
+  private func handleLocationSelection(title: String, subtitle: String, coordinate: CLLocationCoordinate2D) {
+    let region = MKCoordinateRegion(center: coordinate,
+                                    latitudinalMeters: 200,
+                                    longitudinalMeters: 200)
+    
+    mapView.setRegion(region, animated: true)
+    
+    let annotation = CustomAnnotation(
+      coordinate: coordinate,
+      title: title,
+      subtitle: subtitle,
+      type: "",
+      id: title
+    )
+    
+    let place = Place(address: title, fullAddres: subtitle, coordinate: coordinate, state: nil)
+    annotation.type = PlaceManager.shared.exists(place) ? "Location" : ""
+    
+    mapView.addAnnotation(annotation)
+    
+    if UserDefaultsManager.shared.get(of: Bool.self, key: .tutorial) == false {
+      // Setup callout
+      currentPlace = place
+      desAdress = subtitle
+      address = title
+      currentCalloutView.configureButton(title: "Add Stop", icon: .icPlus)
+      showCalloutAnimated()
+    } else {
+      DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+        self.showTooltipForAnnotation(annotation)
       }
     }
   }
@@ -1135,11 +1200,14 @@ extension TruckVC: UITableViewDelegate, UITableViewDataSource {
 
 extension TruckVC: MKLocalSearchCompleterDelegate {
   func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
-    if completer.results.isEmpty {
-      tableView.isHidden = true
-    } else {
-      viewModel.searchSuggestions = completer.results
-    }
+    var items: [SearchItem] = []
+    
+    // Always add first
+    items.append(.userLocation(title: "My Location", subtitle: "Current Position"))
+    // Append Apple search results
+    items.append(contentsOf: completer.results.map { SearchItem.suggestion($0) })
+    viewModel.searchSuggestions.value = items
+    
     tableView.reloadData()
   }
   
@@ -1176,11 +1244,22 @@ extension TruckVC {
 
 extension TruckVC: UICollectionViewDelegate {
   func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-    let item = ServiceType.allCases[indexPath.row]
-    self.searchNearby(with: item.name, type: item.title)
-    self.currentQuery = item.name
-    self.currentType = item.title
-    viewModel.action.send(.getIndex(int: indexPath.row))
+    if viewModel.index.value == indexPath.row {
+      viewModel.action.send(.getIndex(int: -1))
+      MapManager.shared.removeAllServiceAnnotations()
+      self.currentQuery = ""
+      self.currentType = ""
+      self.searchNearby(with: self.currentQuery, type: self.currentType)
+    } else {
+      // Chọn ô mới
+      let item = ServiceType.allCases[indexPath.item]
+      self.searchNearby(with: item.name, type: item.title)
+      self.currentQuery = item.name
+      self.currentType = item.title
+      viewModel.action.send(.getIndex(int: indexPath.row))
+    }
+    
+    collectionView.reloadData()
   }
 }
 

@@ -45,15 +45,14 @@ extension LoadingVM {
     case .getRequest:
       requestAPIPlaces()
     case .confirm:
-      //      router.route(to: .pushSummaryVC, parameters: ["HorseModel": itemHorse.value as Any,
-      //                                                    "TrackingHorseModel": trackingModel as Any])
+      // router.route(to: .pushSummaryVC, parameters: ["HorseModel": itemHorse.value as Any,
+      //                                               "TrackingHorseModel": trackingModel as Any])
       break
     case .iap:
       router.route(to: .iap)
     case .cancelRequest:
       requestTask?.cancel()
       requestTask = nil
-      LogManager.show("[Action] Cancel API request")
       router.route(to: .back)
     case .beforGoing:
       router.route(to: .beforGoing)

@@ -9,7 +9,7 @@ import Foundation
 
 typealias Handler = (() -> Void)
 typealias DateHandler = (Date) -> Void
-typealias RangeDateHandler = ((Date?), Date?) -> Void
+typealias RangeDateHandler = ((Date), Date) -> Void
 typealias HandlerString = ((String) -> Void)
 typealias RatingHandler = ((Int) -> Void)
 typealias TrainingTypeHandler = ((TrainingType) -> Void)

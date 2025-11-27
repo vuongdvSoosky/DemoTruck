@@ -85,6 +85,12 @@ extension TabbarVC {
 extension TabbarVC: CustomTabbarViewDelagate {
   func didSelectedHorse(index: Int) {
     self.selectedIndex = index
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+      guard let self else {
+        return
+      }
+      reloadFleetManagementTabSaveVC()
+    }
   }
   
   func didSelectedTrack(index: Int) {
@@ -133,24 +139,17 @@ extension TabbarVC: CustomTabbarViewDelagate {
   }
   
   func reloadFleetManagementVC() {
-    if let nav = viewControllers?[1] as? UINavigationController,
-       let fleetVC = nav.viewControllers.first(where: { $0 is FleetManagementVC }) as? FleetManagementVC {
-      fleetVC.reloadDataHistoryTab()
+    if let nav = listVC[1] as? FleetManagementVC {
+      DispatchQueue.main.asyncAfter(deadline: .now()) {
+        nav.reloadDataHistoryTab()
+      }
     }
   }
-  
   
   func reloadFleetManagementTabSaveVC() {
-    if let nav = viewControllers?[1] as? UINavigationController,
-       let fleetVC = nav.viewControllers.first(where: { $0 is FleetManagementVC }) as? FleetManagementVC {
-      fleetVC.reloadDataForSavedTab()
+    if let nav = listVC[1] as? FleetManagementVC {
+      nav.reloadDataForSavedTab()
     }
-  }
-  
-  private func showPopupTutorialView(_ index: Int) {
-    //    let view = PopupTutorialView()
-    //    view.setupData(TutorialType.allCases[index])
-    //    view.showSlideView(view: self.view)
   }
 }
 

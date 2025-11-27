@@ -79,7 +79,7 @@ extension RealmService {
   func convertToArray<T: Object>(list: List<T>) -> [T] {
     return list.map({ $0 })
   }
-    
+  
   func convertToList<T: Object>(array: [T]) -> List<T> {
     let list = List<T>()
     array.forEach { item in
@@ -122,6 +122,16 @@ extension RealmService {
       }
     } catch {
       LogManager.show(error)
+    }
+  }
+  
+  func fetchResults<T: Object>(ofType type: T.Type) -> Results<T>? {
+    do {
+      let realm = try Realm(configuration: realmConfiguration)
+      return realm.objects(type.self)
+    } catch {
+      LogManager.show(error)
+      return nil
     }
   }
 }

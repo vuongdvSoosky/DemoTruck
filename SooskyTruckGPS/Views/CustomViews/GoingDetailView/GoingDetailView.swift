@@ -131,9 +131,9 @@ class GoingDetailView: BaseView {
     
     editView.snp.makeConstraints { make in
       make.right.equalToSuperview().inset(12)
-      make.top.equalTo(self.lineView.snp.bottom).inset(-28)
+      make.top.equalTo(self.lineView.snp.bottom).inset(-20)
       make.width.equalTo(102)
-      make.height.equalTo(30)
+      make.height.equalTo(35)
     }
     
     titleRoute.snp.makeConstraints { make in

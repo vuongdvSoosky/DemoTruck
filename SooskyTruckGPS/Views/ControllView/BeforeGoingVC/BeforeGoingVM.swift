@@ -47,10 +47,6 @@ extension BeforeGoingVM {
 }
 
 extension BeforeGoingVM {
-  private func showRewardView(with rpe: Int) {
-    
-  }
-  
   private func saveToRealm() {
     guard let router = PlaceManager.shared.placesRouter else {
       return
@@ -58,6 +54,11 @@ extension BeforeGoingVM {
     let routeRealm = RouteResponseRealm(from: router)
     routeRealm.nameRouter = PlaceManager.shared.placeGroup.nameRouter
     routeRealm.addPlaces(PlaceManager.shared.placeGroup.places)
+    
+    let item = RealmService.shared.fetch(ofType: RouteResponseRealm.self)
+    LogManager.show(item)
+    
+    LogManager.show(routeRealm.id)
     RealmService.shared.add(routeRealm)
     self.router.route(to: .save)
     

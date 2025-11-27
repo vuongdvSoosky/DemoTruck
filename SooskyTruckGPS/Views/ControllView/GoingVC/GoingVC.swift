@@ -154,6 +154,15 @@ class GoingVC: BaseViewController {
     return icon
   }()
   
+  private lazy var icDirection: UIImageView = {
+    let image = UIImageView()
+    image.translatesAutoresizingMaskIntoConstraints = false
+    image.image = .icDirection
+    image.isUserInteractionEnabled = true
+    image.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapDirection)))
+    return image
+  }()
+  
   // MARK: - UICollectionView
   private lazy var collectionView: UICollectionView = {
     let layout = UICollectionViewFlowLayout()
@@ -230,7 +239,7 @@ class GoingVC: BaseViewController {
   
   override func addComponents() {
     self.view.addSubview(containerView)
-    self.containerView.addSubviews(mapView, inforView, collectionView, goingDetailView, statusStackView)
+    self.containerView.addSubviews(mapView, inforView, collectionView, icDirection, goingDetailView, statusStackView)
   }
   
   override func setConstraints() {
@@ -259,6 +268,23 @@ class GoingVC: BaseViewController {
       make.bottom.equalTo(statusStackView.snp.top).inset(-12)
       make.left.right.equalToSuperview().inset(20)
       make.height.equalTo(188)
+    }
+    
+    icDirection.snp.makeConstraints { make in
+      make.centerY.equalToSuperview().offset(55)
+      make.width.height.equalTo(48)
+      make.right.equalToSuperview().inset(20)
+    }
+    
+    let compassButton = MKCompassButton(mapView: mapView)
+    compassButton.compassVisibility = .visible
+    
+    mapView.addSubview(compassButton)
+    
+    compassButton.snp.makeConstraints { make in
+      make.bottom.equalTo(icDirection.snp.top).inset(-30)
+      make.right.equalToSuperview().inset(20)
+      make.width.height.equalTo(44)
     }
     
     statusStackView.snp.makeConstraints { make in
@@ -565,11 +591,22 @@ class GoingVC: BaseViewController {
 
 extension GoingVC: UICollectionViewDelegate {
   func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-    let item = ServiceType.allCases[indexPath.row]
-    searchNearby(with: item.name, type: item.title)
-    self.currentQuery = item.name
-    self.currentType = item.title
-    viewModel.action.send(.getIndex(int: indexPath.row))
+    if viewModel.index.value == indexPath.row {
+      viewModel.action.send(.getIndex(int: -1))
+      MapManager.shared.removeAllServiceAnnotations()
+      self.currentQuery = ""
+      self.currentType = ""
+      self.searchNearby(with: self.currentQuery, type: self.currentType)
+    } else {
+      // Chọn ô mới
+      let item = ServiceType.allCases[indexPath.item]
+      self.searchNearby(with: item.name, type: item.title)
+      self.currentQuery = item.name
+      self.currentType = item.title
+      viewModel.action.send(.getIndex(int: indexPath.row))
+    }
+    
+    collectionView.reloadData()
   }
 }
 
@@ -715,6 +752,10 @@ extension GoingVC {
   
   @objc private func onTapFinishView() {
     viewModel.action.send(.finish)
+  }
+  
+  @objc private func onTapDirection() {
+    self.showCurrentLocation(mapView)
   }
 }
 

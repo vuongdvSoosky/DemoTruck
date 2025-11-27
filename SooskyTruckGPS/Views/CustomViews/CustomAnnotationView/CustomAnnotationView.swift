@@ -94,7 +94,7 @@ class CustomAnnotationView: MKAnnotationView {
     
     containerView.snp.makeConstraints { make in
       make.centerX.equalToSuperview()
-      make.bottom.equalToSuperview().offset(-80)
+      make.bottom.equalToSuperview().offset(-70)
       make.width.equalTo(220)
     }
     

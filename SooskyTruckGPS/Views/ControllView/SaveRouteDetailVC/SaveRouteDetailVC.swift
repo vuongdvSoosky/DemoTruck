@@ -41,7 +41,7 @@ class SaveRouteDetailVC: BaseViewController {
     }
     
     iconRemoveText.snp.makeConstraints { make in
-      make.width.height.equalTo(12)
+      make.width.height.equalTo(22)
       make.centerY.equalTo(searchTextField.snp.centerY)
       make.left.equalTo(searchTextField.snp.right).offset(-12)
       make.right.equalToSuperview().inset(18)
@@ -120,7 +120,7 @@ class SaveRouteDetailVC: BaseViewController {
     icon.translatesAutoresizingMaskIntoConstraints = false
     icon.isUserInteractionEnabled = true
     icon.contentMode = .scaleAspectFit
-    icon.image = .icBackSaveRouteVC
+    icon.image = .icBack
     icon.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapBack)))
     
     return icon
@@ -372,6 +372,7 @@ class SaveRouteDetailVC: BaseViewController {
   private func setupTableView() {
     tableView.delegate = self
     tableView.dataSource = self
+    tableView.registerCell(CurrentLocationCell.self)
     tableView.registerCell(HomeSearchCell.self)
     tableView.backgroundColor = .clear
     tableView.showsVerticalScrollIndicator = false
@@ -403,16 +404,15 @@ class SaveRouteDetailVC: BaseViewController {
     }
     
     icBack.snp.makeConstraints { make in
-      make.top.equalTo(self.view.snp.topMargin).inset(25)
-      make.width.equalTo(17)
-      make.height.equalTo(28)
+      make.centerY.equalTo(self.searchView.snp.centerY)
+      make.width.height.equalTo(36)
       make.left.equalToSuperview().inset(20)
     }
     
     searchView.snp.makeConstraints { make in
       make.top.equalTo(self.view.snp.topMargin).inset(15)
       make.height.equalTo(48)
-      make.left.equalTo(icBack.snp.right).inset(-18)
+      make.left.equalTo(icBack.snp.right).inset(-6)
       make.right.equalToSuperview().inset(20)
     }
     
@@ -424,7 +424,7 @@ class SaveRouteDetailVC: BaseViewController {
     }
     
     viewList.snp.makeConstraints { make in
-      make.bottom.equalTo(    caculatorRouteStackView.snp.top).inset(-12)
+      make.bottom.equalTo(caculatorRouteStackView.snp.top).inset(-12)
       make.centerX.equalToSuperview()
       make.width.equalTo(111)
       make.height.equalTo(47)
@@ -460,7 +460,7 @@ class SaveRouteDetailVC: BaseViewController {
     compassButton.snp.makeConstraints { make in
       make.bottom.equalTo(icDirection.snp.top).inset(-30)
       make.right.equalToSuperview().inset(20)
-      make.width.height.equalTo(48)
+      make.width.height.equalTo(44)
     }
   }
   
@@ -683,7 +683,7 @@ extension SaveRouteDetailVC: UITextFieldDelegate {
   @objc private func textFieldDidChange(_ textField: UITextField) {
     guard let text = textField.text else {
       tableView.isHidden = true
-      viewModel.searchSuggestions.removeAll()
+      viewModel.searchSuggestions.value.removeAll()
       tableView.reloadData()
       self.iconRemoveText.isHidden = true
       return
@@ -834,66 +834,119 @@ extension SaveRouteDetailVC {
 // MARK: - UITableView
 extension SaveRouteDetailVC: UITableViewDelegate, UITableViewDataSource {
   func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-    return viewModel.searchSuggestions.count
+    return viewModel.searchSuggestions.value.count
   }
   
   func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-    let cell = tableView.dequeueReusableCell(HomeSearchCell.self, for: indexPath)
-    cell.backgroundColor = .white
-    cell.selectionStyle = .none
-    
-    let data = viewModel.searchSuggestions[indexPath.row]
-    cell.configData(data: data)
-    tableView.snp.updateConstraints { make in
-      make.top.equalTo(searchView.snp.bottom).offset(8)
-      make.left.equalToSuperview().offset(20)
-      make.centerX.equalToSuperview()
-      if viewModel.searchSuggestions.count >= 4 {
-        make.height.equalTo(288)
-      } else {
-        make.height.equalTo(60 * viewModel.searchSuggestions.count)
+    let item = viewModel.searchSuggestions.value[indexPath.row]
+    switch item {
+    case .userLocation(title: _, subtitle: _):
+      let cell = tableView.dequeueReusableCell(CurrentLocationCell.self, for: indexPath)
+      return cell
+    case .suggestion(let data):
+      let cell = tableView.dequeueReusableCell(HomeSearchCell.self, for: indexPath)
+      cell.backgroundColor = .white
+      cell.selectionStyle = .none
+      cell.configData(data: data)
+      tableView.snp.updateConstraints { make in
+        make.top.equalTo(searchView.snp.bottom).offset(8)
+        make.left.equalToSuperview().offset(20)
+        make.centerX.equalToSuperview()
+        if viewModel.searchSuggestions.value.count >= 4 {
+          make.height.equalTo(288)
+        } else {
+          make.height.equalTo(666 * viewModel.searchSuggestions.value.count)
+        }
       }
+      
+      return cell
     }
-    
-    return cell
   }
   
   func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-    guard indexPath.row < viewModel.searchSuggestions.count else { return }
-    let dataSuggestion = viewModel.searchSuggestions[indexPath.row]
-    searchTextField.text = dataSuggestion.title
-    searchTextField.resignFirstResponder()
-    tableView.isHidden = true
+    guard indexPath.row < viewModel.searchSuggestions.value.count else { return }
+    let item = viewModel.searchSuggestions.value[indexPath.row]
     
-    let request = MKLocalSearch.Request()
-    request.naturalLanguageQuery = dataSuggestion.title
-    let search = MKLocalSearch(request: request)
-    search.start { [weak self] response, error in
-      guard let self = self,
-            let coordinate = response?.mapItems.first?.placemark.coordinate else { return }
-      DispatchQueue.main.async {
-        let region = MKCoordinateRegion(
-          center: coordinate,
-          latitudinalMeters: 200,
-          longitudinalMeters: 200
-        )
-        self.mapView.setRegion(region, animated: true)
+    tableView.isHidden = true
+    searchTextField.resignFirstResponder()
+    
+    switch item {
+      
+      // MARK: - USER LOCATION
+    case .userLocation(_, _):
+      MapManager.shared.requestUserLocation { [weak self] location in
+        guard let self = self, let location = location else { return }
         
-        let annotation = CustomAnnotation(coordinate: coordinate, title: dataSuggestion.title , subtitle: dataSuggestion.subtitle, type: "", id:  dataSuggestion.title)
-        let place = Place(address: dataSuggestion.title, fullAddres: dataSuggestion.subtitle , coordinate: coordinate, state: nil)
-        
-        if PlaceManager.shared.exists(place) {
-          annotation.type = "Location"
-        } else {
-          annotation.type = ""
-        }
-        self.mapView.addAnnotation(annotation)
-        
-        // Hiển thị tooltip sau khi chọn trong tableView
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-          self.showTooltipForAnnotation(annotation)
+        let geocoder = CLGeocoder()
+        geocoder.reverseGeocodeLocation(location) { placemarks, error in
+          guard let placemark = placemarks?.first, error == nil else { return }
+          
+          let number = placemark.subThoroughfare ?? ""   // Số nhà
+          let street = placemark.thoroughfare ?? ""       // Tên đường
+          let city = placemark.locality ?? ""
+          let state = placemark.administrativeArea ?? ""
+          let country = placemark.country ?? ""
+          
+          let houseAddress = [number, street]
+            .filter { !$0.isEmpty }
+            .joined(separator: " ")  // VD: "123 Nguyen Trai"
+          
+          let fullAddress = [city, state, country]
+            .filter { !$0.isEmpty }
+            .joined(separator: ", ")
+          
+          DispatchQueue.main.async {
+            self.handleLocationSelection(
+              title: houseAddress.isEmpty ? "My Location" : houseAddress,
+              subtitle: fullAddress,
+              coordinate: location.coordinate
+            )
+          }
         }
       }
+      
+      // MARK: - APPLE SUGGESTION
+    case .suggestion(let dataSuggestion):
+      searchTextField.text = dataSuggestion.title
+      
+      let request = MKLocalSearch.Request()
+      request.naturalLanguageQuery = dataSuggestion.title
+      let search = MKLocalSearch(request: request)
+      search.start { [weak self] response, error in
+        guard
+          let self = self,
+          let coordinate = response?.mapItems.first?.placemark.coordinate
+        else { return }
+        
+        self.handleLocationSelection(title: dataSuggestion.title,
+                                     subtitle: dataSuggestion.subtitle,
+                                     coordinate: coordinate)
+      }
+    }
+  }
+  
+  private func handleLocationSelection(title: String, subtitle: String, coordinate: CLLocationCoordinate2D) {
+    let region = MKCoordinateRegion(center: coordinate,
+                                    latitudinalMeters: 200,
+                                    longitudinalMeters: 200)
+    
+    mapView.setRegion(region, animated: true)
+    
+    let annotation = CustomAnnotation(
+      coordinate: coordinate,
+      title: title,
+      subtitle: subtitle,
+      type: "",
+      id: title
+    )
+    
+    let place = Place(address: title, fullAddres: subtitle, coordinate: coordinate, state: nil)
+    annotation.type = PlaceManager.shared.exists(place) ? "Location" : ""
+    
+    mapView.addAnnotation(annotation)
+    
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+      self.showTooltipForAnnotation(annotation)
     }
   }
   
@@ -904,11 +957,14 @@ extension SaveRouteDetailVC: UITableViewDelegate, UITableViewDataSource {
 
 extension SaveRouteDetailVC: MKLocalSearchCompleterDelegate {
   func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
-    if completer.results.isEmpty {
-      tableView.isHidden = true
-    } else {
-      viewModel.searchSuggestions = completer.results
-    }
+    var items: [SearchItem] = []
+    
+    // Always add first
+    items.append(.userLocation(title: "My Location", subtitle: "Current Position"))
+    // Append Apple search results
+    items.append(contentsOf: completer.results.map { SearchItem.suggestion($0) })
+    viewModel.searchSuggestions.value = items
+    
     tableView.reloadData()
   }
   
@@ -945,11 +1001,22 @@ extension SaveRouteDetailVC {
 
 extension SaveRouteDetailVC: UICollectionViewDelegate {
   func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-    let item = ServiceType.allCases[indexPath.row]
-    self.searchNearby(with: item.name, type: item.title)
-    self.currentQuery = item.name
-    self.currentType = item.title
-    viewModel.action.send(.getIndex(int: indexPath.row))
+    if viewModel.index.value == indexPath.row {
+      viewModel.action.send(.getIndex(int: -1))
+      MapManager.shared.removeAllServiceAnnotations()
+      self.currentQuery = ""
+      self.currentType = ""
+      self.searchNearby(with: self.currentQuery, type: self.currentType)
+    } else {
+      // Chọn ô mới
+      let item = ServiceType.allCases[indexPath.item]
+      self.searchNearby(with: item.name, type: item.title)
+      self.currentQuery = item.name
+      self.currentType = item.title
+      viewModel.action.send(.getIndex(int: indexPath.row))
+    }
+    
+    collectionView.reloadData()
   }
 }
 

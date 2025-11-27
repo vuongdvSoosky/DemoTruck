@@ -49,14 +49,18 @@ class HistoryCell: BaseCollectionViewCell {
   private lazy var iconDistance: UIImageView = {
     let icon = UIImageView()
     icon.translatesAutoresizingMaskIntoConstraints = false
-    icon.image = .icTotalDistance
+    icon.image = .icDistanceHistoryCell
+    icon.contentMode = .scaleAspectFill
+    icon.snp.makeConstraints { make in
+      make.width.height.equalTo(24)
+    }
     return icon
   }()
   
   private lazy var iconTime: UIImageView = {
     let icon = UIImageView()
     icon.translatesAutoresizingMaskIntoConstraints = false
-    icon.image = .icTimeEstimate
+    icon.image = .icTimeHistoryCell
     return icon
   }()
   
@@ -67,7 +71,7 @@ class HistoryCell: BaseCollectionViewCell {
     let stackView = UIStackView()
     stackView.axis = .horizontal
     stackView.spacing = 4
-    stackView.alignment = .center
+    stackView.alignment = .fill
     [iconDistance,distanceLabel].forEach({stackView.addArrangedSubview($0)})
     
     view.addSubview(stackView)
@@ -85,6 +89,7 @@ class HistoryCell: BaseCollectionViewCell {
     let stackView = UIStackView()
     stackView.axis = .horizontal
     stackView.spacing = 4
+    stackView.alignment = .fill
     [iconTime,timeLabel].forEach({stackView.addArrangedSubview($0)})
     
     view.addSubview(stackView)
@@ -133,18 +138,20 @@ class HistoryCell: BaseCollectionViewCell {
   }
   
   override func setColor() {
-    containerView.addShadow()
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+      self.containerView.addShadow()
+    }
   }
   
   override func setConstraints() {
     containerView.snp.makeConstraints { make in
-      make.edges.equalToSuperview().inset(2)
+      make.edges.equalToSuperview().inset(4)
     }
     
     deleteButton.snp.makeConstraints { make in
-      make.top.equalTo(contentView).inset(2)
+      make.top.equalTo(contentView).inset(4)
       make.bottom.equalTo(contentView).inset(10)
-      make.trailing.equalTo(contentView).offset(-3)
+      make.trailing.equalTo(contentView).offset(-4)
       make.width.equalTo(deleteButtonWidth)
     }
     

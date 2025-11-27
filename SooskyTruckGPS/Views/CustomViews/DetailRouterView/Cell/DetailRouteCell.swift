@@ -257,7 +257,7 @@ extension DetailRouteCell {
     self.addressContent.text = place.fullAddres
     guard let state = place.state else {
       addressTitle.textColor = UIColor(rgb: 0x332644)
-      addressContent.textColor = UIColor(rgb: 0x332644)
+      addressContent.textColor = UIColor(rgb: 0x909090)
       hideStateView()
       return
     }

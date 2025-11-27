@@ -1,23 +1,22 @@
 //
-//  HomeSearchCell.swift
+//  CurrentLocationCell.swift
 //  SooskyTruckGPS
 //
-//  Created by VuongDV on 20/11/25.
+//  Created by VuongDv on 27/11/25.
 //
 
 import UIKit
 import SnapKit
 import MapKit
 
-class HomeSearchCell: BaseTableViewCell {
+class CurrentLocationCell: BaseTableViewCell {
   
-  let titleSearchLbl = UILabel(),
-      descriptionSearchLbl = UILabel()
+  let titleSearchLbl = UILabel()
   
   private lazy var iconTruck: UIImageView = {
     let icon = UIImageView()
     icon.translatesAutoresizingMaskIntoConstraints = false
-    icon.image = .icTruck
+    icon.image = .icDirection
     return icon
   }()
   
@@ -32,13 +31,11 @@ class HomeSearchCell: BaseTableViewCell {
     
     titleSearchLbl.textColor = UIColor(rgb: 0x332644)
     titleSearchLbl.font = AppFont.font(.boldText, size: 16)
-    
-    descriptionSearchLbl.textColor = UIColor(rgb: 0x909090)
-    descriptionSearchLbl.font = AppFont.font(.lightText, size: 14)
+    titleSearchLbl.text = "Use your location"
   }
   
   override func addComponents() {
-    contentView.addSubviews(iconTruck, titleSearchLbl, descriptionSearchLbl)
+    contentView.addSubviews(iconTruck, titleSearchLbl)
   }
   
   override func setConstraints() {
@@ -50,21 +47,8 @@ class HomeSearchCell: BaseTableViewCell {
     
     titleSearchLbl.snp.makeConstraints { make in
       make.left.equalTo(iconTruck.snp.right).offset(8)
-      make.top.equalToSuperview().offset(12)
+      make.centerY.equalToSuperview()
       make.right.equalToSuperview().offset(-8)
     }
-    
-    descriptionSearchLbl.snp.makeConstraints { make in
-      make.left.equalTo(iconTruck.snp.right).offset(8)
-      make.top.equalTo(titleSearchLbl.snp.bottom).offset(4)
-      make.right.equalToSuperview().offset(-8)
-    }
-  }
-}
-
-extension HomeSearchCell {
-  func configData(data: MKLocalSearchCompletion) {
-    titleSearchLbl.text = data.title
-    descriptionSearchLbl.text = data.subtitle
   }
 }

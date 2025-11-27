@@ -198,6 +198,13 @@ extension MapManager {
       }
     }
   }
+  
+  func removeAllServiceAnnotations() {
+     guard let mapView = mapView else { return }
+     
+     let serviceAnnotations = mapView.annotations.filter { $0 is CustomServiceAnimation }
+     mapView.removeAnnotations(serviceAnnotations)
+   }
 }
 
 // MARK: - CheckLocation

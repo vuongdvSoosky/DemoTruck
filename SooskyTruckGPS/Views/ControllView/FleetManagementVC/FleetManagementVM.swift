@@ -6,6 +6,7 @@
 //
 
 import Combine
+import Foundation
 
 class FleetManagementVM: BaseViewModel {
   enum Action {
@@ -14,12 +15,18 @@ class FleetManagementVM: BaseViewModel {
     case getSaveRouteItem(index: Int)
     case getHistoryItem(index: Int)
     case removeItemHistory(item: RouteResponseRealm)
+    case calendar
+    case filterData(selectedDate: (Date, Date))
   }
   
   let action = PassthroughSubject<Action, Never>()
   let saveRouteItems = CurrentValueSubject<[RouteResponseRealm]?, Never>(nil)
   let itemHistory = CurrentValueSubject<[RouteResponseRealm]?, Never>(nil)
   let indexForMainScrollView = CurrentValueSubject<Int, Never>(0)
+  
+  let selectedDate = CurrentValueSubject<(Date, Date), Never>((Date(), Date()))
+  let startDate = CurrentValueSubject<Date?, Never>(nil)
+  let endDate = CurrentValueSubject<Date?, Never>(nil)
   
   private let router = FleetManagementRouter()
   
@@ -64,6 +71,41 @@ extension FleetManagementVM {
       
       RealmService.shared.delete(object)
       fetchData()
+    case .calendar:
+      let dateHandler: RangeDateHandler = { startDate, endDate in
+        self.selectedDate.value.0 = startDate
+        self.selectedDate.value.1 = endDate
+        self.startDate.value = startDate
+        self.endDate.value = endDate
+        
+      }
+      router.route(to: .calendar, parameters: ["handlerDate": dateHandler as RangeDateHandler,
+                                               "date": selectedDate.value])
+    case .filterData(selectedDate: let selectedDate):
+      filterItems(from: selectedDate.0, to: selectedDate.1)
     }
+  }
+}
+
+extension FleetManagementVM {
+  /// Filter cả saveRouteItems và itemHistory theo ngày
+  func filterItems(from start: Date, to end: Date) {
+    let calendar = Calendar.current
+    let startOfDay = calendar.startOfDay(for: start)
+    let endOfDay = calendar.date(bySettingHour: 23, minute: 59, second: 59, of: end) ?? end
+    
+    // Lọc saveRouteItems (history == false)
+    saveRouteItems.value = RealmService.shared
+      .fetchResults(ofType: RouteResponseRealm.self)?
+      .filter("history == false AND createDate >= %@ AND createDate <= %@", startOfDay, endOfDay)
+      .sorted(byKeyPath: "createDate", ascending: false)
+      .map { $0 } ?? []
+    
+    // Lọc itemHistory (history == true)
+    itemHistory.value = RealmService.shared
+      .fetchResults(ofType: RouteResponseRealm.self)?
+      .filter("history == true AND createDate >= %@ AND createDate <= %@", startOfDay, endOfDay)
+      .sorted(byKeyPath: "createDate", ascending: false)
+      .map { $0 } ?? []
   }
 }

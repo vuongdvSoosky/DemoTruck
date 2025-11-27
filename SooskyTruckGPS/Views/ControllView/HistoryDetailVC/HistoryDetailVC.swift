@@ -160,7 +160,7 @@ class HistoryDetailVC: BaseViewController {
     compassButton.snp.makeConstraints { make in
       make.bottom.equalTo(icDirection.snp.top).inset(-30)
       make.right.equalToSuperview().inset(20)
-      make.width.height.equalTo(48)
+      make.width.height.equalTo(44)
     }
   }
   

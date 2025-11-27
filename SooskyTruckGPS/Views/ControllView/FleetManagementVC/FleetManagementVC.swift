@@ -7,6 +7,7 @@
 
 import UIKit
 import SnapKit
+import Combine
 
 class FleetManagementVC: BaseViewController {
   // MARK: - UIView
@@ -43,7 +44,7 @@ class FleetManagementVC: BaseViewController {
     
     return view
   }()
-  private lazy var historyView: UIView = {
+  private lazy var historyTabView: UIView = {
     let view = UIView()
     view.translatesAutoresizingMaskIntoConstraints = false
     view.cornerRadius = 17
@@ -69,6 +70,7 @@ class FleetManagementVC: BaseViewController {
     view.cornerRadius = 12
     view.clipsToBounds = true
     view.backgroundColor = UIColor(rgb: 0xFEFEFE)
+    view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapCalendar)))
     
     let icon = UIImageView()
     icon.image = .icCalendar
@@ -90,6 +92,55 @@ class FleetManagementVC: BaseViewController {
     
     return view
   }()
+  private lazy var contentView: UIView = {
+    let view = UIView()
+    view.translatesAutoresizingMaskIntoConstraints = false
+    return view
+  }()
+  
+  private lazy var saveView: UIView = {
+    let view = UIView()
+    view.translatesAutoresizingMaskIntoConstraints = false
+    view.addSubviews(saveEmptyView, collectionView)
+    
+    collectionView.snp.makeConstraints { make in
+      make.edges.equalToSuperview()
+    }
+    
+    saveEmptyView.snp.makeConstraints { make in
+      make.center.equalToSuperview()
+      make.width.equalTo(302)
+      make.height.equalTo(76)
+    }
+    return view
+  }()
+  
+  private lazy var historyView: UIView = {
+    let view = UIView()
+    view.translatesAutoresizingMaskIntoConstraints = false
+    view.addSubviews(historyEmptyView, historyCollectionView)
+    
+    historyCollectionView.snp.makeConstraints { make in
+      make.edges.equalToSuperview()
+    }
+    
+    historyEmptyView.snp.makeConstraints { make in
+      make.center.equalToSuperview()
+      make.width.equalTo(302)
+      make.height.equalTo(76)
+    }
+    return view
+  }()
+  
+  private let saveEmptyView = EmptyView(
+    title: "No saved routes yet",
+    description: "Start planning your first route to manage your fleet more efficiently"
+  )
+  
+  private let historyEmptyView = EmptyView(
+    title: "No reports available",
+    description: "Reports will appear here once activity starts"
+  )
   
   // MARK: - UILabel
   private lazy var titleVC: UILabel = {
@@ -100,11 +151,12 @@ class FleetManagementVC: BaseViewController {
     label.textColor = UIColor(rgb: 0x332644)
     return label
   }()
+  
   private lazy var dateLabel: UILabel = {
     let label = UILabel()
     label.translatesAutoresizingMaskIntoConstraints = false
-    label.text = "Wednesday, April 2, 2025"
-    label.textColor = UIColor(rgb: 0x1A1A1A)
+    label.text = "Select a date range"
+    label.textColor = UIColor(rgb: 0x909090)
     label.font = AppFont.font(.regularText, size: 17)
     return label
   }()
@@ -117,7 +169,7 @@ class FleetManagementVC: BaseViewController {
     stackView.spacing = 8
     stackView.distribution = .fillEqually
     
-    [saveRouteView, historyView].forEach({stackView.addArrangedSubview($0)})
+    [saveRouteView, historyTabView].forEach({stackView.addArrangedSubview($0)})
     return stackView
   }()
   
@@ -147,7 +199,6 @@ class FleetManagementVC: BaseViewController {
   }()
   
   //  MARK: - MainScrollView
-  
   private lazy var mainScrollView: UIScrollView = {
     let scrollView = UIScrollView()
     scrollView.translatesAutoresizingMaskIntoConstraints = false
@@ -160,23 +211,29 @@ class FleetManagementVC: BaseViewController {
     return scrollView
   }()
   
-  private lazy var contentView: UIView = {
-    let view = UIView()
-    view.translatesAutoresizingMaskIntoConstraints = false
-    return view
-  }()
-  
   private var selectedTab: Int = 0
   private var gradientLayers: [CAGradientLayer] = []
   
   private let viewModel = FleetManagementVM()
+  
+  override func viewWillAppear(_ animated: Bool) {
+    super.viewWillAppear(animated)
+    Publishers.Zip(viewModel.startDate, viewModel.endDate)
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] startDate, endDate in
+        guard let self, let startDate = startDate, let endDate = endDate else { return }
+        self.dateLabel.text = "\(startDate.asString(format: "MMM d, yyyy")) - \(endDate.asString(format: "MMM d, yyyy"))"
+        self.dateLabel.textColor = UIColor(rgb: 0x332644)
+        viewModel.action.send(.filterData(selectedDate: (startDate, endDate)))
+      }.store(in: &subscriptions)
+  }
   
   var handlerActionDeleted: Handler?
   
   override func addComponents() {
     self.view.addSubviews(titleVC, tabView, calenderView, mainScrollView)
     mainScrollView.addSubviews(contentView)
-    contentView.addSubviews(collectionView, historyCollectionView)
+    contentView.addSubviews(saveView, historyView)
   }
   
   override func setConstraints() {
@@ -210,20 +267,20 @@ class FleetManagementVC: BaseViewController {
       make.width.equalTo(mainScrollView.frameLayoutGuide).multipliedBy(2)
     }
     
-    collectionView.snp.makeConstraints { make in
+    saveView.snp.makeConstraints { make in
       make.top.bottom.left.equalToSuperview()
       make.width.equalTo(mainScrollView.snp.width)
     }
     
-    historyCollectionView.snp.makeConstraints { make in
+    historyView.snp.makeConstraints { make in
       make.top.bottom.right.equalToSuperview()
-      make.left.equalTo(collectionView.snp.right)
+      make.left.equalTo(saveView.snp.right)
       make.width.equalTo(mainScrollView.snp.width)
     }
   }
   
   override func setColor() {
-    self.view.backgroundColor = UIColor(rgb: 0xF2F2F2)
+    self.view.backgroundColor = UIColor(rgb: 0xFCFCFC)
     let colors = [UIColor(rgb: 0xF28E01), UIColor(rgb: 0xF26101)]
     saveRouteView.addArrayColorGradient(arrayColor: colors, startPoint: CGPoint(x: 0, y: 0.5), endPoint: CGPoint(x: 1, y: 0.5))
     
@@ -233,7 +290,7 @@ class FleetManagementVC: BaseViewController {
   
   override func setProperties() {
     saveRouteView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapSaveRouteView)))
-    historyView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapHistory)))
+    historyTabView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapHistory)))
     setSelectedTab(0)
     
     collectionView.delegate = self
@@ -250,9 +307,15 @@ class FleetManagementVC: BaseViewController {
   override func binding() {
     viewModel.saveRouteItems
       .receive(on: DispatchQueue.main)
-      .sink { [weak self] Places in
+      .sink { [weak self] places in
         guard let self else {
           return
+        }
+        
+        if places?.isEmpty ?? true {
+          saveEmptyView.isHidden = false
+        } else {
+          saveEmptyView.isHidden = true
         }
         collectionView.reloadData()
       }.store(in: &subscriptions)
@@ -272,6 +335,13 @@ class FleetManagementVC: BaseViewController {
         guard let self else {
           return
         }
+        
+        if itemHistory?.count == 0 {
+          historyEmptyView.isHidden = false
+        } else {
+          historyEmptyView.isHidden = true
+        }
+        
         historyCollectionView.reloadData()
       }.store(in: &subscriptions)
   }
@@ -286,6 +356,10 @@ class FleetManagementVC: BaseViewController {
     setSelectedTab(1)
     viewModel.action.send(.getIndexToScroll(index: 1))
   }
+  
+  @objc private func onTapCalendar() {
+    viewModel.action.send(.calendar)
+  }
 }
 
 extension FleetManagementVC {
@@ -293,19 +367,19 @@ extension FleetManagementVC {
     selectedTab = index
     
     removeGradient(from: saveRouteView)
-    removeGradient(from: historyView)
+    removeGradient(from: historyTabView)
     
     setTab(view: saveRouteView, labelFont: AppFont.font(.regularText, size: 14), textColor: UIColor(rgb: 0x727272))
-    setTab(view: historyView,   labelFont: AppFont.font(.regularText, size: 14), textColor: UIColor(rgb: 0x727272))
+    setTab(view: historyTabView,   labelFont: AppFont.font(.regularText, size: 14), textColor: UIColor(rgb: 0x727272))
     
     let colors = [UIColor(rgb: 0xF28E01), UIColor(rgb: 0xF26101)]
     
     if index == 0 {
       saveRouteView.addArrayColorGradient(arrayColor: colors, startPoint: CGPoint(x: 0, y: 0.5), endPoint: CGPoint(x: 1, y: 0.5))
-      setTab(view: saveRouteView, labelFont: AppFont.font(.semiBoldText, size: 15), textColor: .white)
+      setTab(view: saveRouteView, labelFont: AppFont.font(.boldText, size: 15), textColor: .white)
     } else {
-      historyView.addArrayColorGradient(arrayColor: colors, startPoint: CGPoint(x: 0, y: 0.5), endPoint: CGPoint(x: 1, y: 0.5))
-      setTab(view: historyView, labelFont: AppFont.font(.semiBoldText, size: 15), textColor: .white)
+      historyTabView.addArrayColorGradient(arrayColor: colors, startPoint: CGPoint(x: 0, y: 0.5), endPoint: CGPoint(x: 1, y: 0.5))
+      setTab(view: historyTabView, labelFont: AppFont.font(.boldText, size: 15), textColor: .white)
     }
   }
   
@@ -426,14 +500,15 @@ extension FleetManagementVC: UICollectionViewDelegateFlowLayout {
 
 extension FleetManagementVC {
   func reloadDataHistoryTab() {
-    setSelectedTab(1)
     viewModel.fetchData()
+    setSelectedTab(1)
+    viewModel.action.send(.getIndexToScroll(index: 1))
   }
   
   func reloadDataForSavedTab() {
-    setSelectedTab(0)
     viewModel.fetchData()
-    
+    setSelectedTab(0)
+    viewModel.action.send(.getIndexToScroll(index: 0))
   }
 }
 

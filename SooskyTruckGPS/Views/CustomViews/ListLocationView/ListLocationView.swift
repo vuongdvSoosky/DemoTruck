@@ -122,6 +122,7 @@ class ListLocationView: BaseView {
     titleLabel.snp.makeConstraints { make in
       make.top.equalTo(iconClose.snp.bottom).offset(0)
       make.left.equalToSuperview().inset(12)
+      make.height.equalTo(0)
     }
     
     routeNameTextView.snp.makeConstraints { make in
