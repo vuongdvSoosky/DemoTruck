@@ -43,7 +43,7 @@ class LocationSearchManager: NSObject {
   @Published var status: SearchStatus = .idle
   var onSelectCurrentPosition = PassthroughSubject<LocationResult, Never>()
   
-  var results: [LocationResult] = []
+  @Published var results: [LocationResult] = []
   var completer: MKLocalSearchCompleter
   
   var search: MKLocalSearch?

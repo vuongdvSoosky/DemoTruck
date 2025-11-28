@@ -387,6 +387,12 @@ class GoingVC: BaseViewController {
     mapView.delegate = self
   }
   
+  private func resetTrackingData() {
+    distanceCalculator.stopTracking()
+    distanceCalculator.resetTrackingData()
+    timerManager.resetTotalOperationTime()
+  }
+  
   private func updateAnnotations(for places: [Place]) {
     guard !isUpdatingAnnotations else { return }
     isUpdatingAnnotations = true
@@ -751,6 +757,7 @@ extension GoingVC {
   }
   
   @objc private func onTapFinishView() {
+    resetTrackingData()
     viewModel.action.send(.finish)
   }
   

@@ -285,6 +285,7 @@ class TruckVC: BaseViewController {
   private var isProgrammaticRegionChange = false
   private var currentTooltipView: CustomAnnotationView?
   private var currentAnnotation: CustomAnnotation?
+  private var searchManager: LocationSearchManager!
   private var currentTooltipID: String?
   
   var currentUserCoordinate: CLLocationCoordinate2D?
@@ -526,6 +527,15 @@ class TruckVC: BaseViewController {
         }
         tableView.reloadData()
         updateTableHeight()
+      }
+      .store(in: &subscriptions)
+    
+    searchManager.$results
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] results in
+        //                    self?.searchResults = results
+        //                    self?.tableView.reloadData()
+        //                    self?.tableView.isHidden = results.isEmpty
       }
       .store(in: &subscriptions)
   }
