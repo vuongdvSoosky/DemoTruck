@@ -8,6 +8,7 @@
 import UIKit
 import SnapKit
 import MapKit
+import Toast
 
 class SaveRouteDetailVC: BaseViewController {
   private lazy var mapView: MKMapView = {
@@ -145,6 +146,8 @@ class SaveRouteDetailVC: BaseViewController {
   private var currentTooltipView: CustomAnnotationView?
   private var currentTooltipID: String?
   private var currentAnnotation: CustomAnnotation?
+  private var isUpdatingAnnotations = false
+  
   private lazy var searchTextField: UITextField = {
     let textField = UITextField()
     textField.translatesAutoresizingMaskIntoConstraints = false
@@ -220,7 +223,7 @@ class SaveRouteDetailVC: BaseViewController {
     MapManager.shared.requestUserLocation { [weak self] location in
       guard let self = self, let location = location else { return }
       MapManager.shared.centerMap(on: location, zoom: 0.02)
-       searchNearby()
+      searchNearby()
     }
   }
   
@@ -233,7 +236,7 @@ class SaveRouteDetailVC: BaseViewController {
         }
         
         self.arrayPlaces = places.places
-        LogManager.show(self.arrayPlaces.count)
+      
         if self.arrayPlaces.count < 2 {
           caculatorRouteView.isHidden = true
         } else {
@@ -242,12 +245,12 @@ class SaveRouteDetailVC: BaseViewController {
             guard let self else {
               return
             }
-                caculatorRouteStackView.layoutIfNeeded()
+            caculatorRouteStackView.layoutIfNeeded()
             let colors = [UIColor(rgb: 0xF28E01), UIColor(rgb: 0xF26101)]
-                caculatorRouteStackView.addArrayColorGradient(arrayColor: colors, startPoint: CGPoint(x: 0, y: 0.5), endPoint: CGPoint(x: 1, y: 0.5))
+            caculatorRouteStackView.addArrayColorGradient(arrayColor: colors, startPoint: CGPoint(x: 0, y: 0.5), endPoint: CGPoint(x: 1, y: 0.5))
           }
         }
-        self.updateAnnotations(for:  places.places)
+        self.updateAnnotations(for: places.places)
       }.store(in: &subscriptions)
     
     viewModel.index
@@ -265,6 +268,7 @@ class SaveRouteDetailVC: BaseViewController {
         guard let self else {
           return
         }
+      
         titleButtonView.text = "Calculate Best Route"
         iconButtonView.isHidden = false
       }.store(in: &subscriptions)
@@ -570,10 +574,10 @@ extension SaveRouteDetailVC: MKMapViewDelegate {
     // debounce tránh spam search khi người dùng kéo bản đồ liên tục
     searchDelayTimer?.invalidate()
     searchDelayTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: false) { [weak self] _ in
-       self?.searchNearby(with: self?.currentQuery ?? "", type: self?.currentType ?? "")
+      self?.searchNearby(with: self?.currentQuery ?? "", type: self?.currentType ?? "")
     }
   }
-
+  
   func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
     if annotation is MKUserLocation { return nil }
     
@@ -586,10 +590,10 @@ extension SaveRouteDetailVC: MKMapViewDelegate {
       if view == nil {
         view = CustomAnnotationView(annotation: customAnno, reuseIdentifier: identifier)
         view?.delegate = self
-//        view?.hideButton()
+        //        view?.hideButton()
       } else {
         view?.annotation = customAnno
-//        view?.hideButton()
+        //        view?.hideButton()
       }
       
       // Gán ID annotation
@@ -606,21 +610,21 @@ extension SaveRouteDetailVC: MKMapViewDelegate {
           // So sánh bằng coordinate nếu id không có
           let epsilon = 1e-6
           return abs(place.coordinate.latitude - customAnno.coordinate.latitude) < epsilon &&
-                 abs(place.coordinate.longitude - customAnno.coordinate.longitude) < epsilon
+          abs(place.coordinate.longitude - customAnno.coordinate.longitude) < epsilon
         }
       }
       
-      // Chọn icon dựa vào state nếu có, nếu không thì dựa vào type
-      if let place = correspondingPlace, let state = place.state {
-        // Hiển thị icon dựa trên state (true/false)
-        if state {
-          // state == true → hiển thị icFinish
-          view?.image = .icLocationFinish
-        } else {
-          // state == false → hiển thị icFailedRoute
-          view?.image = .icLocationFailed
-        }
-      } else {
+//      // Chọn icon dựa vào state nếu có, nếu không thì dựa vào type
+//      if let place = correspondingPlace, let state = place.state {
+//        // Hiển thị icon dựa trên state (true/false)
+//        if state {
+//          // state == true → hiển thị icFinish
+//          view?.image = .icLocationFinish
+//        } else {
+//          // state == false → hiển thị icFailedRoute
+//          view?.image = .icLocationFailed
+//        }
+//      } else {
         // Nếu state là nil, hiển thị icon dựa vào type
         switch customAnno.type {
         case "Location":
@@ -638,7 +642,7 @@ extension SaveRouteDetailVC: MKMapViewDelegate {
         default:
           view?.image = .icLocationEmpty
         }
-      }
+     // }
       
       // Ẩn tooltip mặc định (chỉ hiển thị khi tap)
       view?.hideTooltip()
@@ -660,10 +664,10 @@ extension SaveRouteDetailVC: MKMapViewDelegate {
       if view == nil {
         view = CustomAnnotationView(annotation: customService, reuseIdentifier: identifier)
         view?.delegate = self
-//        view?.hideButton()
+        //        view?.hideButton()
       } else {
         view?.annotation = customService
-//        view?.hideButton()
+        //        view?.hideButton()
       }
       
       // Gán ID annotation
@@ -729,80 +733,79 @@ extension SaveRouteDetailVC: UITextFieldDelegate {
     viewModel.searchCompleter.queryFragment = text
   }
   
-    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-      textField.resignFirstResponder()
-      guard let keyword = textField.text, !keyword.isEmpty else { return true }
-      tableContainer.isHidden = true
-  
-      let request = MKLocalSearch.Request()
-      request.naturalLanguageQuery = keyword
-      let search = MKLocalSearch(request: request)
-      request.region = mapView.region
-  
-      search.start { [weak self] response, error in
-        guard let self = self,
-              let mapItem = response?.mapItems.first else { return }
-        let coordinate = mapItem.placemark.coordinate
-        DispatchQueue.main.async {
-          let region = MKCoordinateRegion(
-            center: coordinate,
-            latitudinalMeters: 200,
-            longitudinalMeters: 200
-          )
-          self.mapView.setRegion(region, animated: true)
-  
-          // Lấy thông tin đầy đủ từ mapItem giống như tableView
-          let placemark = mapItem.placemark
-          let title = mapItem.name ?? keyword
-          
-          // Format địa chỉ đầy đủ từ placemark
-          var addressParts: [String] = []
-
-          if let city = placemark.locality {
-            addressParts.append(city)
-          }
-          if let state = placemark.administrativeArea {
-            addressParts.append(state)
-          }
-
-          if let country = placemark.country {
-            addressParts.append(country)
-          }
-          
-          let subtitle = addressParts.isEmpty ? (placemark.title ?? "") : addressParts.joined(separator: ", ")
-          
-          let annotation = CustomAnnotation(coordinate: coordinate, title: title, subtitle: subtitle, type: "Location", id: keyword)
-          
-          // Xoá annotation cũ nếu tồn tại
-          if let existingAnnotation = self.mapView.annotations.first(where: {
-              guard let ann = $0 as? CustomAnnotation else { return false }
-              return ann.id == keyword
-          }) as? CustomAnnotation {
-              self.mapView.removeAnnotation(existingAnnotation)
-          }
-          
-          let place = Place(address: title, fullAddres: subtitle , coordinate: coordinate, state: nil)
-          
-          if PlaceManager.shared.exists(place) {
-            annotation.type = "Location"
-          } else {
-            annotation.type = ""
-          }
-          
-          self.mapView.addAnnotation(annotation)
-  
-          // Hiển thị tooltip sau khi tìm kiếm
-          DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            self.showTooltipForAnnotation(annotation)
-          }
+  func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+    textField.resignFirstResponder()
+    guard let keyword = textField.text, !keyword.isEmpty else { return true }
+    tableContainer.isHidden = true
+    
+    let request = MKLocalSearch.Request()
+    request.naturalLanguageQuery = keyword
+    let search = MKLocalSearch(request: request)
+    request.region = mapView.region
+    
+    search.start { [weak self] response, error in
+      guard let self = self,
+            let mapItem = response?.mapItems.first else { return }
+      let coordinate = mapItem.placemark.coordinate
+      DispatchQueue.main.async {
+        let region = MKCoordinateRegion(
+          center: coordinate,
+          latitudinalMeters: 200,
+          longitudinalMeters: 200
+        )
+        self.mapView.setRegion(region, animated: true)
+        
+        // Lấy thông tin đầy đủ từ mapItem giống như tableView
+        let placemark = mapItem.placemark
+        let title = mapItem.name ?? keyword
+        
+        // Format địa chỉ đầy đủ từ placemark
+        var addressParts: [String] = []
+        
+        if let city = placemark.locality {
+          addressParts.append(city)
+        }
+        if let state = placemark.administrativeArea {
+          addressParts.append(state)
+        }
+        
+        if let country = placemark.country {
+          addressParts.append(country)
+        }
+        
+        let subtitle = addressParts.isEmpty ? (placemark.title ?? "") : addressParts.joined(separator: ", ")
+        
+        let annotation = CustomAnnotation(coordinate: coordinate, title: title, subtitle: subtitle, type: "Location", id: keyword)
+        
+        // Xoá annotation cũ nếu tồn tại
+        if let existingAnnotation = self.mapView.annotations.first(where: {
+          guard let ann = $0 as? CustomAnnotation else { return false }
+          return ann.id == keyword
+        }) as? CustomAnnotation {
+          self.mapView.removeAnnotation(existingAnnotation)
+        }
+        
+        let place = Place(address: title, fullAddres: subtitle , coordinate: coordinate, state: nil)
+        
+        if PlaceManager.shared.exists(place) {
+          annotation.type = "Location"
+        } else {
+          annotation.type = ""
+        }
+        
+        self.mapView.addAnnotation(annotation)
+        
+        // Hiển thị tooltip sau khi tìm kiếm
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+          self.showTooltipForAnnotation(annotation)
         }
       }
-      return true
     }
+    return true
+  }
 }
 
 // MARK: - Action
-
 extension SaveRouteDetailVC {
   @objc private func onTapCloseCalloutView(_ gesture: UITapGestureRecognizer) {
     view.endEditing(true)
@@ -831,8 +834,8 @@ extension SaveRouteDetailVC {
     let place = Place(address: annotation.title ?? "", fullAddres: annotation.subtitle ?? "", coordinate: annotation.coordinate)
     if !PlaceManager.shared.exists(place) {
       if let annotation = currentAnnotation {
-              mapView.removeAnnotation(annotation)
-              currentAnnotation = nil
+        mapView.removeAnnotation(annotation)
+        currentAnnotation = nil
       }
     }
   }
@@ -1022,7 +1025,6 @@ extension SaveRouteDetailVC: MKLocalSearchCompleterDelegate {
   }
 }
 
-
 extension SaveRouteDetailVC {
   func geocodeAndFormatAddress(_ address: String, completion: @escaping (String) -> Void) {
     let geocoder = CLGeocoder()
@@ -1091,9 +1093,60 @@ extension SaveRouteDetailVC: UICollectionViewDataSource {
 
 extension SaveRouteDetailVC: CustomAnnotationViewDelagate {
   func customAnnotationView(_ annotationView: CustomAnnotationView, place: Place?) {
-    guard let place = place else {
+    guard let place = place else { return }
+    if PlaceManager.shared.goingPlaceGroup.places.count >= 30 {
+      var style = ToastStyle()
+      style.backgroundColor = UIColor(rgb: 0xF03C3C)
+      style.cornerRadius = 16
+      style.titleColor = .white
+      style.titleAlignment = .center
+      style.titleFont = AppFont.font(.semiBoldText, size: 15)
+      style.messageColor = .white
+      style.displayShadow = false
+      style.imageSize = CGSize(width: 24.0, height: 24.0)
+      
+      self.view.makeToast("You can only get an optimal route with 30 stops or fewer",
+                          duration: 3.0,
+                          position: .top,
+                          image: .icAlert,
+                          style: style)
       return
     }
+    
+    if PlaceManager.shared.placeGroup.places.count < 1 {
+      addPlaceToPlaceGourp(annotationView, place: place)
+    } else {
+      annotationView.showLoadingView()
+      MapManager.shared.checkRouteAvailable(from: PlaceManager.shared.placeGroup.places.last?.coordinate ?? CLLocationCoordinate2D(), to: place.coordinate) { [weak self] available in
+        guard let self else {
+          return
+        }
+        if available {
+          annotationView.hideLoadingView()
+          addPlaceToPlaceGourp(annotationView, place: place)
+        } else {
+          annotationView.hideLoadingView()
+          var style = ToastStyle()
+          style.backgroundColor = UIColor(rgb: 0xF03C3C)
+          style.cornerRadius = 16
+          style.titleColor = .white
+          style.titleAlignment = .center
+          style.titleFont = AppFont.font(.semiBoldText, size: 15)
+          style.messageColor = .white
+          style.displayShadow = false
+          style.imageSize = CGSize(width: 24.0, height: 24.0)
+          
+          self.view.makeToast("Cannot calculate a route with these stops",
+                              duration: 3.0,
+                              position: .top,
+                              image: .icAlert,
+                              style: style)
+        }
+      }
+    }
+  }
+  
+  private func addPlaceToPlaceGourp(_ annotationView: CustomAnnotationView, place: Place) {
     let wasInPlaceGroup = PlaceManager.shared.exists(place)
     PlaceManager.shared.addLocation(place)
     viewModel.action.send(.actionEditLocation)

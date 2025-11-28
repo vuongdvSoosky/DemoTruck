@@ -12,6 +12,7 @@ struct RouteResponse: Codable {
   let hints: RouteHints?
   let info: RouteInfo?
   var paths: [RoutePath]
+  var id: String?
 }
 
 // MARK: - Hints

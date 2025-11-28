@@ -172,6 +172,23 @@ class TruckProfileView: BaseView {
   
   var handler: Handler?
   
+  override func binding() {
+    TruckTypeManager.shared.$truckTypes
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] type in
+        guard let self, let type = type else {
+          return
+        }
+        switch type {
+          
+        case .big:
+          changeStateBigTruckView()
+        case .small:
+          changeStateSmallTruckView()
+        }
+      }.store(in: &subscriptions)
+  }
+  
   override func addComponents() {
     addSubviews(containerView,iconTutorialTruckProfile)
     containerView.addSubviews(titleLabel, iconClose, stackView)
@@ -234,21 +251,17 @@ class TruckProfileView: BaseView {
   }
   
   @objc private func onTapBigTruckView() {
-    bigTruckView.borderWidth = 5
-    icChooseBigTruck.image = .icChooseTruck
+    changeStateBigTruckView()
     enableSaveView()
     
-    smallTruckView.borderWidth = 0
-    icChooseSmallTruck.image = .icUnChooseTruck
+    TruckTypeManager.shared.setType(.big)
   }
   
   @objc private func onTapSmallTruckView() {
-    smallTruckView.borderWidth = 5
-    icChooseSmallTruck.image = .icChooseTruck
+    changeStateSmallTruckView()
     enableSaveView()
     
-    bigTruckView.borderWidth = 0
-    icChooseBigTruck.image = .icUnChooseTruck
+    TruckTypeManager.shared.setType(.small)
   }
   
   @objc private func onTapSave() {
@@ -266,5 +279,21 @@ class TruckProfileView: BaseView {
       self.saveView.cornerRadius = 12
       self.saveView.clipsToBounds = true
     }
+  }
+  
+  private func changeStateBigTruckView() {
+    bigTruckView.borderWidth = 5
+    icChooseBigTruck.image = .icChooseTruck
+    
+    smallTruckView.borderWidth = 0
+    icChooseSmallTruck.image = .icUnChooseTruck
+  }
+  
+  private func changeStateSmallTruckView() {
+    smallTruckView.borderWidth = 5
+    icChooseSmallTruck.image = .icChooseTruck
+    
+    bigTruckView.borderWidth = 0
+    icChooseBigTruck.image = .icUnChooseTruck
   }
 }

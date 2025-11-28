@@ -8,6 +8,7 @@
 import UIKit
 import MapKit
 import SnapKit
+import NVActivityIndicatorView
 
 protocol CustomAnnotationViewDelagate: AnyObject {
   func customAnnotationView(_ annotationView: CustomAnnotationView, place: Place?)
@@ -66,6 +67,13 @@ class CustomAnnotationView: MKAnnotationView {
     label.text = "Add Stop"
     label.textAlignment = .center
     return label
+  }()
+  
+  private lazy var loadingView: UIActivityIndicatorView = {
+    let view = UIActivityIndicatorView()
+    view.translatesAutoresizingMaskIntoConstraints = false
+    view.color = .white
+    return view
   }()
   
   weak var delegate: CustomAnnotationViewDelagate?
@@ -127,7 +135,11 @@ class CustomAnnotationView: MKAnnotationView {
     stack.spacing = 10
     stack.alignment = .center
     
-    buttonView.addSubview(stack)
+    buttonView.addSubviews(loadingView, stack)
+    loadingView.snp.makeConstraints { make in
+      make.center.equalToSuperview()
+      make.width.height.equalTo(24)
+    }
     stack.snp.makeConstraints { make in
       make.center.equalToSuperview()
     }
@@ -146,11 +158,7 @@ class CustomAnnotationView: MKAnnotationView {
     return nil
   }
   
-  private func configureView() {
-    guard let ann = annotation as? CustomAnnotation else { return }
-    //    titleLabel.text = ann.title
-    //    subtitleLabel.text = ann.subtitle
-  }
+  private func configureView() {}
   
   func configureButton(title: String, icon: UIImage) {
     removeLabel.text = title
@@ -216,5 +224,21 @@ extension CustomAnnotationView {
       make.bottom.equalToSuperview().offset(-12)
       make.height.equalTo(36)
     }
+  }
+  
+  func showLoadingView() {
+    removeIcon.isHidden = true
+    removeLabel.isHidden = true
+    
+    loadingView.isHidden = false
+    loadingView.startAnimating()
+  }
+  
+  func hideLoadingView() {
+    removeIcon.isHidden = false
+    removeLabel.isHidden = false
+    
+    loadingView.isHidden = true
+    loadingView.stopAnimating()
   }
 }

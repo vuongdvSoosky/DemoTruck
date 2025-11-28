@@ -160,7 +160,7 @@ class ListLocationView: BaseView {
         }
         self.places = places.places
         self.routeNameTextView.text = places.nameRouter
-        LogManager.show(places.nameRouter)
+        self.nameRoute = places.nameRouter
         collectionView.reloadData()
       }.store(in: &subscriptions)
   }

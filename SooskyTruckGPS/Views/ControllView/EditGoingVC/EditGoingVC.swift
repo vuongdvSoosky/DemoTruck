@@ -8,6 +8,7 @@
 import UIKit
 import SnapKit
 import MapKit
+import Toast
 
 class EditGoingVC: BaseViewController {
   private lazy var mapView: MKMapView = {
@@ -208,9 +209,10 @@ class EditGoingVC: BaseViewController {
     setupMap()
     setupTableView()
     setupSearchCompleter()
+    
+    PlaceManager.shared.setStateGoing(with: true)
   }
-  
-  
+
   override func setProperties() {
     searchTextField.delegate = self
     searchTextField.addTarget(self, action: #selector(textFieldDidChange(_:)), for: .editingChanged)
@@ -230,7 +232,7 @@ class EditGoingVC: BaseViewController {
     MapManager.shared.requestUserLocation { [weak self] location in
       guard let self = self, let location = location else { return }
       MapManager.shared.centerMap(on: location, zoom: 0.02)
-       searchNearby()
+      searchNearby()
     }
   }
   
@@ -269,14 +271,18 @@ class EditGoingVC: BaseViewController {
         guard let self else {
           return
         }
-        caculatorRouteStackView.isUserInteractionEnabled = true
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {[weak self] in
-          guard let self else {
-            return
+        // Filter những địa điểm location có state là nill, phải có ít nhất là 2
+        let items = PlaceManager.shared.goingPlaceGroup.places.filter { $0.state == nil }
+        if items.count >= 2 {
+          caculatorRouteStackView.isUserInteractionEnabled = true
+          DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {[weak self] in
+            guard let self else {
+              return
+            }
+            caculatorRouteStackView.layoutIfNeeded()
+            let colors = [UIColor(rgb: 0xF28E01), UIColor(rgb: 0xF26101)]
+            caculatorRouteStackView.addArrayColorGradient(arrayColor: colors, startPoint: CGPoint(x: 0, y: 0.5), endPoint: CGPoint(x: 1, y: 0.5))
           }
-          caculatorRouteStackView.layoutIfNeeded()
-          let colors = [UIColor(rgb: 0xF28E01), UIColor(rgb: 0xF26101)]
-          caculatorRouteStackView.addArrayColorGradient(arrayColor: colors, startPoint: CGPoint(x: 0, y: 0.5), endPoint: CGPoint(x: 1, y: 0.5))
         }
       }.store(in: &subscriptions)
     
@@ -342,7 +348,7 @@ class EditGoingVC: BaseViewController {
       }
     }
   }
-
+  
   private func updateAnnotations(for places: [Place]) {
     let placeIds = Set(places.map { $0.id })
     
@@ -581,10 +587,10 @@ extension EditGoingVC: MKMapViewDelegate {
     // debounce tránh spam search khi người dùng kéo bản đồ liên tục
     searchDelayTimer?.invalidate()
     searchDelayTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: false) { [weak self] _ in
-       self?.searchNearby(with: self?.currentQuery ?? "", type: self?.currentType ?? "")
+      self?.searchNearby(with: self?.currentQuery ?? "", type: self?.currentType ?? "")
     }
   }
-    
+  
   func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
     if annotation is MKUserLocation { return nil }
     
@@ -615,7 +621,7 @@ extension EditGoingVC: MKMapViewDelegate {
           // So sánh bằng coordinate nếu id không có
           let epsilon = 1e-6
           return abs(place.coordinate.latitude - customAnno.coordinate.latitude) < epsilon &&
-                 abs(place.coordinate.longitude - customAnno.coordinate.longitude) < epsilon
+          abs(place.coordinate.longitude - customAnno.coordinate.longitude) < epsilon
         }
       }
       
@@ -754,12 +760,12 @@ extension EditGoingVC: UITextFieldDelegate {
     textField.resignFirstResponder()
     guard let keyword = textField.text, !keyword.isEmpty else { return true }
     tableContainer.isHidden = true
-
+    
     let request = MKLocalSearch.Request()
     request.naturalLanguageQuery = keyword
     let search = MKLocalSearch(request: request)
     request.region = mapView.region
-
+    
     search.start { [weak self] response, error in
       guard let self = self,
             let mapItem = response?.mapItems.first else { return }
@@ -771,21 +777,21 @@ extension EditGoingVC: UITextFieldDelegate {
           longitudinalMeters: 200
         )
         self.mapView.setRegion(region, animated: true)
-
+        
         // Lấy thông tin đầy đủ từ mapItem giống như tableView
         let placemark = mapItem.placemark
         let title = mapItem.name ?? keyword
         
         // Format địa chỉ đầy đủ từ placemark
         var addressParts: [String] = []
-
+        
         if let city = placemark.locality {
           addressParts.append(city)
         }
         if let state = placemark.administrativeArea {
           addressParts.append(state)
         }
-
+        
         if let country = placemark.country {
           addressParts.append(country)
         }
@@ -796,10 +802,10 @@ extension EditGoingVC: UITextFieldDelegate {
         
         // Xoá annotation cũ nếu tồn tại
         if let existingAnnotation = self.mapView.annotations.first(where: {
-            guard let ann = $0 as? CustomAnnotation else { return false }
-            return ann.id == keyword
+          guard let ann = $0 as? CustomAnnotation else { return false }
+          return ann.id == keyword
         }) as? CustomAnnotation {
-            self.mapView.removeAnnotation(existingAnnotation)
+          self.mapView.removeAnnotation(existingAnnotation)
         }
         
         // Tìm Place tương ứng từ arrayPlaces để lấy state
@@ -810,7 +816,7 @@ extension EditGoingVC: UITextFieldDelegate {
             // So sánh bằng coordinate nếu id không có
             let epsilon = 1e-6
             return abs(place.coordinate.latitude - annotation.coordinate.latitude) < epsilon &&
-                   abs(place.coordinate.longitude - annotation.coordinate.longitude) < epsilon
+            abs(place.coordinate.longitude - annotation.coordinate.longitude) < epsilon
           }
         }
         
@@ -873,8 +879,8 @@ extension EditGoingVC {
     let place = Place(address: annotation.title ?? "", fullAddres: annotation.subtitle ?? "", coordinate: annotation.coordinate)
     if !PlaceManager.shared.goingExists(place) {
       if let annotation = currentAnnotation {
-              mapView.removeAnnotation(annotation)
-              currentAnnotation = nil
+        mapView.removeAnnotation(annotation)
+        currentAnnotation = nil
       }
     }
   }
@@ -893,6 +899,7 @@ extension EditGoingVC {
   
   @objc private func onTapBack() {
     viewModel.action.send(.back)
+    PlaceManager.shared.setStateGoing(with: false)
     PlaceManager.shared.syncGoingGroupFromPlace()
   }
 }
@@ -1034,15 +1041,15 @@ extension EditGoingVC: MKLocalSearchCompleterDelegate {
     var items: [SearchItem] = []
     
     items.append(.userLocation(title: "My Location", subtitle: "Current Position"))
-
+    
     let results = completer.results
-
+    
     if results.isEmpty {
       items.append(.manual(title: completer.queryFragment))
     } else {
       items.append(contentsOf: results.map { SearchItem.suggestion($0) })
     }
-
+    
     viewModel.searchSuggestions.value = items
   }
   
@@ -1120,6 +1127,60 @@ extension EditGoingVC: UICollectionViewDataSource {
 extension EditGoingVC: CustomAnnotationViewDelagate {
   func customAnnotationView(_ annotationView: CustomAnnotationView, place: Place?) {
     guard let place = place else { return }
+    
+    if PlaceManager.shared.goingPlaceGroup.places.count >= 30 {
+      var style = ToastStyle()
+      style.backgroundColor = UIColor(rgb: 0xF03C3C)
+      style.cornerRadius = 16
+      style.titleColor = .white
+      style.titleAlignment = .center
+      style.titleFont = AppFont.font(.semiBoldText, size: 15)
+      style.messageColor = .white
+      style.displayShadow = false
+      style.imageSize = CGSize(width: 24.0, height: 24.0)
+      
+      self.view.makeToast("You can only get an optimal route with 30 stops or fewer",
+                          duration: 3.0,
+                          position: .top,
+                          image: .icAlert,
+                          style: style)
+      return
+    }
+    
+    if PlaceManager.shared.placeGroup.places.count < 1 {
+      addPlaceToPlaceGourp(annotationView, place: place)
+    } else {
+      annotationView.showLoadingView()
+      MapManager.shared.checkRouteAvailable(from: PlaceManager.shared.placeGroup.places.last?.coordinate ?? CLLocationCoordinate2D(), to: place.coordinate) { [weak self] available in
+        guard let self else {
+          return
+        }
+        if available {
+          annotationView.hideLoadingView()
+          addPlaceToPlaceGourp(annotationView, place: place)
+        } else {
+          annotationView.hideLoadingView()
+          var style = ToastStyle()
+          style.backgroundColor = UIColor(rgb: 0xF03C3C)
+          style.cornerRadius = 16
+          style.titleColor = .white
+          style.titleAlignment = .center
+          style.titleFont = AppFont.font(.semiBoldText, size: 15)
+          style.messageColor = .white
+          style.displayShadow = false
+          style.imageSize = CGSize(width: 24.0, height: 24.0)
+          
+          self.view.makeToast("Cannot calculate a route with these stops",
+                              duration: 3.0,
+                              position: .top,
+                              image: .icAlert,
+                              style: style)
+        }
+      }
+    }
+  }
+  
+  private func addPlaceToPlaceGourp(_ annotationView: CustomAnnotationView, place: Place) {
     let wasInPlaceGroup = PlaceManager.shared.goingExists(place)
     PlaceManager.shared.addLocation(place, toGoing: true)
     viewModel.action.send(.actionEditLocation)

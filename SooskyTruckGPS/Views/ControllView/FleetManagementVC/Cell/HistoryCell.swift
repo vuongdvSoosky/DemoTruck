@@ -255,6 +255,6 @@ extension HistoryCell {
     self.itemPlace = item
     self.distanceLabel.text = "\(String(format: "%.2f", item.trackingRecords.first?.distanceRace ?? 0.0)) mi"
     self.routeName.text = item.nameRouter ?? "My Route"
-    self.timeLabel.text = item.trackingRecords.first?.duration?.toTimeStringFromSeconds()
+    self.timeLabel.text = item.trackingRecords.first?.duration?.toHHMMSSString()
   }
 }

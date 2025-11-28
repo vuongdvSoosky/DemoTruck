@@ -31,6 +31,8 @@ class RouteResponseRealm: BaseObject {
     if let info = model.info {
       self.info = RouteInfoRealm(from: info)
     }
+    
+    self.id = model.id ?? UUID().uuidString
     self.paths.append(objectsIn: model.paths.map { RoutePathRealm(from: $0) })
   }
   

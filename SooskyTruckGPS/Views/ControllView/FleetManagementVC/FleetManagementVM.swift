@@ -61,7 +61,10 @@ extension FleetManagementVM {
     case .getIndexToScroll(index: let index):
       indexForMainScrollView.value = index
     case .getSaveRouteItem(index: let index):
+      PlaceManager.shared.setPlaceRouterID(saveRouteItems.value?[index].id ?? "")
+      LogManager.show(saveRouteItems.value?[index].id ?? "")
       router.route(to: .saveRouterVC, parameters: ["RouteResponseRealm": saveRouteItems.value?[index] as Any])
+      
     case .getHistoryItem(index: let index):
       router.route(to: .historyVC, parameters: ["HistoryResponseRealm": itemHistory.value?[index] as Any])
     case .removeItemHistory(item: let item):

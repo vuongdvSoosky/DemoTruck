@@ -15,6 +15,8 @@ class PlaceManager {
   @Published var goingPlaceGroup: PlaceGroup = .init(nameRouter: "My Route", places: [])
   @Published var placesRouter: RouteResponse?
   @Published var currentPlace: Place?
+  @Published private(set) var placeRouterID: String = ""
+  @Published private(set) var isGoing: Bool = false
 
   private init() {}
 }
@@ -71,8 +73,19 @@ extension PlaceManager {
   }
 
   // MARK: - Router
+//  func updateRoute(_ response: RouteResponse) {
+//    self.placesRouter = response
+//  }
   func updateRoute(_ response: RouteResponse) {
-    self.placesRouter = response
+      // Nếu đã có route rồi → chỉ update lại
+      if let existing = placesRouter, existing.id == response.id {
+          // cập nhật thông tin
+          placesRouter = response
+          return
+      }
+      
+      // Nếu chưa có → tạo mới
+      placesRouter = response
   }
 
   func setPlaceGroup(_ places: [Place], name: String) {
@@ -82,6 +95,19 @@ extension PlaceManager {
 
   func renamePlaceGroup(_ name: String) {
     placeGroup.nameRouter = name
+    goingPlaceGroup.nameRouter = name
+  }
+  
+  func setPlaceRouterID(_ id: String) {
+    placeRouterID = id
+  }
+  
+  func createPlaceRouterID() {
+    placeRouterID = UUID().uuidString
+  }
+  
+  func setStateGoing(with state: Bool) {
+    self.isGoing = state
   }
 
   // MARK: - Private

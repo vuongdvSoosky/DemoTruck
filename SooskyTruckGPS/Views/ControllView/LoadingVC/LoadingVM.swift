@@ -71,7 +71,7 @@ extension LoadingVM {
       guard let self else { return }
       
       do {
-        let data = try await APIService.shared.fetchData(with: points)
+        var data = try await APIService.shared.fetchData(with: points)
         
         if Task.isCancelled {
           LogManager.show("[Debug] request canceled")
@@ -82,13 +82,19 @@ extension LoadingVM {
           guard let self else {
             return
           }
-          
-          showConfirmView.send(())
+          data.id = PlaceManager.shared.placeRouterID
+          LogManager.show("data.id", data.id)
           PlaceManager.shared.updateRoute(data)
+          showConfirmView.send(())
         }
       } catch let error {
         LogManager.show(error)
-        router.route(to: .showError)
+        DispatchQueue.main.async { [weak self] in
+          guard let self else {
+            return
+          }
+          router.route(to: .showError)
+        }
       }
     }
   }

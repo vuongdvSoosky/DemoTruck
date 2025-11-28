@@ -48,20 +48,45 @@ extension BeforeGoingVM {
 
 extension BeforeGoingVM {
   private func saveToRealm() {
-    guard let router = PlaceManager.shared.placesRouter else {
-      return
+    guard let router = PlaceManager.shared.placesRouter else { return }
+
+    let newRoute = RouteResponseRealm(from: router)
+    newRoute.nameRouter = PlaceManager.shared.placeGroup.nameRouter
+    newRoute.addPlaces(PlaceManager.shared.placeGroup.places)
+    
+    if PlaceManager.shared.isGoing {
+      RealmService.shared.add(newRoute)
+      PlaceManager.shared.setStateGoing(with: false)
+    } else {
+      // Lấy tất cả Route đang active (history = false)
+      let itemNormal = RealmService.shared.fetch(ofType: RouteResponseRealm.self)
+        .filter { $0.history == false }
+
+      if let existItem = itemNormal.first(where: { $0.id == newRoute.id }) {
+        // >>> UPDATE EXISTING RECORD <<<
+        let data: [String: Any] = [
+          "hints": newRoute.hints as Any,
+          "info": newRoute.info as Any,
+          "paths": newRoute.paths as Any,
+          "places": newRoute.places as Any,
+          "trackingRecords": newRoute.trackingRecords as Any,
+          "history": newRoute.history as Any,
+          "createDate": newRoute.createDate as Any,
+          "nameRouter": newRoute.nameRouter as Any
+        ]
+        RealmService.shared.update(existItem, data: data)
+        PlaceManager.shared.createPlaceRouterID()
+        
+        LogManager.show("Updated existing route id:", existItem.id)
+      } else {
+        // >>> ADD NEW <<<
+        RealmService.shared.add(newRoute)
+        LogManager.show("Added new route id:", newRoute.id)
+      }
     }
-    let routeRealm = RouteResponseRealm(from: router)
-    routeRealm.nameRouter = PlaceManager.shared.placeGroup.nameRouter
-    routeRealm.addPlaces(PlaceManager.shared.placeGroup.places)
     
-    let item = RealmService.shared.fetch(ofType: RouteResponseRealm.self)
-    LogManager.show(item)
-    
-    LogManager.show(routeRealm.id)
-    RealmService.shared.add(routeRealm)
+    // Route Done
     self.router.route(to: .save)
-    
     PlaceManager.shared.setPlaceGroup([], name: "My Route")
   }
 }

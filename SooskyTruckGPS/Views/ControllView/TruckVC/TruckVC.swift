@@ -1352,16 +1352,38 @@ extension TruckVC: CustomAnnotationViewDelagate {
   func customAnnotationView(_ annotationView: CustomAnnotationView, place: Place?) {
     guard let place = place else { return }
     
+    if PlaceManager.shared.goingPlaceGroup.places.count >= 30 {
+      var style = ToastStyle()
+      style.backgroundColor = UIColor(rgb: 0xF03C3C)
+      style.cornerRadius = 16
+      style.titleColor = .white
+      style.titleAlignment = .center
+      style.titleFont = AppFont.font(.semiBoldText, size: 15)
+      style.messageColor = .white
+      style.displayShadow = false
+      style.imageSize = CGSize(width: 24.0, height: 24.0)
+      
+      self.view.makeToast("You can only get an optimal route with 30 stops or fewer",
+                          duration: 3.0,
+                          position: .top,
+                          image: .icAlert,
+                          style: style)
+      return
+    }
+    
     if PlaceManager.shared.placeGroup.places.count < 1 {
       addPlaceToPlaceGourp(annotationView, place: place)
     } else {
+      annotationView.showLoadingView()
       MapManager.shared.checkRouteAvailable(from: PlaceManager.shared.currentPlace?.coordinate ?? CLLocationCoordinate2D(), to: place.coordinate) { [weak self] available in
         guard let self else {
           return
         }
         if available {
+          annotationView.hideLoadingView()
           addPlaceToPlaceGourp(annotationView, place: place)
         } else {
+          annotationView.hideLoadingView()
           var style = ToastStyle()
           style.backgroundColor = UIColor(rgb: 0xF03C3C)
           style.cornerRadius = 16
