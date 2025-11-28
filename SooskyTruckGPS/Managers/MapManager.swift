@@ -9,11 +9,20 @@ import Foundation
 import MapKit
 import CoreLocation
 
+protocol MapManagerDelegate: AnyObject {
+  /// Gọi khi người dùng kéo thả marker current location
+  func currentMarkerDidMove(to coordinate: CLLocationCoordinate2D)
+}
+
 final class MapManager: NSObject {
   
   static let shared = MapManager()
   private let locationManager = CLLocationManager()
   var mapView: MKMapView?
+  weak var delegate: MapManagerDelegate?
+  private var userMarker: DraggableAnnotation?
+  private var trackingUser = false
+  private var userAnnotation: MKPointAnnotation?
   
   private var currentLocationCompletion: ((CLLocation?) -> Void)?
   
@@ -25,15 +34,17 @@ final class MapManager: NSObject {
   private func setupLocationManager() {
     locationManager.delegate = self
     locationManager.desiredAccuracy = kCLLocationAccuracyBest
+    locationManager.distanceFilter = 1
   }
   
   // MARK: - Setup Map
   
   func attachMap(to mapView: MKMapView) {
     self.mapView = mapView
-    mapView.showsUserLocation = true
-    mapView.setUserTrackingMode(.followWithHeading, animated: true)
-    mapView.showsCompass = false
+    //    mapView.showsUserLocation = true
+    //    mapView.setUserTrackingMode(.followWithHeading, animated: true)
+    //    mapView.showsCompass = false
+    mapView.delegate = self
   }
   
   // MARK: - Request Location
@@ -72,10 +83,29 @@ extension MapManager: CLLocationManagerDelegate {
   }
   
   func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-    guard let location = locations.last else { return }
-    currentLocationCompletion?(location)
-    currentLocationCompletion = nil
-    locationManager.stopUpdatingLocation()
+    guard trackingUser,
+          let mapView = mapView,
+          let location = locations.last
+    else { return }
+    
+    if userAnnotation == nil {
+      let annotation = MKPointAnnotation()
+      annotation.coordinate = location.coordinate
+      userAnnotation = annotation
+      mapView.addAnnotation(annotation)
+    } else {
+      UIView.animate(withDuration: 0.2) {   // animation smooth
+        self.userAnnotation?.coordinate = location.coordinate
+      }
+    }
+    
+    // Optional: luôn follow user
+    let region = MKCoordinateRegion(center: location.coordinate,
+                                    latitudinalMeters: 300,
+                                    longitudinalMeters: 300)
+    mapView.setRegion(region, animated: true)
+    
+    delegate?.currentMarkerDidMove(to: location.coordinate)
   }
   
   func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
@@ -200,11 +230,11 @@ extension MapManager {
   }
   
   func removeAllServiceAnnotations() {
-     guard let mapView = mapView else { return }
-     
-     let serviceAnnotations = mapView.annotations.filter { $0 is CustomServiceAnimation }
-     mapView.removeAnnotations(serviceAnnotations)
-   }
+    guard let mapView = mapView else { return }
+    
+    let serviceAnnotations = mapView.annotations.filter { $0 is CustomServiceAnimation }
+    mapView.removeAnnotations(serviceAnnotations)
+  }
 }
 
 // MARK: - CheckLocation
@@ -266,5 +296,76 @@ class CustomServiceAnimation: NSObject, MKAnnotation {
     self.titlePlace = titlePlace
     self.id = id
     self.title = titlePlace
+  }
+}
+
+extension MapManager {
+  
+  /// Hiển thị marker tại vị trí hiện tại và hỗ trợ kéo thả
+  func showCurrentLocationMarker(_ location: CLLocation ) {
+    // Xóa marker cũ
+    if let old = self.userMarker {
+      mapView?.removeAnnotation(old)
+    }
+    
+    let annotation = DraggableAnnotation(coordinate: location.coordinate)
+    self.userMarker = annotation
+    mapView?.addAnnotation(annotation)
+    self.centerMap(on: location)
+  }
+}
+
+// MARK: - MKMapViewDelegate
+extension MapManager: MKMapViewDelegate {
+  
+  func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
+    guard annotation === userAnnotation else { return nil }
+    
+    let identifier = "UserLocationMarker"
+    var view = mapView.dequeueReusableAnnotationView(withIdentifier: identifier)
+    
+    if view == nil {
+      view = MKAnnotationView(annotation: annotation, reuseIdentifier: identifier)
+      view?.image = .icCurrentLocation
+      view?.centerOffset = CGPoint(x: 0, y: -20)
+      view?.canShowCallout = false
+    } else {
+      view?.annotation = annotation
+    }
+    return view
+  }
+  
+  func mapView(_ mapView: MKMapView, annotationView view: MKAnnotationView,
+               didChange newState: MKAnnotationView.DragState,
+               fromOldState oldState: MKAnnotationView.DragState) {
+    
+    if newState == .ending || newState == .canceling {
+      view.dragState = .none
+      if let coord = view.annotation?.coordinate {
+        delegate?.currentMarkerDidMove(to: coord)
+      }
+    }
+  }
+}
+
+// MARK: - Draggable annotation model
+class DraggableAnnotation: NSObject, MKAnnotation {
+  dynamic var coordinate: CLLocationCoordinate2D
+  
+  init(coordinate: CLLocationCoordinate2D) {
+    self.coordinate = coordinate
+  }
+}
+
+extension MapManager {
+  func startTrackingUser() {
+    trackingUser = true
+    locationManager.requestWhenInUseAuthorization()
+    locationManager.startUpdatingLocation()
+  }
+  
+  func stopTrackingUser() {
+    trackingUser = false
+    locationManager.stopUpdatingLocation()
   }
 }

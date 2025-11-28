@@ -911,71 +911,73 @@ extension EditGoingVC: UITableViewDelegate, UITableViewDataSource {
   }
   
   func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-    let item = viewModel.searchSuggestions.value[indexPath.row]
-    switch item {
-    case .userLocation(title: _, subtitle: _):
-      let cell = tableView.dequeueReusableCell(CurrentLocationCell.self, for: indexPath)
-      return cell
-    case .suggestion(let data):
-      let cell = tableView.dequeueReusableCell(HomeSearchCell.self, for: indexPath)
-      cell.backgroundColor = .white
-      cell.selectionStyle = .none
-      cell.configData(data: data)
-      return cell
-    case .manual(title: let title):
-      let cell = tableView.dequeueReusableCell(HomeSearchCell.self, for: indexPath)
-      cell.configDataManual(data: title)
-      return cell
-    }
+    let cell = tableView.dequeueReusableCell(CurrentLocationCell.self, for: indexPath)
+    return cell
+//    let item = viewModel.searchSuggestions.value[indexPath.row]
+//    switch item {
+//    case .userLocation(title: _, subtitle: _):
+//      let cell = tableView.dequeueReusableCell(CurrentLocationCell.self, for: indexPath)
+//      return cell
+//    case .suggestion(let data):
+//      let cell = tableView.dequeueReusableCell(HomeSearchCell.self, for: indexPath)
+//      cell.backgroundColor = .white
+//      cell.selectionStyle = .none
+//      cell.configData(data: data)
+//      return cell
+//    case .manual(title: let title):
+//      let cell = tableView.dequeueReusableCell(HomeSearchCell.self, for: indexPath)
+//      cell.configDataManual(data: title)
+//      return cell
+//    }
   }
   
-  func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-    guard indexPath.row < viewModel.searchSuggestions.value.count else { return }
-    let item = viewModel.searchSuggestions.value[indexPath.row]
-    
-    tableContainer.isHidden = true
-    searchTextField.resignFirstResponder()
-    
-    switch item {
-      // MARK: - USER LOCATION
-    case .userLocation(_, _):
-      MapManager.shared.requestUserLocation { [weak self] location in
-        guard let self = self, let location = location else { return }
-        
-        let geocoder = CLGeocoder()
-        geocoder.reverseGeocodeLocation(location) { placemarks, error in
-          guard let placemark = placemarks?.first, error == nil else { return }
-          
-          let number = placemark.subThoroughfare ?? ""
-          let street = placemark.thoroughfare ?? ""
-          let city = placemark.locality ?? ""
-          let state = placemark.administrativeArea ?? ""
-          let country = placemark.country ?? ""
-          
-          let houseAddress = [number, street].filter { !$0.isEmpty }.joined(separator: " ")
-          let fullAddress = [city, state, country].filter { !$0.isEmpty }.joined(separator: ", ")
-          
-          DispatchQueue.main.async {
-            self.handleLocationSelection(
-              title: houseAddress.isEmpty ? "My Location" : houseAddress,
-              subtitle: fullAddress,
-              coordinate: location.coordinate
-            )
-          }
-        }
-      }
-      
-      // MARK: - APPLE SUGGESTION
-    case .suggestion(let dataSuggestion):
-      searchTextField.text = dataSuggestion.title
-      performSearch(query: dataSuggestion.title, subtitle: dataSuggestion.subtitle)
-      
-      // MARK: - MANUAL INPUT
-    case .manual(let title):
-      searchTextField.text = title
-      performSearch(query: title, subtitle: nil)
-    }
-  }
+//  func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+//    guard indexPath.row < viewModel.searchSuggestions.value.count else { return }
+//    let item = viewModel.searchSuggestions.value[indexPath.row]
+//    
+//    tableContainer.isHidden = true
+//    searchTextField.resignFirstResponder()
+//    
+//    switch item {
+//      // MARK: - USER LOCATION
+//    case .userLocation(_, _):
+//      MapManager.shared.requestUserLocation { [weak self] location in
+//        guard let self = self, let location = location else { return }
+//        
+//        let geocoder = CLGeocoder()
+//        geocoder.reverseGeocodeLocation(location) { placemarks, error in
+//          guard let placemark = placemarks?.first, error == nil else { return }
+//          
+//          let number = placemark.subThoroughfare ?? ""
+//          let street = placemark.thoroughfare ?? ""
+//          let city = placemark.locality ?? ""
+//          let state = placemark.administrativeArea ?? ""
+//          let country = placemark.country ?? ""
+//          
+//          let houseAddress = [number, street].filter { !$0.isEmpty }.joined(separator: " ")
+//          let fullAddress = [city, state, country].filter { !$0.isEmpty }.joined(separator: ", ")
+//          
+//          DispatchQueue.main.async {
+//            self.handleLocationSelection(
+//              title: houseAddress.isEmpty ? "My Location" : houseAddress,
+//              subtitle: fullAddress,
+//              coordinate: location.coordinate
+//            )
+//          }
+//        }
+//      }
+//      
+//      // MARK: - APPLE SUGGESTION
+//    case .suggestion(let dataSuggestion):
+//      searchTextField.text = dataSuggestion.title
+//      performSearch(query: dataSuggestion.title, subtitle: dataSuggestion.subtitle)
+//      
+//      // MARK: - MANUAL INPUT
+//    case .manual(let title):
+//      searchTextField.text = title
+//      performSearch(query: title, subtitle: nil)
+//    }
+//  }
   
   // MARK: - Perform MKLocalSearch and only act if real result exists
   private func performSearch(query: String, subtitle: String?) {
@@ -1038,19 +1040,19 @@ extension EditGoingVC: UITableViewDelegate, UITableViewDataSource {
 
 extension EditGoingVC: MKLocalSearchCompleterDelegate {
   func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
-    var items: [SearchItem] = []
-    
-    items.append(.userLocation(title: "My Location", subtitle: "Current Position"))
-    
-    let results = completer.results
-    
-    if results.isEmpty {
-      items.append(.manual(title: completer.queryFragment))
-    } else {
-      items.append(contentsOf: results.map { SearchItem.suggestion($0) })
-    }
-    
-    viewModel.searchSuggestions.value = items
+//    var items: [SearchItem] = []
+//    
+//    items.append(.userLocation(title: "My Location", subtitle: "Current Position"))
+//    
+//    let results = completer.results
+//    
+//    if results.isEmpty {
+//      items.append(.manual(title: completer.queryFragment))
+//    } else {
+//      items.append(contentsOf: results.map { SearchItem.suggestion($0) })
+//    }
+//    
+//    viewModel.searchSuggestions.value = items
   }
   
   func completer(_ completer: MKLocalSearchCompleter, didFailWithError error: Error) {

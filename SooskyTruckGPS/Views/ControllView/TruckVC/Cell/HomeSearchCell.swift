@@ -79,4 +79,9 @@ extension HomeSearchCell {
     
     titleSearchLbl.text = data
   }
+  
+  func configResultSearch(with item: SearchItem) {
+    titleSearchLbl.text = item.title
+    descriptionSearchLbl.text = item.subtitle
+  }
 }

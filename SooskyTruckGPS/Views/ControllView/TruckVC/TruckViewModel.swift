@@ -18,8 +18,6 @@ class TruckViewModel: BaseViewModel {
   
   let action = PassthroughSubject<Action, Never>()
   var Places: [PlaceGroup] = []
-  var searchCompleter = MKLocalSearchCompleter()
-  var searchSuggestions = CurrentValueSubject<[SearchItem], Never>([])
   let index = CurrentValueSubject<Int?, Never>(nil)
   let actionTutorialTruckProFile = PassthroughSubject<Void, Never>()
   let showTutorialCaculate = PassthroughSubject<Void, Never>()

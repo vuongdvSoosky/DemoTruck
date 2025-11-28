@@ -287,6 +287,7 @@ class TruckVC: BaseViewController {
   private var currentAnnotation: CustomAnnotation?
   private var searchManager: LocationSearchManager!
   private var currentTooltipID: String?
+  private var searchResults: [SearchItem] = []
   
   var currentUserCoordinate: CLLocationCoordinate2D?
   
@@ -296,8 +297,9 @@ class TruckVC: BaseViewController {
     super.viewDidLoad()
     setupMap()
     setupTableView()
-    setupSearchCompleter()
     showTutorial()
+    
+    UserDefaultsManager.shared.set(true, key: .tutorial)
   }
   
   private func showTutorial() {
@@ -398,7 +400,7 @@ class TruckVC: BaseViewController {
     tableContainer.snp.makeConstraints { make in
       make.top.equalTo(searchView.snp.bottom).offset(8)
       make.left.right.equalToSuperview().inset(20)
-      make.height.equalTo(66)
+      make.height.equalTo(288)
     }
     tableContainer.addSubview(tableView)
     
@@ -425,8 +427,11 @@ class TruckVC: BaseViewController {
   }
   
   override func setProperties() {
+    searchManager = LocationSearchManager()
+    
     searchTextField.delegate = self
     searchTextField.addTarget(self, action: #selector(textFieldDidChange(_:)), for: .editingChanged)
+    
     let tapGesture = UITapGestureRecognizer(target: self, action: #selector(onTapCloseCalloutView(_:)))
     tapGesture.cancelsTouchesInView = false
     view.addGestureRecognizer(tapGesture)
@@ -440,12 +445,12 @@ class TruckVC: BaseViewController {
   
   private func setupMap() {
     MapManager.shared.attachMap(to: mapView)
-    mapView.delegate = self
+    MapManager.shared.delegate = self
+//    mapView.delegate = self
+    MapManager.shared.startTrackingUser()
     // Lấy vị trí hiện tại và hiển thị dịch vụ xung quanh
     MapManager.shared.requestUserLocation { [weak self] location in
-      guard let self = self, let location = location else { return }
-      MapManager.shared.centerMap(on: location, zoom: 0.02)
-      searchNearby()
+      self?.searchNearby()
     }
   }
   
@@ -520,28 +525,24 @@ class TruckVC: BaseViewController {
         }
       }.store(in: &subscriptions)
     
-    viewModel.searchSuggestions
-      .sink { [weak self] location in
+    
+    searchManager.$items
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] results in
         guard let self else {
           return
         }
-        tableView.reloadData()
+        searchResults = results
+        LogManager.show(results.count)
         updateTableHeight()
-      }
-      .store(in: &subscriptions)
-    
-    searchManager.$results
-      .receive(on: DispatchQueue.main)
-      .sink { [weak self] results in
-        //                    self?.searchResults = results
-        //                    self?.tableView.reloadData()
-        //                    self?.tableView.isHidden = results.isEmpty
+        tableView.reloadData()
+        tableView.isHidden = results.isEmpty
       }
       .store(in: &subscriptions)
   }
   
   func updateTableHeight() {
-    let count = viewModel.searchSuggestions.value.count
+    let count = searchResults.count
     let height: CGFloat
     
     if count >= 4 {
@@ -732,12 +733,6 @@ class TruckVC: BaseViewController {
     DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
       self.searchView.addShadow()
     }
-  }
-  
-  private func setupSearchCompleter() {
-    viewModel.searchCompleter.delegate = self
-    viewModel.searchCompleter.region = MKCoordinateRegion()
-    viewModel.searchCompleter.resultTypes = .address
   }
   
   @objc private func annotationTapped(_ sender: UITapGestureRecognizer) {
@@ -952,106 +947,118 @@ extension TruckVC: MKMapViewDelegate {
 
 // MARK: UITextFieldDelegate
 extension TruckVC: UITextFieldDelegate {
+  //  @objc private func textFieldDidChange(_ textField: UITextField) {
+  //    guard let text = textField.text, !text.isEmpty else {
+  //      tableContainer.isHidden = true
+  //      //  noFindAddressView.isHidden = true
+  //      if UserDefaultsManager.shared.get(of: Bool.self, key: .tutorial) == false {
+  //        iconTutorialSearch.isHidden = false
+  //      }
+  //
+  ////      viewModel.searchSuggestions.value.removeAll()
+  //      iconRemoveText.isHidden = true
+  //      return
+  //    }
+  //
+  //    iconRemoveText.isHidden = false
+  //    self.address = text
+  ////    viewModel.searchCompleter.queryFragment = text
+  //    tableContainer.isHidden = false
+  //    iconTutorialSearch.isHidden = true
+  //
+  //    searchManager.query = text
+  //  }
+  
   @objc private func textFieldDidChange(_ textField: UITextField) {
     guard let text = textField.text, !text.isEmpty else {
-      tableContainer.isHidden = true
-      //  noFindAddressView.isHidden = true
-      if UserDefaultsManager.shared.get(of: Bool.self, key: .tutorial) == false {
-        iconTutorialSearch.isHidden = false
-      }
-      
-      viewModel.searchSuggestions.value.removeAll()
-      iconRemoveText.isHidden = true
+      searchResults.removeAll()
+      tableView.reloadData()
+      tableView.isHidden = true
       return
     }
-    
-    iconRemoveText.isHidden = false
-    self.address = text
-    viewModel.searchCompleter.queryFragment = text
-    tableContainer.isHidden = false
-    iconTutorialSearch.isHidden = true
+    searchManager.query = text
   }
   
-  func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-    textField.resignFirstResponder()
-    guard let keyword = textField.text, !keyword.isEmpty else { return true }
-    tableContainer.isHidden = true
-    // noFindAddressView.isHidden = true
-    
-    let request = MKLocalSearch.Request()
-    request.naturalLanguageQuery = keyword
-    let search = MKLocalSearch(request: request)
-    request.region = mapView.region
-    
-    search.start { [weak self] response, error in
-      guard let self = self,
-            let mapItem = response?.mapItems.first else { return }
-      
-      let coordinate = mapItem.placemark.coordinate
-      DispatchQueue.main.async {
-        let region = MKCoordinateRegion(
-          center: coordinate,
-          latitudinalMeters: 200,
-          longitudinalMeters: 200
-        )
-        self.mapView.setRegion(region, animated: true)
-        
-        // Lấy thông tin đầy đủ từ mapItem giống như tableView
-        let placemark = mapItem.placemark
-        let title = mapItem.name ?? keyword
-        
-        // Format địa chỉ đầy đủ từ placemark
-        var addressParts: [String] = []
-        
-        if let city = placemark.locality {
-          addressParts.append(city)
-        }
-        if let state = placemark.administrativeArea {
-          addressParts.append(state)
-        }
-        
-        if let country = placemark.country {
-          addressParts.append(country)
-        }
-        
-        let subtitle = addressParts.isEmpty ? (placemark.title ?? "") : addressParts.joined(separator: ", ")
-        
-        let annotation = CustomAnnotation(coordinate: coordinate, title: title, subtitle: subtitle, type: "Location", id: keyword)
-        
-        // Xoá annotation cũ nếu tồn tại
-        if let existingAnnotation = self.mapView.annotations.first(where: {
-          guard let ann = $0 as? CustomAnnotation else { return false }
-          return ann.id == keyword
-        }) as? CustomAnnotation {
-          self.mapView.removeAnnotation(existingAnnotation)
-        }
-        
-        let place = Place(address: title, fullAddres: subtitle , coordinate: coordinate, state: nil)
-        
-        if PlaceManager.shared.exists(place) {
-          annotation.type = "Location"
-        } else {
-          annotation.type = ""
-        }
-        
-        self.mapView.addAnnotation(annotation)
-        
-        if !UserDefaultsManager.shared.get(of: Bool.self, key: .tutorial) {
-          self.currentPlace = Place(address: title, fullAddres: subtitle , coordinate: coordinate, state: nil)
-          self.desAdress = subtitle
-          self.address = title
-          self.currentCalloutView.configureButton(title: "Add Stop", icon: .icPlus)
-          self.showCalloutAnimated()
-        } else {
-          // Hiển thị tooltip sau khi tìm kiếm
-          DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            self.showTooltipForAnnotation(annotation)
-          }
-        }
-      }
-    }
-    return true
-  }
+  //  func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+  //    textField.resignFirstResponder()
+  //    guard let keyword = textField.text, !keyword.isEmpty else { return true }
+  //    tableContainer.isHidden = true
+  //    // noFindAddressView.isHidden = true
+  //
+  //    let request = MKLocalSearch.Request()
+  //    request.naturalLanguageQuery = keyword
+  //    let search = MKLocalSearch(request: request)
+  //    request.region = mapView.region
+  //
+  //    search.start { [weak self] response, error in
+  //      guard let self = self,
+  //            let mapItem = response?.mapItems.first else { return }
+  //
+  //      let coordinate = mapItem.placemark.coordinate
+  //      DispatchQueue.main.async {
+  //        let region = MKCoordinateRegion(
+  //          center: coordinate,
+  //          latitudinalMeters: 200,
+  //          longitudinalMeters: 200
+  //        )
+  //        self.mapView.setRegion(region, animated: true)
+  //
+  //        // Lấy thông tin đầy đủ từ mapItem giống như tableView
+  //        let placemark = mapItem.placemark
+  //        let title = mapItem.name ?? keyword
+  //
+  //        // Format địa chỉ đầy đủ từ placemark
+  //        var addressParts: [String] = []
+  //
+  //        if let city = placemark.locality {
+  //          addressParts.append(city)
+  //        }
+  //        if let state = placemark.administrativeArea {
+  //          addressParts.append(state)
+  //        }
+  //
+  //        if let country = placemark.country {
+  //          addressParts.append(country)
+  //        }
+  //
+  //        let subtitle = addressParts.isEmpty ? (placemark.title ?? "") : addressParts.joined(separator: ", ")
+  //
+  //        let annotation = CustomAnnotation(coordinate: coordinate, title: title, subtitle: subtitle, type: "Location", id: keyword)
+  //
+  //        // Xoá annotation cũ nếu tồn tại
+  //        if let existingAnnotation = self.mapView.annotations.first(where: {
+  //          guard let ann = $0 as? CustomAnnotation else { return false }
+  //          return ann.id == keyword
+  //        }) as? CustomAnnotation {
+  //          self.mapView.removeAnnotation(existingAnnotation)
+  //        }
+  //
+  //        let place = Place(address: title, fullAddres: subtitle , coordinate: coordinate, state: nil)
+  //
+  //        if PlaceManager.shared.exists(place) {
+  //          annotation.type = "Location"
+  //        } else {
+  //          annotation.type = ""
+  //        }
+  //
+  //        self.mapView.addAnnotation(annotation)
+  //
+  //        if !UserDefaultsManager.shared.get(of: Bool.self, key: .tutorial) {
+  //          self.currentPlace = Place(address: title, fullAddres: subtitle , coordinate: coordinate, state: nil)
+  //          self.desAdress = subtitle
+  //          self.address = title
+  //          self.currentCalloutView.configureButton(title: "Add Stop", icon: .icPlus)
+  //          self.showCalloutAnimated()
+  //        } else {
+  //          // Hiển thị tooltip sau khi tìm kiếm
+  //          DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+  //            self.showTooltipForAnnotation(annotation)
+  //          }
+  //        }
+  //      }
+  //    }
+  //    return true
+  //  }
 }
 
 // MARK: - Action
@@ -1130,76 +1137,76 @@ extension TruckVC {
 // MARK: - UITableView
 extension TruckVC: UITableViewDelegate, UITableViewDataSource {
   func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-    return viewModel.searchSuggestions.value.count
+    return searchResults.count
   }
   
   func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-    let item = viewModel.searchSuggestions.value[indexPath.row]
-    switch item {
-    case .userLocation(title: _, subtitle: _):
-      let cell = tableView.dequeueReusableCell(CurrentLocationCell.self, for: indexPath)
-      return cell
-    case .suggestion(let data):
-      let cell = tableView.dequeueReusableCell(HomeSearchCell.self, for: indexPath)
-      cell.backgroundColor = .white
-      cell.selectionStyle = .none
-      cell.configData(data: data)
-      return cell
-      
-    case .manual(let title):
-      let cell = tableView.dequeueReusableCell(HomeSearchCell.self, for: indexPath)
-      cell.configDataManual(data: title)
-      return cell
-    }
+        let item = searchResults[indexPath.row]
+        switch item {
+        case .suggestion(let data):
+          let cell = tableView.dequeueReusableCell(HomeSearchCell.self, for: indexPath)
+          cell.backgroundColor = .white
+          cell.selectionStyle = .none
+          cell.configData(data: data)
+          return cell
+    
+        case .manual(let title):
+          let cell = tableView.dequeueReusableCell(HomeSearchCell.self, for: indexPath)
+          cell.configDataManual(data: title)
+          return cell
+        case .userLocation(title: _, subtitle: _, coordinate: _):
+          let cell = tableView.dequeueReusableCell(CurrentLocationCell.self, for: indexPath)
+          return cell
+        }
   }
   
-  func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-    guard indexPath.row < viewModel.searchSuggestions.value.count else { return }
-    let item = viewModel.searchSuggestions.value[indexPath.row]
-    
-    tableContainer.isHidden = true
-    searchTextField.resignFirstResponder()
-    
-    switch item {
-      // MARK: - USER LOCATION
-    case .userLocation(_, _):
-      MapManager.shared.requestUserLocation { [weak self] location in
-        guard let self = self, let location = location else { return }
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+      guard indexPath.row < searchResults.count else { return }
+      let item = searchResults[indexPath.row]
+  
+      tableContainer.isHidden = true
+      searchTextField.resignFirstResponder()
+  
+      switch item {
+        // MARK: - APPLE SUGGESTION
+      case .suggestion(let dataSuggestion):
+        searchTextField.text = dataSuggestion.title
+        performSearch(query: dataSuggestion.title, subtitle: dataSuggestion.subtitle)
+  
+        // MARK: - MANUAL INPUT
+      case .manual(let title):
+        searchTextField.text = title
+        performSearch(query: title, subtitle: nil)
         
-        let geocoder = CLGeocoder()
-        geocoder.reverseGeocodeLocation(location) { placemarks, error in
-          guard let placemark = placemarks?.first, error == nil else { return }
-          
-          let number = placemark.subThoroughfare ?? ""
-          let street = placemark.thoroughfare ?? ""
-          let city = placemark.locality ?? ""
-          let state = placemark.administrativeArea ?? ""
-          let country = placemark.country ?? ""
-          
-          let houseAddress = [number, street].filter { !$0.isEmpty }.joined(separator: " ")
-          let fullAddress = [city, state, country].filter { !$0.isEmpty }.joined(separator: ", ")
-          
-          DispatchQueue.main.async {
-            self.handleLocationSelection(
-              title: houseAddress.isEmpty ? "My Location" : houseAddress,
-              subtitle: fullAddress,
-              coordinate: location.coordinate
-            )
+        // MARK: - USER LOCATION
+      case .userLocation(title: let title, subtitle: let subtitle, coordinate: let coordinate):
+        MapManager.shared.requestUserLocation { [weak self] location in
+          guard let self = self, let location = location else { return }
+  
+          let geocoder = CLGeocoder()
+          geocoder.reverseGeocodeLocation(location) { placemarks, error in
+            guard let placemark = placemarks?.first, error == nil else { return }
+  
+            let number = placemark.subThoroughfare ?? ""
+            let street = placemark.thoroughfare ?? ""
+            let city = placemark.locality ?? ""
+            let state = placemark.administrativeArea ?? ""
+            let country = placemark.country ?? ""
+  
+            let houseAddress = [number, street].filter { !$0.isEmpty }.joined(separator: " ")
+            let fullAddress = [city, state, country].filter { !$0.isEmpty }.joined(separator: ", ")
+  
+            DispatchQueue.main.async {
+              self.handleLocationSelection(
+                title: houseAddress.isEmpty ? "My Location" : houseAddress,
+                subtitle: fullAddress,
+                coordinate: location.coordinate
+              )
+            }
           }
         }
       }
-      
-      // MARK: - APPLE SUGGESTION
-    case .suggestion(let dataSuggestion):
-      searchTextField.text = dataSuggestion.title
-      performSearch(query: dataSuggestion.title, subtitle: dataSuggestion.subtitle)
-      
-      // MARK: - MANUAL INPUT
-    case .manual(let title):
-      searchTextField.text = title
-      performSearch(query: title, subtitle: nil)
     }
-  }
   
   // MARK: - Perform MKLocalSearch and only act if real result exists
   private func performSearch(query: String, subtitle: String?) {
@@ -1267,28 +1274,6 @@ extension TruckVC: UITableViewDelegate, UITableViewDataSource {
   
   func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
     return 66
-  }
-}
-
-extension TruckVC: MKLocalSearchCompleterDelegate {
-  func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
-    var items: [SearchItem] = []
-    
-    items.append(.userLocation(title: "My Location", subtitle: "Current Position"))
-    
-    let results = completer.results
-    
-    if results.isEmpty {
-      items.append(.manual(title: completer.queryFragment))
-    } else {
-      items.append(contentsOf: results.map { SearchItem.suggestion($0) })
-    }
-    
-    viewModel.searchSuggestions.value = items
-  }
-  
-  func completer(_ completer: MKLocalSearchCompleter, didFailWithError error: Error) {
-    LogManager.show("Completer error: \(error.localizedDescription)")
   }
 }
 
@@ -1506,5 +1491,11 @@ extension TruckVC {
       }
       mapView.isUserInteractionEnabled = false
     })
+  }
+}
+
+extension TruckVC: MapManagerDelegate {
+  func currentMarkerDidMove(to coordinate: CLLocationCoordinate2D) {
+    LogManager.show(coordinate)
   }
 }
