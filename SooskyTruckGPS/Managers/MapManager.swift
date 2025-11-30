@@ -37,6 +37,10 @@ final class MapManager: NSObject {
     mapView.showsCompass = false
   }
   
+  func removeMap() {
+    mapView = nil
+  }
+  
   // MARK: - Center Map
   
   func centerMap(on location: CLLocation, zoom: Double = 0.01) {

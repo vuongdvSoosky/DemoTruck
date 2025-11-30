@@ -284,8 +284,6 @@ class TruckVC: BaseViewController {
   private var searchManager: LocationSearchManager!
   private var currentTooltipID: String?
   private var searchResults: [SearchItem] = []
-  private var userMarker: DraggableAnnotation?
-  private var trackingUser = false
   var userAnnotation: MKPointAnnotation?
   private var userLocationAnnotation: CustomAnnotation?
   private var isInitialLocationSet = false
@@ -503,11 +501,6 @@ class TruckVC: BaseViewController {
     MapManager.shared.attachMap(to: mapView)
     mapView.delegate = self
     mapView.showsUserLocation = false
-    //    MapManager.shared.startTrackingUser()
-    //    // Lấy vị trí hiện tại và hiển thị dịch vụ xung quanh
-    //    MapManager.shared.requestUserLocation { [weak self] location in
-    //      self?.searchNearby()
-    //    }
   }
   
   override func binding() {
@@ -589,7 +582,6 @@ class TruckVC: BaseViewController {
           return
         }
         searchResults = results
-        LogManager.show(results.count)
         updateTableHeight()
         tableView.reloadData()
         tableView.isHidden = results.isEmpty

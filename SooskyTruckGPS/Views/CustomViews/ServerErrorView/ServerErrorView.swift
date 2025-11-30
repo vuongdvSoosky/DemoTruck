@@ -32,7 +32,8 @@ class ServerErrorView: BaseView {
     
     let discardLabel = UILabel()
     let discardText = "Server is under maintenance"
-    discardLabel.setLineSpacing()
+//    discardLabel.setLineSpacing()
+    discardLabel.text = discardText
     discardLabel.font = AppFont.font(.boldText, size: 21)
     discardLabel.textColor = UIColor(rgb: 0xF26101)
     discardLabel.numberOfLines = 0
@@ -44,7 +45,7 @@ class ServerErrorView: BaseView {
     desLabel.textColor = UIColor(rgb: 0x332644)
     desLabel.textAlignment = .center
     desLabel.numberOfLines = 0
-    desLabel.setLineSpacing()
+    desLabel.text = discardText
   
     let stackView = UIView()
     

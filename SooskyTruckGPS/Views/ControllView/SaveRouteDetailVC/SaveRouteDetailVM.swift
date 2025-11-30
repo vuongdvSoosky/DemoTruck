@@ -21,8 +21,6 @@ class SaveRouteDetailVM: BaseViewModel {
   
   let action = PassthroughSubject<Action, Never>()
   var item = CurrentValueSubject<RouteResponseRealm?, Never>(nil)
-  var searchCompleter = MKLocalSearchCompleter()
-  var searchSuggestions = CurrentValueSubject<[SearchItem], Never>([])
   let index = CurrentValueSubject<Int?, Never>(nil)
   let actionEditLocation = PassthroughSubject<Void, Never>()
   var isEditLocation: Bool = false

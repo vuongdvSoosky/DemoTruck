@@ -195,16 +195,33 @@ class SaveRouteDetailVC: BaseViewController {
   private var currentType = ""
   private var searchDelayTimer: Timer?
   
+  private var searchResults: [SearchItem] = []
+  var userAnnotation: MKPointAnnotation?
+  private var userLocationAnnotation: CustomAnnotation?
+  private var isInitialLocationSet = false
+  private var lastUpdateLocation: CLLocation?
+  private var locationUpdateTimer: Timer?
+  private lazy var locationManager: CLLocationManager = {
+    let manager = CLLocationManager()
+    manager.delegate = self
+    manager.desiredAccuracy = kCLLocationAccuracyBest
+    return manager
+  }()
+  
+  var currentUserCoordinate: CLLocationCoordinate2D?
+  private var searchManager: LocationSearchManager!
+  
   private var viewModel: SaveRouteDetailVM!
   
   override func viewDidLoad() {
     super.viewDidLoad()
     setupMap()
     setupTableView()
-    setupSearchCompleter()
   }
   
   override func setProperties() {
+    searchManager = LocationSearchManager()
+    
     searchTextField.delegate = self
     searchTextField.addTarget(self, action: #selector(textFieldDidChange(_:)), for: .editingChanged)
     let tapGesture = UITapGestureRecognizer(target: self, action: #selector(onTapCloseCalloutView(_:)))
@@ -273,16 +290,57 @@ class SaveRouteDetailVC: BaseViewController {
         iconButtonView.isHidden = false
       }.store(in: &subscriptions)
     
-    viewModel.searchSuggestions
-      .sink { [weak self] _ in
-        self?.tableView.reloadData()
-        self?.updateTableHeight()
+    searchManager.$results
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] results in
+        guard let self else {
+          return
+        }
+        searchResults = results
+        updateTableHeight()
+        tableView.reloadData()
+        tableView.isHidden = results.isEmpty
       }
       .store(in: &subscriptions)
+    
+    // Lấy location lần đầu và zoom map
+    LocationService.shared.requestCurrentLocation { [weak self] location in
+      guard let self = self else { return }
+      
+      DispatchQueue.main.async {
+        // Xóa annotation cũ nếu có
+        self.removeUserLocationAnnotation()
+        
+        // Tạo CustomAnnotation cho user location
+        let userAnnotation = CustomAnnotation(
+          coordinate: location.coordinate,
+          title: "My Location",
+          subtitle: nil,
+          type: "UserLocation",
+          id: "user_location"
+        )
+        self.userLocationAnnotation = userAnnotation
+        self.mapView.addAnnotation(userAnnotation)
+        
+        // Chỉ zoom map lần đầu tiên
+        if !self.isInitialLocationSet {
+          let region = MKCoordinateRegion(
+            center: location.coordinate,
+            latitudinalMeters: 500,
+            longitudinalMeters: 500
+          )
+          self.mapView.setRegion(region, animated: true)
+          self.isInitialLocationSet = true
+        }
+        
+        // Bắt đầu theo dõi location updates liên tục
+        self.startTrackingUserLocation()
+      }
+    }
   }
   
   func updateTableHeight() {
-    let count = viewModel.searchSuggestions.value.count
+    let count = searchResults.count
     let height: CGFloat
     
     if count >= 4 {
@@ -420,12 +478,6 @@ class SaveRouteDetailVC: BaseViewController {
     tableView.clipsToBounds = true
     tableView.layer.cornerRadius = 12
     tableView.layer.masksToBounds = true
-  }
-  
-  private func setupSearchCompleter() {
-    viewModel.searchCompleter.delegate = self
-    viewModel.searchCompleter.region = MKCoordinateRegion()
-    viewModel.searchCompleter.resultTypes = .address
   }
   
   override func addComponents() {
@@ -723,14 +775,14 @@ extension SaveRouteDetailVC: UITextFieldDelegate {
   @objc private func textFieldDidChange(_ textField: UITextField) {
     guard let text = textField.text else {
       tableContainer.isHidden = true
-      viewModel.searchSuggestions.value.removeAll()
+      searchResults.removeAll()
       self.iconRemoveText.isHidden = true
       return
     }
     self.iconRemoveText.isHidden = false
     self.address = text
     tableContainer.isHidden = false
-    viewModel.searchCompleter.queryFragment = text
+    searchManager.query = text
   }
   
   func textFieldShouldReturn(_ textField: UITextField) -> Bool {
@@ -873,77 +925,77 @@ extension SaveRouteDetailVC {
 // MARK: - UITableView
 extension SaveRouteDetailVC: UITableViewDelegate, UITableViewDataSource {
   func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-    return viewModel.searchSuggestions.value.count
+    return searchResults.count
   }
   
   func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-//    let item = viewModel.searchSuggestions.value[indexPath.row]
-//    switch item {
-//    case .userLocation(title: _, subtitle: _):
-//      let cell = tableView.dequeueReusableCell(CurrentLocationCell.self, for: indexPath)
-//      return cell
-//    case .suggestion(let data):
-//      let cell = tableView.dequeueReusableCell(HomeSearchCell.self, for: indexPath)
-//      cell.backgroundColor = .white
-//      cell.selectionStyle = .none
-//      cell.configData(data: data)
-//      return cell
-//    case .manual(title: let title):
-//      let cell = tableView.dequeueReusableCell(HomeSearchCell.self, for: indexPath)
-//      cell.configDataManual(data: title)
-//      return cell
-    let cell = tableView.dequeueReusableCell(CurrentLocationCell.self, for: indexPath)
-    return cell
-   // }
+    let item = searchResults[indexPath.row]
+    switch item {
+    case .suggestion(let data):
+      let cell = tableView.dequeueReusableCell(HomeSearchCell.self, for: indexPath)
+      cell.backgroundColor = .white
+      cell.selectionStyle = .none
+      cell.configData(data: data)
+      return cell
+    case .manual(title: let title):
+      let cell = tableView.dequeueReusableCell(HomeSearchCell.self, for: indexPath)
+      cell.configDataManual(data: title)
+      return cell
+    case .userLocation(title: let title, subtitle: let subtitle, coordinate: let coordinate):
+      let cell = tableView.dequeueReusableCell(CurrentLocationCell.self, for: indexPath)
+      return cell
+    }
   }
   
-  //func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-//    guard indexPath.row < viewModel.searchSuggestions.value.count else { return }
-//    let item = viewModel.searchSuggestions.value[indexPath.row]
-//    
-//    tableContainer.isHidden = true
-//    searchTextField.resignFirstResponder()
-//    
-//    switch item {
-//      // MARK: - USER LOCATION
-//    case .userLocation(_, _):
-//      MapManager.shared.requestUserLocation { [weak self] location in
-//        guard let self = self, let location = location else { return }
-//        
-//        let geocoder = CLGeocoder()
-//        geocoder.reverseGeocodeLocation(location) { placemarks, error in
-//          guard let placemark = placemarks?.first, error == nil else { return }
-//          
-//          let number = placemark.subThoroughfare ?? ""
-//          let street = placemark.thoroughfare ?? ""
-//          let city = placemark.locality ?? ""
-//          let state = placemark.administrativeArea ?? ""
-//          let country = placemark.country ?? ""
-//          
-//          let houseAddress = [number, street].filter { !$0.isEmpty }.joined(separator: " ")
-//          let fullAddress = [city, state, country].filter { !$0.isEmpty }.joined(separator: ", ")
-//          
-//          DispatchQueue.main.async {
-//            self.handleLocationSelection(
-//              title: houseAddress.isEmpty ? "My Location" : houseAddress,
-//              subtitle: fullAddress,
-//              coordinate: location.coordinate
-//            )
-//          }
-//        }
-//      }
-//      
-//      // MARK: - APPLE SUGGESTION
-//    case .suggestion(let dataSuggestion):
-//      searchTextField.text = dataSuggestion.title
-//      performSearch(query: dataSuggestion.title, subtitle: dataSuggestion.subtitle)
-//      
-//      // MARK: - MANUAL INPUT
-//    case .manual(let title):
-//      searchTextField.text = title
-//      performSearch(query: title, subtitle: nil)
-//    }
- // }
+  func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+    guard indexPath.row < searchResults.count else { return }
+    let item = searchResults[indexPath.row]
+    
+    tableContainer.isHidden = true
+    searchTextField.resignFirstResponder()
+    
+    switch item {
+      // MARK: - APPLE SUGGESTION
+    case .suggestion(let dataSuggestion):
+      searchTextField.text = dataSuggestion.title
+      performSearch(query: dataSuggestion.title, subtitle: dataSuggestion.subtitle)
+      
+      // MARK: - MANUAL INPUT
+    case .manual(let title):
+      searchTextField.text = title
+      performSearch(query: title, subtitle: nil)
+      
+      // MARK: - USER LOCATION
+    case .userLocation(title: _, subtitle: _, coordinate: _):
+      LocationService.shared.requestCurrentLocation { [weak self] location in
+        guard let self else { return }
+        
+        let geocoder = CLGeocoder()
+        geocoder.reverseGeocodeLocation(location) { placemarks, error in
+          guard let placemark = placemarks?.first, error == nil else { return }
+          
+          let number = placemark.subThoroughfare ?? ""
+          let street = placemark.thoroughfare ?? ""
+          let city = placemark.locality ?? ""
+          let state = placemark.administrativeArea ?? ""
+          let country = placemark.country ?? ""
+          
+          let houseAddress = [number, street].filter { !$0.isEmpty }.joined(separator: " ")
+          let fullAddress = [city, state, country].filter { !$0.isEmpty }.joined(separator: ", ")
+          
+          DispatchQueue.main.async {
+            self.handleLocationSelection(
+              title: houseAddress.isEmpty ? "My Location" : houseAddress,
+              subtitle: fullAddress,
+              coordinate: location.coordinate
+            )
+          }
+        }
+      }
+      
+      break
+    }
+  }
   
   // MARK: - Perform MKLocalSearch and only act if real result exists
   private func performSearch(query: String, subtitle: String?) {
@@ -960,12 +1012,7 @@ extension SaveRouteDetailVC: UITableViewDelegate, UITableViewDataSource {
       }
       
       let placemarkTitle = firstItem.placemark.title ?? ""
-      
-      // Optional: kiểm tra title có liên quan đến query
-      guard placemarkTitle.lowercased().contains(query.lowercased()) else {
-        return
-      }
-      
+    
       let coordinate = firstItem.placemark.coordinate
       let resolvedSubtitle = subtitle ?? placemarkTitle
       
@@ -1001,7 +1048,7 @@ extension SaveRouteDetailVC: UITableViewDelegate, UITableViewDataSource {
   }
   
   func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-    return 60
+    return 66
   }
 }
 
@@ -1199,5 +1246,156 @@ extension SaveRouteDetailVC: CustomAnnotationViewDelagate {
 extension SaveRouteDetailVC {
   func setViewModel(_ viewModel: SaveRouteDetailVM) {
     self.viewModel = viewModel
+  }
+}
+
+// MARK: - CLLocationManagerDelegate
+extension SaveRouteDetailVC: CLLocationManagerDelegate {
+  func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+    guard let location = locations.last else { return }
+    
+    DispatchQueue.main.async { [weak self] in
+      guard let self = self else { return }
+      
+      // Cập nhật annotation mà không di chuyển map
+      self.updateUserLocationAnnotation(coordinate: location.coordinate)
+      self.currentUserCoordinate = location.coordinate
+    }
+  }
+  
+  func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+    LogManager.show("Location update error: \(error.localizedDescription)")
+  }
+  
+  func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
+    switch status {
+    case .authorizedWhenInUse, .authorizedAlways:
+      if !isInitialLocationSet {
+        // Nếu chưa có location ban đầu, lấy location
+        LocationService.shared.requestCurrentLocation { [weak self] location in
+          guard let self = self else { return }
+          DispatchQueue.main.async {
+            // Xóa annotation cũ nếu có
+            self.removeUserLocationAnnotation()
+            
+            let userAnnotation = CustomAnnotation(
+              coordinate: location.coordinate,
+              title: "My Location",
+              subtitle: nil,
+              type: "UserLocation",
+              id: "user_location"
+            )
+            self.userLocationAnnotation = userAnnotation
+            self.mapView.addAnnotation(userAnnotation)
+            
+            if !self.isInitialLocationSet {
+              let region = MKCoordinateRegion(
+                center: location.coordinate,
+                latitudinalMeters: 500,
+                longitudinalMeters: 500
+              )
+              self.mapView.setRegion(region, animated: true)
+              self.isInitialLocationSet = true
+            }
+            
+            self.startTrackingUserLocation()
+          }
+        }
+      } else {
+        // Nếu đã có location, tiếp tục theo dõi
+        startTrackingUserLocation()
+      }
+    default:
+      break
+    }
+  }
+  
+  private func updateUserLocationAnnotation(coordinate: CLLocationCoordinate2D) {
+    guard let annotation = userLocationAnnotation else {
+      // Nếu không có annotation, tạo mới
+      let userAnnotation = CustomAnnotation(
+        coordinate: coordinate,
+        title: "My Location",
+        subtitle: nil,
+        type: "UserLocation",
+        id: "user_location"
+      )
+      userLocationAnnotation = userAnnotation
+      mapView.addAnnotation(userAnnotation)
+      return
+    }
+    
+    // Debounce: Hủy timer cũ nếu có
+    locationUpdateTimer?.invalidate()
+    
+    // Tạo timer mới để update sau 0.5 giây
+    locationUpdateTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { [weak self] _ in
+      guard let self = self, let annotation = self.userLocationAnnotation else { return }
+      
+      // Kiểm tra xem location có thay đổi đáng kể không (ít nhất 3m)
+      if let lastLocation = self.lastUpdateLocation {
+        let distance = CLLocation(latitude: lastLocation.coordinate.latitude, longitude: lastLocation.coordinate.longitude)
+          .distance(from: CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude))
+        
+        // Chỉ update nếu di chuyển ít nhất 3 mét
+        if distance < 3 {
+          return
+        }
+      }
+      
+      // Đảm bảo chỉ có một annotation: xóa tất cả annotations có id "user_location" trước
+      let annotationsToRemove = self.mapView.annotations.filter { ann in
+        if let customAnn = ann as? CustomAnnotation {
+          return customAnn.id == "user_location" && ann !== annotation
+        }
+        return false
+      }
+      if !annotationsToRemove.isEmpty {
+        self.mapView.removeAnnotations(annotationsToRemove)
+      }
+      
+      // Cập nhật coordinate và remove/add lại annotation để MapKit cập nhật vị trí
+      annotation.coordinate = coordinate
+      self.mapView.removeAnnotation(annotation)
+      self.mapView.addAnnotation(annotation)
+      
+      self.lastUpdateLocation = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+    }
+  }
+  
+  private func startTrackingUserLocation() {
+    let authStatus = locationManager.authorizationStatus
+    switch authStatus {
+    case .notDetermined:
+      locationManager.requestWhenInUseAuthorization()
+    case .authorizedWhenInUse, .authorizedAlways:
+      locationManager.startUpdatingLocation()
+    default:
+      break
+    }
+  }
+  
+  private func stopTrackingUserLocation() {
+    locationManager.stopUpdatingLocation()
+    locationUpdateTimer?.invalidate()
+    locationUpdateTimer = nil
+  }
+  
+  // MARK: - User Location Tracking
+  private func removeUserLocationAnnotation() {
+    // Xóa annotation cũ nếu có
+    if let existingAnnotation = userLocationAnnotation {
+      mapView.removeAnnotation(existingAnnotation)
+      userLocationAnnotation = nil
+    }
+    
+    // Xóa tất cả annotations có id "user_location" hoặc title "My Location"
+    let annotationsToRemove = mapView.annotations.filter { annotation in
+      if let customAnn = annotation as? CustomAnnotation {
+        return customAnn.id == "user_location" || customAnn.type == "UserLocation"
+      }
+      return annotation.title == "My Location"
+    }
+    mapView.removeAnnotations(annotationsToRemove)
   }
 }
