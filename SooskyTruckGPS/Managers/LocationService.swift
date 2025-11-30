@@ -17,6 +17,7 @@ class LocationService: NSObject, CLLocationManagerDelegate {
   private(set) var stateAuthen: Bool = false
   private var didCallCompletion = false
   
+  
   private override init() {
     super.init()
     locationManager.delegate = self
@@ -35,6 +36,17 @@ class LocationService: NSObject, CLLocationManagerDelegate {
     } else {
       handleAuthorizationChange(currentStatus)
     }
+  }
+  
+  func startTrackingUser() {
+//    trackingUser = true
+    locationManager.requestWhenInUseAuthorization()
+    locationManager.startUpdatingLocation()
+  }
+  
+  func stopTrackingUser() {
+//    trackingUser = false
+    locationManager.stopUpdatingLocation()
   }
   
   /// Delegate khi trạng thái quyền thay đổi

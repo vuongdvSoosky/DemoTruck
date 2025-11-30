@@ -144,7 +144,7 @@ class TruckVC: BaseViewController {
     }
     return view
   }()
-
+  
   private let tableContainer: UIView = {
     let view = UIView()
     view.backgroundColor = .clear
@@ -436,12 +436,13 @@ class TruckVC: BaseViewController {
   
   private func setupMap() {
     MapManager.shared.attachMap(to: mapView)
- //   mapView.delegate = self
-   // MapManager.shared.startTrackingUser()
-    // Lấy vị trí hiện tại và hiển thị dịch vụ xung quanh
-    MapManager.shared.requestUserLocation { [weak self] location in
-      self?.searchNearby()
-    }
+    mapView.delegate = self
+    mapView.showsUserLocation = false
+    //    MapManager.shared.startTrackingUser()
+    //    // Lấy vị trí hiện tại và hiển thị dịch vụ xung quanh
+    //    MapManager.shared.requestUserLocation { [weak self] location in
+    //      self?.searchNearby()
+    //    }
   }
   
   override func binding() {
@@ -516,7 +517,7 @@ class TruckVC: BaseViewController {
       }.store(in: &subscriptions)
     
     
-    searchManager.$items
+    searchManager.$results
       .receive(on: DispatchQueue.main)
       .sink { [weak self] results in
         guard let self else {
@@ -529,6 +530,29 @@ class TruckVC: BaseViewController {
         tableView.isHidden = results.isEmpty
       }
       .store(in: &subscriptions)
+    
+    LocationService.shared.requestCurrentLocation { [weak self] location in
+      guard let self = self else { return }
+      
+      // 3. Xóa annotation cũ nếu có
+      self.mapView.annotations
+        .filter { $0 is MKPointAnnotation && $0.title == "My Location" }
+        .forEach { self.mapView.removeAnnotation($0) }
+      
+      // 4. Tạo annotation mới
+      let userAnnotation = MKPointAnnotation()
+      userAnnotation.coordinate = location.coordinate
+      userAnnotation.title = "My Location"
+      self.mapView.addAnnotation(userAnnotation)
+      
+      // 5. Zoom tới vị trí
+      let region = MKCoordinateRegion(
+        center: location.coordinate,
+        latitudinalMeters: 500,
+        longitudinalMeters: 500
+      )
+      self.mapView.setRegion(region, animated: true)
+    }
   }
   
   func updateTableHeight() {
@@ -929,22 +953,18 @@ extension TruckVC: MKMapViewDelegate {
         }
         
         return view
-      }
-      else {
-        guard annotation === userAnnotation else { return nil }
+      } else {
+        guard annotation.title == "My Location" else { return nil }
         
         let identifier = "UserLocationMarker"
         var view = mapView.dequeueReusableAnnotationView(withIdentifier: identifier)
         
-        if view == nil {
-          view = MKAnnotationView(annotation: annotation, reuseIdentifier: identifier)
-          view?.image = .icCurrentLocation
-          view?.centerOffset = CGPoint(x: 0, y: -20)
-          view?.canShowCallout = false
-        } else {
-          view?.annotation = annotation
-        }
-        return view
+        view = MKAnnotationView(annotation: annotation, reuseIdentifier: identifier)
+        view?.image = .icCurrentLocation
+        view?.centerOffset = CGPoint(x: 0, y: -20)
+        view?.canShowCallout = false
+        view?.annotation = annotation
+        
       }
     }
     return nil
@@ -953,33 +973,33 @@ extension TruckVC: MKMapViewDelegate {
 
 // MARK: UITextFieldDelegate
 extension TruckVC: UITextFieldDelegate {
-//    @objc private func textFieldDidChange(_ textField: UITextField) {
-//      guard let text = textField.text, !text.isEmpty else {
-//        tableContainer.isHidden = true
-//        if UserDefaultsManager.shared.get(of: Bool.self, key: .tutorial) == false {
-//          iconTutorialSearch.isHidden = false
-//        }
-//        iconRemoveText.isHidden = true
-//        return
-//      }
-//  
-//      iconRemoveText.isHidden = false
-//      self.address = text
-//      tableContainer.isHidden = false
-//      iconTutorialSearch.isHidden = true
-//  
-//      searchManager.query = text
-//    }
-  
   @objc private func textFieldDidChange(_ textField: UITextField) {
     guard let text = textField.text, !text.isEmpty else {
-      searchResults.removeAll()
-      tableView.reloadData()
-      tableView.isHidden = true
+      tableContainer.isHidden = true
+      if UserDefaultsManager.shared.get(of: Bool.self, key: .tutorial) == false {
+        iconTutorialSearch.isHidden = false
+      }
+      iconRemoveText.isHidden = true
       return
     }
+    
+    iconRemoveText.isHidden = false
+    self.address = text
+    tableContainer.isHidden = false
+    iconTutorialSearch.isHidden = true
+    
     searchManager.query = text
   }
+  
+  //  @objc private func textFieldDidChange(_ textField: UITextField) {
+  //    guard let text = textField.text, !text.isEmpty else {
+  //      searchResults.removeAll()
+  //      tableView.reloadData()
+  //      tableView.isHidden = true
+  //      return
+  //    }
+  //    searchManager.query = text
+  //  }
   
   //  func textFieldShouldReturn(_ textField: UITextField) -> Bool {
   //    textField.resignFirstResponder()
@@ -1143,72 +1163,74 @@ extension TruckVC: UITableViewDelegate, UITableViewDataSource {
   }
   
   func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let item = searchResults[indexPath.row]
-        switch item {
-        case .suggestion(let data):
-          let cell = tableView.dequeueReusableCell(HomeSearchCell.self, for: indexPath)
-          cell.backgroundColor = .white
-          cell.selectionStyle = .none
-          cell.configData(data: data)
-          return cell
-    
-        case .manual(let title):
-          let cell = tableView.dequeueReusableCell(HomeSearchCell.self, for: indexPath)
-          cell.configDataManual(data: title)
-          return cell
-        case .userLocation(title: _, subtitle: _, coordinate: _):
-          let cell = tableView.dequeueReusableCell(CurrentLocationCell.self, for: indexPath)
-          return cell
-        }
+    let item = searchResults[indexPath.row]
+    switch item {
+    case .suggestion(let data):
+      let cell = tableView.dequeueReusableCell(HomeSearchCell.self, for: indexPath)
+      cell.backgroundColor = .white
+      cell.selectionStyle = .none
+      cell.configData(data: data)
+      return cell
+      
+    case .manual(let title):
+      let cell = tableView.dequeueReusableCell(HomeSearchCell.self, for: indexPath)
+      cell.configDataManual(data: title)
+      return cell
+    case .userLocation(title: _, subtitle: _, coordinate: _):
+      let cell = tableView.dequeueReusableCell(CurrentLocationCell.self, for: indexPath)
+      return cell
+    }
   }
   
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-      guard indexPath.row < searchResults.count else { return }
-      let item = searchResults[indexPath.row]
-  
-      tableContainer.isHidden = true
-      searchTextField.resignFirstResponder()
-  
-      switch item {
-        // MARK: - APPLE SUGGESTION
-      case .suggestion(let dataSuggestion):
-        searchTextField.text = dataSuggestion.title
-        performSearch(query: dataSuggestion.title, subtitle: dataSuggestion.subtitle)
-  
-        // MARK: - MANUAL INPUT
-      case .manual(let title):
-        searchTextField.text = title
-        performSearch(query: title, subtitle: nil)
+  func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+    guard indexPath.row < searchResults.count else { return }
+    let item = searchResults[indexPath.row]
+    
+    tableContainer.isHidden = true
+    searchTextField.resignFirstResponder()
+    
+    switch item {
+      // MARK: - APPLE SUGGESTION
+    case .suggestion(let dataSuggestion):
+      searchTextField.text = dataSuggestion.title
+      performSearch(query: dataSuggestion.title, subtitle: dataSuggestion.subtitle)
+      
+      // MARK: - MANUAL INPUT
+    case .manual(let title):
+      searchTextField.text = title
+      performSearch(query: title, subtitle: nil)
+      
+      // MARK: - USER LOCATION
+    case .userLocation(title: _, subtitle: _, coordinate: _):
+      LocationService.shared.requestCurrentLocation { [weak self] location in
+        guard let self else { return }
         
-        // MARK: - USER LOCATION
-      case .userLocation(title: let title, subtitle: let subtitle, coordinate: let coordinate):
-        MapManager.shared.requestUserLocation { [weak self] location in
-          guard let self = self, let location = location else { return }
-  
-          let geocoder = CLGeocoder()
-          geocoder.reverseGeocodeLocation(location) { placemarks, error in
-            guard let placemark = placemarks?.first, error == nil else { return }
-  
-            let number = placemark.subThoroughfare ?? ""
-            let street = placemark.thoroughfare ?? ""
-            let city = placemark.locality ?? ""
-            let state = placemark.administrativeArea ?? ""
-            let country = placemark.country ?? ""
-  
-            let houseAddress = [number, street].filter { !$0.isEmpty }.joined(separator: " ")
-            let fullAddress = [city, state, country].filter { !$0.isEmpty }.joined(separator: ", ")
-  
-            DispatchQueue.main.async {
-              self.handleLocationSelection(
-                title: houseAddress.isEmpty ? "My Location" : houseAddress,
-                subtitle: fullAddress,
-                coordinate: location.coordinate
-              )
-            }
+        let geocoder = CLGeocoder()
+        geocoder.reverseGeocodeLocation(location) { placemarks, error in
+          guard let placemark = placemarks?.first, error == nil else { return }
+          
+          let number = placemark.subThoroughfare ?? ""
+          let street = placemark.thoroughfare ?? ""
+          let city = placemark.locality ?? ""
+          let state = placemark.administrativeArea ?? ""
+          let country = placemark.country ?? ""
+          
+          let houseAddress = [number, street].filter { !$0.isEmpty }.joined(separator: " ")
+          let fullAddress = [city, state, country].filter { !$0.isEmpty }.joined(separator: ", ")
+          
+          DispatchQueue.main.async {
+            self.handleLocationSelection(
+              title: houseAddress.isEmpty ? "My Location" : houseAddress,
+              subtitle: fullAddress,
+              coordinate: location.coordinate
+            )
           }
         }
       }
+      
+      break
     }
+  }
   
   // MARK: - Perform MKLocalSearch and only act if real result exists
   private func performSearch(query: String, subtitle: String?) {

@@ -220,8 +220,8 @@ class SaveRouteDetailVC: BaseViewController {
     MapManager.shared.attachMap(to: mapView)
     mapView.delegate = self
     // Lấy vị trí hiện tại và hiển thị dịch vụ xung quanh
-    MapManager.shared.requestUserLocation { [weak self] location in
-      guard let self = self, let location = location else { return }
+    LocationService.shared.requestCurrentLocation { [weak self] location in
+      guard let self else { return }
       MapManager.shared.centerMap(on: location, zoom: 0.02)
       searchNearby()
     }
