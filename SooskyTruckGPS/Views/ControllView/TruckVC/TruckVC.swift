@@ -25,13 +25,7 @@ class TruckVC: BaseViewController {
     view.isHidden = true
     return view
   }()
-  private lazy var fullScreenOverlayView: UIView = {
-    let view = UIView()
-    view.translatesAutoresizingMaskIntoConstraints = false
-    view.backgroundColor = UIColor(rgb: 0x000000, alpha: 1.0)
-    view.isHidden = true
-    return view
-  }()
+
   private lazy var searchView: UIView = {
     let view = UIView()
     view.translatesAutoresizingMaskIntoConstraints = false
@@ -104,13 +98,6 @@ class TruckVC: BaseViewController {
       PlaceManager.shared.addLocation(Place)
       
       if PlaceManager.shared.placeGroup.places.count == 1 {
-        self.view.insertSubview(searchView, aboveSubview: tutorialView)
-        self.view.insertSubview(tableView, aboveSubview: tutorialView)
-        self.iconTutorialSearch.image = .icSearchTutorial2
-        self.iconTutorialSearch.isHidden = false
-        self.hideCalloutAnimated()
-        searchTextField.text = ""
-      } else {
         self.view.bringSubviewToFront(tutorialView)
         self.view.insertSubview(viewList, aboveSubview: tutorialView)
         self.view.insertSubview(iconTutorialList, aboveSubview: tutorialView)
@@ -120,6 +107,12 @@ class TruckVC: BaseViewController {
         searchTextField.text = ""
         viewList.isHidden = false
         self.iconTutorialAddStop.isHidden = true
+      } else {
+        searchTextField.text = ""
+        self.hideCalloutAnimated()
+        UserDefaultsManager.shared.set(true, key: .tutorial)
+        tutorialView.isHidden = true
+        hideOverlay()
       }
       
       if PlaceManager.shared.exists(Place) {
@@ -155,7 +148,7 @@ class TruckVC: BaseViewController {
   
   private let tableContainer: UIView = {
     let view = UIView()
-    view.backgroundColor = .clear
+    view.backgroundColor = .green
     view.layer.shadowColor = UIColor(rgb: 0x000000).cgColor
     view.layer.shadowOpacity = 0.4
     view.layer.shadowRadius = 8
@@ -305,8 +298,7 @@ class TruckVC: BaseViewController {
     setupMap()
     setupTableView()
     showTutorial()
-    
-    UserDefaultsManager.shared.set(true, key: .tutorial)
+    UserDefaultsManager.shared.set(false, key: .tutorial)
   }
   
   override func viewWillAppear(_ animated: Bool) {
@@ -344,37 +336,11 @@ class TruckVC: BaseViewController {
     (self.tabBarController as? TabbarVC)?.hideOverlay()
   }
   
-  func showFullScreenOverlay() {
-    guard let window = view.window ?? UIApplication.shared.windows.first(where: { $0.isKeyWindow }) else {
-      // Nếu chưa có window, thêm vào tabBarController.view
-      if let tabBarController = tabBarController {
-        fullScreenOverlayView.removeFromSuperview()
-        tabBarController.view.addSubview(fullScreenOverlayView)
-        fullScreenOverlayView.snp.makeConstraints { make in
-          make.edges.equalToSuperview()
-        }
-        fullScreenOverlayView.isHidden = false
-      }
-      return
-    }
-    
-    // Thêm vào window để che toàn bộ màn hình
-    fullScreenOverlayView.removeFromSuperview()
-    window.addSubview(fullScreenOverlayView)
-    fullScreenOverlayView.snp.makeConstraints { make in
-      make.edges.equalToSuperview()
-    }
-    fullScreenOverlayView.isHidden = false
-  }
-  
-  func hideFullScreenOverlay() {
-    fullScreenOverlayView.isHidden = true
-    fullScreenOverlayView.removeFromSuperview()
-  }
-  
   override func addComponents() {
     self.view.addSubviews(mapView, searchView, viewList, collectionView, icDirection,
-                          tutorialView, iconTruck, iconTutorialTruck, iconTutorialSearch, currentCalloutView, iconTutorialList, caculatorRouteStackView, iconTutorialAddStop, iconTutorialCaculate, tableContainer)
+                          tutorialView, iconTruck, iconTutorialTruck, iconTutorialSearch,
+                          currentCalloutView, iconTutorialList, caculatorRouteStackView,
+                          iconTutorialAddStop, iconTutorialCaculate, tableContainer)
   }
   
   override func setConstraints() {
@@ -565,12 +531,16 @@ class TruckVC: BaseViewController {
         }
         
         if UserDefaultsManager.shared.get(of: Bool.self, key: .tutorial) == false {
-          self.iconTutorialCaculate.isHidden = false
           tutorialView.isHidden = false
+          self.view.insertSubview(tutorialView, aboveSubview: viewList)
+          self.view.insertSubview(searchView, aboveSubview: tutorialView)
+          self.view.insertSubview(tableContainer, aboveSubview: tutorialView)
+          self.view.insertSubview(iconTutorialSearch, aboveSubview: tutorialView)
+          self.iconTutorialSearch.image = .icSearchTutorial2
+          self.iconTutorialSearch.isHidden = false
+          self.hideCalloutAnimated()
+          searchTextField.text = ""
           showOverlay()
-          self.view.bringSubviewToFront(tutorialView)
-          self.view.insertSubview(caculatorRouteStackView, aboveSubview: tutorialView)
-          self.view.insertSubview(iconTutorialCaculate, aboveSubview: tutorialView)
         }
       }.store(in: &subscriptions)
     
@@ -809,7 +779,6 @@ class TruckVC: BaseViewController {
     tableView.clipsToBounds = true
     tableView.layer.cornerRadius = 12
     tableView.layer.masksToBounds = true
-    
   }
   
   override func setColor() {
@@ -1145,7 +1114,7 @@ extension TruckVC: UITextFieldDelegate {
         // Hiển thị tooltip sau khi tìm kiếm
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
           self.showTooltipForAnnotation(annotation)
-            }
+          }
         }
       }
     }
@@ -1297,8 +1266,15 @@ extension TruckVC: UITableViewDelegate, UITableViewDataSource {
           }
         }
       }
-      
-      break
+    }
+    
+    if UserDefaultsManager.shared.get(of: Bool.self, key: .tutorial) == false {
+      if PlaceManager.shared.placeGroup.places.count > 0 {
+        DispatchQueue.main.async {
+            self.view.addSubview(self.currentCalloutView)
+            self.view.addSubview(self.iconTutorialAddStop)
+        }
+      }
     }
   }
   

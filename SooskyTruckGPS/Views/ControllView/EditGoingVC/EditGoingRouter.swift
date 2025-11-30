@@ -34,6 +34,7 @@ extension EditGoingRouter {
         loadingVC.filteredPlaces = filteredPlaces
       }
       context.push(to: loadingVC, animated: true)
+      context.removeViewController(EditGoingVC.self)
       
     case .go:
       let goingVC = GoingVC()

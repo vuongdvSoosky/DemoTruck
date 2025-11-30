@@ -33,7 +33,7 @@ class TabbarVC: UITabBarController, UITabBarControllerDelegate {
   
   private lazy var customItemTabbar: CustomTabbarView = {
     let tabbar = CustomTabbarView()
-    tabbar.backgroundColor = UIColor(rgb: 0xFAF7F3)
+    tabbar.backgroundColor = UIColor(rgb: 0xF6F6F6)
     return tabbar
   }()
   

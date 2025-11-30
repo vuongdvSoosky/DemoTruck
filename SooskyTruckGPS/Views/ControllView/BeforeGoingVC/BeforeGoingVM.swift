@@ -54,10 +54,6 @@ extension BeforeGoingVM {
     newRoute.nameRouter = PlaceManager.shared.placeGroup.nameRouter
     newRoute.addPlaces(PlaceManager.shared.placeGroup.places)
     
-    if PlaceManager.shared.isGoing {
-      RealmService.shared.add(newRoute)
-      PlaceManager.shared.setStateGoing(with: false)
-    } else {
       // Lấy tất cả Route đang active (history = false)
       let itemNormal = RealmService.shared.fetch(ofType: RouteResponseRealm.self)
         .filter { $0.history == false }
@@ -75,17 +71,14 @@ extension BeforeGoingVM {
           "nameRouter": newRoute.nameRouter as Any
         ]
         RealmService.shared.update(existItem, data: data)
-        PlaceManager.shared.createPlaceRouterID()
-        
         LogManager.show("Updated existing route id:", existItem.id)
       } else {
         // >>> ADD NEW <<<
         RealmService.shared.add(newRoute)
         LogManager.show("Added new route id:", newRoute.id)
       }
-    }
-    
     // Route Done
+    PlaceManager.shared.createPlaceRouterID()
     self.router.route(to: .save)
     PlaceManager.shared.setPlaceGroup([], name: "My Route")
   }

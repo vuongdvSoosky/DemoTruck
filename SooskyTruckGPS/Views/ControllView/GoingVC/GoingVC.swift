@@ -924,6 +924,7 @@ extension GoingVC {
 extension GoingVC: GoingDetailViewDelegate {
   func onTapEdit() {
     viewModel.action.send(.edit)
+    PlaceManager.shared.setStateGoing(with: true)
   }
   
   func didChooseItem(item: Place) {

@@ -22,12 +22,10 @@ class CustomTabbarView: BaseView {
   @IBOutlet weak var icTruck: UIImageView!
   @IBOutlet weak var icList: UIImageView!
   @IBOutlet weak var icSettings: UIImageView!
-  @IBOutlet weak var icTraining: UIImageView!
   
   @IBOutlet weak var truckLabel: UILabel!
   @IBOutlet weak var listLabel: UILabel!
   @IBOutlet weak var settingsLabel: UILabel!
-  @IBOutlet weak var trainingLabel: UILabel!
   
   @IBOutlet var containerView: [UIView]!
   
@@ -52,7 +50,7 @@ class CustomTabbarView: BaseView {
   }
   
   override func setColor() {
-    contentView.backgroundColor = UIColor(rgb: 0xFEFEFE)
+    contentView.backgroundColor = UIColor(rgb: 0xF6F6F6)
   }
   
   override func setProperties() {
@@ -60,7 +58,7 @@ class CustomTabbarView: BaseView {
       stackView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapTabbar(_:))))
     }
     
-    [truckLabel, listLabel, trainingLabel, settingsLabel].forEach { label in
+    [truckLabel, listLabel, settingsLabel].forEach { label in
       label?.setContentHuggingPriority(.required, for: .horizontal)
       label?.setContentCompressionResistancePriority(.required, for: .horizontal)
     }

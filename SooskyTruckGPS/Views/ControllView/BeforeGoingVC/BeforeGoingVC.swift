@@ -72,14 +72,9 @@ class BeforeGoingVC: BaseViewController {
     view.borderColor = UIColor(rgb: 0xF26101)
     view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapSave)))
     
-    let label = UILabel()
-    label.text = "Save"
-    label.font = AppFont.font(.boldText, size: 20)
-    label.textColor = UIColor(rgb: 0x332644)
-    label.textAlignment = .center
-    view.addSubviews(label)
+    view.addSubviews(saveLabel)
     
-    label.snp.makeConstraints { make in
+    saveLabel.snp.makeConstraints { make in
       make.center.equalToSuperview()
     }
     return view
@@ -198,6 +193,16 @@ class BeforeGoingVC: BaseViewController {
     return label
   }()
   
+  private lazy var saveLabel: UILabel = {
+    let label = UILabel()
+    label.text = "Save"
+    label.font = AppFont.font(.boldText, size: 20)
+    label.textColor = UIColor(rgb: 0x332644)
+    label.textAlignment = .center
+    
+    return label
+  }()
+  
   // MARK: - UIScrollView
   private lazy var mainScrollView: UIScrollView = {
     let scrollView = UIScrollView()
@@ -223,6 +228,7 @@ class BeforeGoingVC: BaseViewController {
   private let viewModel = BeforeGoingVM()
   var currentTooltipView: CustomAnnotationView?
   var currentTooltipID: String?
+  var isGoing: Bool = false
   
   override func addComponents() {
     self.view.addSubviews(iconBack, titleVC, containerView, stateStackView, tabView)
@@ -356,6 +362,19 @@ class BeforeGoingVC: BaseViewController {
           return
         }
         displayRouteOnMap(route: router, mapView: mapKitView)
+      }.store(in: &subscriptions)
+    
+    PlaceManager.shared.$isGoing
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] isGoing in
+        guard let self else {
+          return
+        }
+        self.isGoing = isGoing
+        if isGoing {
+          saveLabel.text = "Cancel"
+          saveLabel.font = AppFont.font(.mediumText, size: 20)
+        }
       }.store(in: &subscriptions)
   }
   
@@ -491,7 +510,12 @@ class BeforeGoingVC: BaseViewController {
   }
   
   @objc private func onTapSave() {
-    viewModel.action.send(.save)
+    if isGoing {
+      viewModel.action.send(.back)
+      PlaceManager.shared.setStateGoing(with: false)
+    } else {
+      viewModel.action.send(.save)
+    }
   }
   
   @objc private func onTapGo() {
@@ -631,10 +655,8 @@ extension BeforeGoingVC: MKMapViewDelegate {
       
       if view == nil {
         view = CustomAnnotationView(annotation: customService, reuseIdentifier: identifier)
-//        view?.hideButton()
       } else {
         view?.annotation = customService
-//        view?.hideButton()
       }
       
       // Gán ID annotation
@@ -745,5 +767,12 @@ extension BeforeGoingVC {
     annotationView.showTooltip()
     annotationView.configure(title: annotation.title ?? "", des: annotation.subtitle ?? "")
     annotationView.hideButton()
+  }
+}
+
+extension BeforeGoingVC {
+  func setupForEditGoing() {
+    saveLabel.text = "Cancel"
+    saveLabel.font = AppFont.font(.mediumText, size: 20)
   }
 }

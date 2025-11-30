@@ -15,7 +15,7 @@ class PlaceManager {
   @Published var goingPlaceGroup: PlaceGroup = .init(nameRouter: "My Route", places: [])
   @Published var placesRouter: RouteResponse?
   @Published var currentPlace: Place?
-  @Published private(set) var placeRouterID: String = ""
+  @Published private(set) var placeRouterID: String = UUID().uuidString
   @Published private(set) var isGoing: Bool = false
 
   private init() {}

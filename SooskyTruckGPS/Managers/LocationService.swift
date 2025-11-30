@@ -63,9 +63,26 @@ class LocationService: NSObject, CLLocationManagerDelegate {
   
   // MARK: - Location
   
-  func requestCurrentLocation(onUpdate: @escaping (CLLocation) -> Void) {
-    self.onLocationUpdate = onUpdate
-    locationManager.startUpdatingLocation()
+  func requestCurrentLocation(from viewController: UIViewController? = nil,
+                             onUpdate: @escaping (CLLocation) -> Void) {
+      self.onLocationUpdate = onUpdate
+      let status = CLLocationManager.authorizationStatus()
+
+      switch status {
+      case .notDetermined:
+          locationManager.requestWhenInUseAuthorization()
+
+      case .authorizedWhenInUse, .authorizedAlways:
+          locationManager.startUpdatingLocation()
+
+      case .restricted, .denied:
+          if let vc = viewController {
+              showSettingsAlert(from: vc)
+          }
+
+      @unknown default:
+          break
+      }
   }
   
   func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {

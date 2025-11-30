@@ -1042,7 +1042,7 @@ extension EditGoingVC: UITableViewDelegate, UITableViewDataSource {
       let cell = tableView.dequeueReusableCell(HomeSearchCell.self, for: indexPath)
       cell.configDataManual(data: title)
       return cell
-    case .userLocation(title: let title, subtitle: let subtitle, coordinate: let coordinate):
+    case .userLocation(title: _, subtitle: _, coordinate: _):
       let cell = tableView.dequeueReusableCell(CurrentLocationCell.self, for: indexPath)
       return cell
     }
