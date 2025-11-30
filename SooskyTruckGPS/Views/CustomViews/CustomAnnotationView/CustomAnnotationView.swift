@@ -79,7 +79,7 @@ class CustomAnnotationView: MKAnnotationView {
   private lazy var successView: UIView = {
     let view = UIView()
     view.translatesAutoresizingMaskIntoConstraints = false
-    view.cornerRadius = 8
+    view.cornerRadius = 6
     view.clipsToBounds = true
     view.backgroundColor = UIColor(rgb: 0x299F46, alpha: 0.14)
     view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapSuccess)))
@@ -109,7 +109,7 @@ class CustomAnnotationView: MKAnnotationView {
   private lazy var failedView: UIView = {
     let view = UIView()
     view.translatesAutoresizingMaskIntoConstraints = false
-    view.cornerRadius = 8
+    view.cornerRadius = 6
     view.clipsToBounds = true
     view.backgroundColor = UIColor(rgb: 0xDC2E24, alpha: 0.14)
     view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapFailed)))
@@ -215,8 +215,8 @@ class CustomAnnotationView: MKAnnotationView {
     
     verticalStackView.snp.makeConstraints { make in
       make.top.equalTo(subtitleLabel.snp.bottom).inset(-8)
-      make.left.equalToSuperview().offset(18)
-      make.right.equalToSuperview().offset(-18)
+      make.left.equalToSuperview().offset(12)
+      make.right.equalToSuperview().offset(-12)
       make.bottom.equalToSuperview().offset(-12)
     }
     

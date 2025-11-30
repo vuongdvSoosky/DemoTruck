@@ -611,38 +611,52 @@ class GoingVC: BaseViewController {
   
   // MARK: - Helper: Update icon cho annotation dựa trên state
   private func updateIconForAnnotation(annotationView: CustomAnnotationView, place: Place) {
-    annotationView.getPlace(with: place)
-    // Chọn icon dựa vào state nếu có, nếu không thì dựa vào type
+    guard let annotation = annotationView.annotation as? CustomAnnotation else { return }
+    if self.mapView.annotations.contains(where: { $0 === annotation }),
+       let view = self.mapView.view(for: annotation) as? CustomAnnotationView {
+      // Ẩn view
+      view.hideTooltip()
+    }
+  
+    // Lưu state cũ để so sánh
+    let oldState = annotation.state
+    
+    // Cập nhật state vào CustomAnnotation để đồng bộ
+    annotation.state = place.state
+    
+    // Xác định icon cần hiển thị
+    let newImage: UIImage?
     if let state = place.state {
       // Hiển thị icon dựa trên state (true/false)
       if state {
-        // state == true → hiển thị icLocationFinish
-        annotationView.image = .icLocationFinish
+        newImage = .icLocationFinish
       } else {
-        // state == false → hiển thị icLocationFailed
-        annotationView.image = .icLocationFailed
+        newImage = .icLocationFailed
       }
     } else {
       // Nếu state là nil, hiển thị icon dựa vào type
-      if let annotation = annotationView.annotation as? CustomAnnotation {
-        switch annotation.type {
-        case "Location":
-          annotationView.image = .icLocationStop
-        case "Gas Station":
-          annotationView.image = .icPinGas
-        case "Bank":
-          annotationView.image = .icPinBank
-        case "Car Wash":
-          annotationView.image = .icPinCarWash
-        case "Pharmacy":
-          annotationView.image = .icPinPharmacy
-        case "Fast Food":
-          annotationView.image = .icPinFastFood
-        default:
-          annotationView.image = .icLocationEmpty
-        }
+      switch annotation.type {
+      case "Location":
+        newImage = .icLocationStop
+      case "Gas Station":
+        newImage = .icPinGas
+      case "Bank":
+        newImage = .icPinBank
+      case "Car Wash":
+        newImage = .icPinCarWash
+      case "Pharmacy":
+        newImage = .icPinPharmacy
+      case "Fast Food":
+        newImage = .icPinFastFood
+      default:
+        newImage = .icLocationEmpty
       }
     }
+    
+    // Update icon và force refresh view
+    annotationView.image = newImage
+    
+    // Force refresh annotation view bằng cách ẩn rồi hiển thị lại
   }
   
   private func scrollToFirstPlace() {
@@ -1172,9 +1186,33 @@ extension GoingVC {
     annotationView.showTooltip()
     annotationView.configure(title: annotation.title ?? "", des: annotation.subtitle ?? "")
     
-    // Kiểm tra xem đã có trong placeGroup chưa
-    let place = Place(id: annotation.id, address: annotation.title ?? "", fullAddres: annotation.subtitle ?? "", coordinate: annotation.coordinate, state: annotation.state, type: annotation.type)
-    LogManager.show("annotation.state", annotation.state)
+    // Tìm Place tương ứng từ arrayPlaces để lấy state mới nhất (đồng bộ với updateIconForAnnotation)
+    let correspondingPlace = arrayPlaces.first { place in
+      if let placeId = place.id, let annoId = annotation.id {
+        return placeId == annoId
+      } else {
+        // So sánh bằng coordinate nếu id không có
+        let epsilon = 1e-6
+        return abs(place.coordinate.latitude - annotation.coordinate.latitude) < epsilon &&
+               abs(place.coordinate.longitude - annotation.coordinate.longitude) < epsilon
+      }
+    }
+    
+    // Sử dụng state từ correspondingPlace nếu có, nếu không thì dùng annotation.state
+    let currentState = correspondingPlace?.state ?? annotation.state
+    
+    // Cập nhật annotation.state để đồng bộ
+    annotation.state = currentState
+    
+    // Tạo Place với state mới nhất
+    let place = Place(
+      id: annotation.id,
+      address: annotation.title ?? "",
+      fullAddres: annotation.subtitle ?? "",
+      coordinate: annotation.coordinate,
+      state: currentState,
+      type: annotation.type
+    )
     annotationView.getPlace(with: place)
     if PlaceManager.shared.goingExists(place) {
       annotationView.configureButton(title: "Remove Stop", icon: .icTrash)
