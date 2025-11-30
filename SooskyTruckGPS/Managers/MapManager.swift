@@ -157,7 +157,7 @@ extension MapManager {
             coordinate: item.placemark.coordinate,
             type: type,
             titlePlace: item.name ?? "",
-            id: UUID().uuidString
+            id: UUID().uuidString, state: nil
           )
           annotation.title = item.name
           annotation.subtitle = fullAddress
@@ -209,13 +209,15 @@ class CustomAnnotation: NSObject, MKAnnotation {
   var identifier: String = "CustomAnnotationView"
   var type: String?
   var id: String?
+  var state: Bool?
   
-  init(coordinate: CLLocationCoordinate2D, title: String?, subtitle: String?, type: String?, id: String?) {
+  init(coordinate: CLLocationCoordinate2D, title: String?, subtitle: String?, type: String?, id: String?, state: Bool?) {
     self.coordinate = coordinate
     self.title = title
     self.subtitle = subtitle
     self.type = type
     self.id = id
+    self.state = state
   }
 }
 
@@ -227,13 +229,15 @@ class CustomServiceAnimation: NSObject, MKAnnotation {
   var title: String?
   var subtitle: String?
   var identifier: String = "CustomAnnotationView"
+  var state: Bool?
   
-  init(coordinate: CLLocationCoordinate2D, type: String, titlePlace: String, id: String) {
+  init(coordinate: CLLocationCoordinate2D, type: String, titlePlace: String, id: String, state: Bool?) {
     self.coordinate = coordinate
     self.type = type
     self.titlePlace = titlePlace
     self.id = id
     self.title = titlePlace
+    self.state = state
   }
 }
 

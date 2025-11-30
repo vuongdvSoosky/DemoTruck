@@ -76,8 +76,91 @@ class CustomAnnotationView: MKAnnotationView {
     return view
   }()
   
+  private lazy var successView: UIView = {
+    let view = UIView()
+    view.translatesAutoresizingMaskIntoConstraints = false
+    view.cornerRadius = 8
+    view.clipsToBounds = true
+    view.backgroundColor = UIColor(rgb: 0x299F46, alpha: 0.14)
+    view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapSuccess)))
+    view.borderColor = UIColor(rgb: 0x299F46)
+    
+    let icon = UIImageView()
+    icon.image = .icDoneArrived
+    icon.contentMode = .scaleAspectFit
+    
+    let label = UILabel()
+    label.text = "Success"
+    label.textColor = UIColor(rgb: 0x299F46)
+    label.font = AppFont.font(.semiBoldText, size: 15)
+    
+    let stackView = UIStackView()
+    stackView.axis = .horizontal
+    stackView.spacing = 4
+    [icon, label].forEach({stackView.addArrangedSubview($0)})
+    
+    view.addSubview(stackView)
+    
+    stackView.snp.makeConstraints { make in
+      make.center.equalToSuperview()
+    }
+    return view
+  }()
+  private lazy var failedView: UIView = {
+    let view = UIView()
+    view.translatesAutoresizingMaskIntoConstraints = false
+    view.cornerRadius = 8
+    view.clipsToBounds = true
+    view.backgroundColor = UIColor(rgb: 0xDC2E24, alpha: 0.14)
+    view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapFailed)))
+    view.borderColor = UIColor(rgb: 0xDC2E24)
+    
+    let icon = UIImageView()
+    icon.image = .icFailedArrived
+    icon.contentMode = .scaleAspectFit
+    
+    let label = UILabel()
+    label.text = "Failed"
+    label.textColor = UIColor(rgb: 0xDC2E24)
+    label.font = AppFont.font(.semiBoldText, size: 15)
+    
+    let stackView = UIStackView()
+    stackView.axis = .horizontal
+    stackView.spacing = 4
+    [icon, label].forEach({stackView.addArrangedSubview($0)})
+    
+    view.addSubview(stackView)
+    
+    stackView.snp.makeConstraints { make in
+      make.center.equalToSuperview()
+    }
+    return view
+  }()
+  
+  private lazy var stateStateStackView: UIStackView = {
+    let stackView = UIStackView()
+    stackView.axis = .horizontal
+    stackView.spacing = 4
+    stackView.distribution = .fillEqually
+    [successView, failedView].forEach({stackView.addArrangedSubview($0)})
+    stackView.isHidden = true
+    return stackView
+  }()
+  
+  private lazy var verticalStackView: UIStackView = {
+    let stackView = UIStackView()
+    stackView.axis = .vertical
+    stackView.distribution = .fill
+    [buttonView, stateStateStackView].forEach({stackView.addArrangedSubview($0)})
+    return stackView
+  }()
+  
   weak var delegate: CustomAnnotationViewDelagate?
   private var currentPlace: Place?
+  
+  private var place: Place?
+  private var isSuccessSelected = false
+  private var isFailedSelected = false
   
   // MARK: - Override Annotation
   override var annotation: MKAnnotation? {
@@ -108,7 +191,7 @@ class CustomAnnotationView: MKAnnotationView {
     
     containerView.addSubview(titleLabel)
     containerView.addSubview(subtitleLabel)
-    containerView.addSubview(buttonView)
+    containerView.addSubview(verticalStackView)
     
     titleLabel.snp.makeConstraints { make in
       make.top.equalToSuperview().offset(18)
@@ -123,11 +206,18 @@ class CustomAnnotationView: MKAnnotationView {
     }
     
     buttonView.snp.makeConstraints { make in
+      make.height.equalTo(30)
+    }
+
+    stateStateStackView.snp.makeConstraints { make in
+      make.height.equalTo(30)
+    }
+    
+    verticalStackView.snp.makeConstraints { make in
       make.top.equalTo(subtitleLabel.snp.bottom).inset(-8)
       make.left.equalToSuperview().offset(18)
       make.right.equalToSuperview().offset(-18)
       make.bottom.equalToSuperview().offset(-12)
-      make.height.equalTo(36)
     }
     
     let stack = UIStackView(arrangedSubviews: [removeIcon, removeLabel])
@@ -200,30 +290,10 @@ extension CustomAnnotationView {
   
   func hideButton() {
     buttonView.isHidden = true
-    // Cập nhật constraint để subtitleLabel là bottom
-    subtitleLabel.snp.remakeConstraints { make in
-      make.top.equalTo(titleLabel.snp.bottom).offset(6)
-      make.left.equalTo(titleLabel)
-      make.right.equalTo(titleLabel)
-      make.bottom.equalToSuperview().offset(-12)
-    }
   }
   
   func showButton() {
     buttonView.isHidden = false
-    // Khôi phục constraint ban đầu
-    subtitleLabel.snp.remakeConstraints { make in
-      make.top.equalTo(titleLabel.snp.bottom).offset(6)
-      make.left.equalTo(titleLabel)
-      make.right.equalTo(titleLabel)
-    }
-    buttonView.snp.remakeConstraints { make in
-      make.top.equalTo(subtitleLabel.snp.bottom).inset(-8)
-      make.left.equalToSuperview().offset(18)
-      make.right.equalToSuperview().offset(-18)
-      make.bottom.equalToSuperview().offset(-12)
-      make.height.equalTo(36)
-    }
   }
   
   func showLoadingView() {
@@ -240,5 +310,73 @@ extension CustomAnnotationView {
     
     loadingView.isHidden = true
     loadingView.stopAnimating()
+  }
+  
+  func showStateStackView() {
+    stateStateStackView.isHidden = false
+  }
+  
+  func getPlace(with place: Place) {
+    self.place = place
+    guard let state = place.state else {
+      isSuccessSelected = false
+      isFailedSelected = false
+      successView.borderWidth = 0
+      failedView.borderWidth = 0
+      return
+    }
+    
+    if state {
+      isSuccessSelected = true
+      isFailedSelected = false
+      successView.borderWidth = 2
+      failedView.borderWidth = 0
+    } else {
+      isSuccessSelected = false
+      isFailedSelected = true
+      successView.borderWidth = 0
+      failedView.borderWidth = 2
+    }
+    
+  }
+}
+
+extension CustomAnnotationView {
+  @objc private func onTapSuccess() {
+    guard let place = place else { return }
+    
+    if isSuccessSelected {
+      // Bỏ chọn
+      isSuccessSelected = false
+      successView.borderWidth = 0
+      PlaceManager.shared.changeState(for: place, isSuccess: true)
+    } else {
+      // Chọn
+      isSuccessSelected = true
+      isFailedSelected = false
+      
+      successView.borderWidth = 2
+      failedView.borderWidth = 0
+      PlaceManager.shared.changeState(for: place, isSuccess: true)
+    }
+  }
+  
+  @objc private func onTapFailed() {
+    guard let place = place else { return }
+    
+    if isFailedSelected {
+      // Bỏ chọn
+      isFailedSelected = false
+      failedView.borderWidth = 0
+      PlaceManager.shared.changeState(for: place, isSuccess: false)
+    } else {
+      // Chọn
+      isFailedSelected = true
+      isSuccessSelected = false
+      
+      failedView.borderWidth = 2
+      successView.borderWidth = 0
+      PlaceManager.shared.changeState(for: place, isSuccess: false)
+    }
   }
 }

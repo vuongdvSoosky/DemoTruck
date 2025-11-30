@@ -449,7 +449,7 @@ class BeforeGoingVC: BaseViewController {
           title: place.address,
           subtitle: place.fullAddres,
           type: place.type ?? "Location",
-          id: place.id
+          id: place.id, state: place.state
         )
         mapKitView.addAnnotation(newAnnotation)
       }

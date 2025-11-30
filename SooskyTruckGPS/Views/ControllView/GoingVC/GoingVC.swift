@@ -408,7 +408,7 @@ class GoingVC: BaseViewController {
           title: "My Location",
           subtitle: nil,
           type: "UserLocation",
-          id: "user_location"
+          id: "user_location", state: nil
         )
         self.userLocationAnnotation = userAnnotation
         self.mapView.addAnnotation(userAnnotation)
@@ -538,6 +538,7 @@ class GoingVC: BaseViewController {
           existingAnnotation.subtitle = place.fullAddres
           existingAnnotation.type = place.type ?? "Location"
           existingAnnotation.id = place.id
+          existingAnnotation.state = place.state
         }
         
         // Luôn update icon (để đảm bảo icon được cập nhật khi state thay đổi)
@@ -555,7 +556,7 @@ class GoingVC: BaseViewController {
           title: place.address,
           subtitle: place.fullAddres,
           type: place.type ?? "Location",
-          id: place.id
+          id: place.id, state: place.state
         )
         mapView.addAnnotation(newAnnotation)
       }
@@ -610,6 +611,7 @@ class GoingVC: BaseViewController {
   
   // MARK: - Helper: Update icon cho annotation dựa trên state
   private func updateIconForAnnotation(annotationView: CustomAnnotationView, place: Place) {
+    annotationView.getPlace(with: place)
     // Chọn icon dựa vào state nếu có, nếu không thì dựa vào type
     if let state = place.state {
       // Hiển thị icon dựa trên state (true/false)
@@ -997,9 +999,11 @@ extension GoingVC: MKMapViewDelegate {
       if view == nil {
         view = CustomAnnotationView(annotation: customAnno, reuseIdentifier: identifier)
         view?.hideButton()
+        view?.showStateStackView()
       } else {
         view?.annotation = customAnno
         view?.hideButton()
+        view?.showStateStackView()
       }
       
       // Gán ID annotation
@@ -1169,7 +1173,9 @@ extension GoingVC {
     annotationView.configure(title: annotation.title ?? "", des: annotation.subtitle ?? "")
     
     // Kiểm tra xem đã có trong placeGroup chưa
-    let place = Place(id: annotation.id, address: annotation.title ?? "", fullAddres: annotation.subtitle ?? "", coordinate: annotation.coordinate, state: nil, type: annotation.type)
+    let place = Place(id: annotation.id, address: annotation.title ?? "", fullAddres: annotation.subtitle ?? "", coordinate: annotation.coordinate, state: annotation.state, type: annotation.type)
+    LogManager.show("annotation.state", annotation.state)
+    annotationView.getPlace(with: place)
     if PlaceManager.shared.goingExists(place) {
       annotationView.configureButton(title: "Remove Stop", icon: .icTrash)
     } else {
@@ -1212,7 +1218,7 @@ extension GoingVC: CLLocationManagerDelegate {
               title: "My Location",
               subtitle: nil,
               type: "UserLocation",
-              id: "user_location"
+              id: "user_location", state: nil
             )
             self.userLocationAnnotation = userAnnotation
             self.mapView.addAnnotation(userAnnotation)
@@ -1265,7 +1271,7 @@ extension GoingVC: CLLocationManagerDelegate {
         title: "My Location",
         subtitle: nil,
         type: "UserLocation",
-        id: "user_location"
+        id: "user_location", state: nil
       )
       userLocationAnnotation = userAnnotation
       mapView.addAnnotation(userAnnotation)

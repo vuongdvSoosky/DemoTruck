@@ -583,7 +583,7 @@ class TruckVC: BaseViewController {
           title: "My Location",
           subtitle: nil,
           type: "UserLocation",
-          id: "user_location"
+          id: "user_location", state: nil
         )
         self.userLocationAnnotation = userAnnotation
         self.mapView.addAnnotation(userAnnotation)
@@ -721,7 +721,7 @@ class TruckVC: BaseViewController {
           title: place.address,
           subtitle: place.fullAddres,
           type: place.type ?? "Location",
-          id: place.id
+          id: place.id, state: place.state
         )
         mapView.addAnnotation(newAnnotation)
       }
@@ -762,7 +762,7 @@ class TruckVC: BaseViewController {
                                            title: place.address,
                                            subtitle: place.fullAddres,
                                            type: place.type ?? "Location",
-                                           id: place.id)
+                                           id: place.id, state: place.state)
       mapView.addAnnotation(newAnnotation)
     }
   }
@@ -1095,7 +1095,7 @@ extension TruckVC: UITextFieldDelegate {
         
         let subtitle = addressParts.isEmpty ? (placemark.title ?? "") : addressParts.joined(separator: ", ")
         
-        let annotation = CustomAnnotation(coordinate: coordinate, title: title, subtitle: subtitle, type: "Location", id: keyword)
+        let annotation = CustomAnnotation(coordinate: coordinate, title: title, subtitle: subtitle, type: "Location", id: keyword, state: nil)
         
         // Xoá annotation cũ nếu tồn tại
         if let existingAnnotation = self.mapView.annotations.first(where: {
@@ -1319,7 +1319,7 @@ extension TruckVC: UITableViewDelegate, UITableViewDataSource {
       title: title,
       subtitle: subtitle,
       type: "",
-      id: title
+      id: title, state: nil
     )
     
     let place = Place(address: title, fullAddres: subtitle, coordinate: coordinate, state: nil)
@@ -1623,7 +1623,7 @@ extension TruckVC {
         title: "My Location",
         subtitle: nil,
         type: "UserLocation",
-        id: "user_location"
+        id: "user_location", state: nil
       )
       userLocationAnnotation = userAnnotation
       mapView.addAnnotation(userAnnotation)
@@ -1703,7 +1703,7 @@ extension TruckVC: CLLocationManagerDelegate {
               title: "My Location",
               subtitle: nil,
               type: "UserLocation",
-              id: "user_location"
+              id: "user_location", state: nil
             )
             self.userLocationAnnotation = userAnnotation
             self.mapView.addAnnotation(userAnnotation)
