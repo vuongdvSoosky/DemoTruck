@@ -9,6 +9,7 @@ import UIKit
 import SnapKit
 import MapKit
 import Toast
+import CoreLocation
 
 class TruckVC: BaseViewController {
   // MARK: - UIView
@@ -21,6 +22,13 @@ class TruckVC: BaseViewController {
     let view = UIView()
     view.translatesAutoresizingMaskIntoConstraints = false
     view.backgroundColor = UIColor(rgb: 0x000000, alpha: 0.7)
+    view.isHidden = true
+    return view
+  }()
+  private lazy var fullScreenOverlayView: UIView = {
+    let view = UIView()
+    view.translatesAutoresizingMaskIntoConstraints = false
+    view.backgroundColor = UIColor(rgb: 0x000000, alpha: 1.0)
     view.isHidden = true
     return view
   }()
@@ -279,6 +287,16 @@ class TruckVC: BaseViewController {
   private var userMarker: DraggableAnnotation?
   private var trackingUser = false
   var userAnnotation: MKPointAnnotation?
+  private var userLocationAnnotation: CustomAnnotation?
+  private var isInitialLocationSet = false
+  private var lastUpdateLocation: CLLocation?
+  private var locationUpdateTimer: Timer?
+  private lazy var locationManager: CLLocationManager = {
+    let manager = CLLocationManager()
+    manager.delegate = self
+    manager.desiredAccuracy = kCLLocationAccuracyBest
+    return manager
+  }()
   
   var currentUserCoordinate: CLLocationCoordinate2D?
   
@@ -291,6 +309,25 @@ class TruckVC: BaseViewController {
     showTutorial()
     
     UserDefaultsManager.shared.set(true, key: .tutorial)
+  }
+  
+  override func viewWillAppear(_ animated: Bool) {
+    super.viewWillAppear(animated)
+    // Resume tracking nếu đã có location ban đầu
+    if isInitialLocationSet {
+      startTrackingUserLocation()
+    }
+  }
+  
+  override func viewWillDisappear(_ animated: Bool) {
+    super.viewWillDisappear(animated)
+    // Dừng tracking để tiết kiệm pin
+    stopTrackingUserLocation()
+  }
+  
+  override func viewDidDisappear(_ animated: Bool) {
+    super.viewDidDisappear(animated)
+    stopTrackingUserLocation()
   }
   
   private func showTutorial() {
@@ -307,6 +344,34 @@ class TruckVC: BaseViewController {
   
   func hideOverlay() {
     (self.tabBarController as? TabbarVC)?.hideOverlay()
+  }
+  
+  func showFullScreenOverlay() {
+    guard let window = view.window ?? UIApplication.shared.windows.first(where: { $0.isKeyWindow }) else {
+      // Nếu chưa có window, thêm vào tabBarController.view
+      if let tabBarController = tabBarController {
+        fullScreenOverlayView.removeFromSuperview()
+        tabBarController.view.addSubview(fullScreenOverlayView)
+        fullScreenOverlayView.snp.makeConstraints { make in
+          make.edges.equalToSuperview()
+        }
+        fullScreenOverlayView.isHidden = false
+      }
+      return
+    }
+    
+    // Thêm vào window để che toàn bộ màn hình
+    fullScreenOverlayView.removeFromSuperview()
+    window.addSubview(fullScreenOverlayView)
+    fullScreenOverlayView.snp.makeConstraints { make in
+      make.edges.equalToSuperview()
+    }
+    fullScreenOverlayView.isHidden = false
+  }
+  
+  func hideFullScreenOverlay() {
+    fullScreenOverlayView.isHidden = true
+    fullScreenOverlayView.removeFromSuperview()
   }
   
   override func addComponents() {
@@ -531,27 +596,39 @@ class TruckVC: BaseViewController {
       }
       .store(in: &subscriptions)
     
+    // Lấy location lần đầu và zoom map
     LocationService.shared.requestCurrentLocation { [weak self] location in
       guard let self = self else { return }
       
-      // 3. Xóa annotation cũ nếu có
-      self.mapView.annotations
-        .filter { $0 is MKPointAnnotation && $0.title == "My Location" }
-        .forEach { self.mapView.removeAnnotation($0) }
-      
-      // 4. Tạo annotation mới
-      let userAnnotation = MKPointAnnotation()
-      userAnnotation.coordinate = location.coordinate
-      userAnnotation.title = "My Location"
-      self.mapView.addAnnotation(userAnnotation)
-      
-      // 5. Zoom tới vị trí
-      let region = MKCoordinateRegion(
-        center: location.coordinate,
-        latitudinalMeters: 500,
-        longitudinalMeters: 500
-      )
-      self.mapView.setRegion(region, animated: true)
+      DispatchQueue.main.async {
+        // Xóa annotation cũ nếu có
+        self.removeUserLocationAnnotation()
+        
+        // Tạo CustomAnnotation cho user location
+        let userAnnotation = CustomAnnotation(
+          coordinate: location.coordinate,
+          title: "My Location",
+          subtitle: nil,
+          type: "UserLocation",
+          id: "user_location"
+        )
+        self.userLocationAnnotation = userAnnotation
+        self.mapView.addAnnotation(userAnnotation)
+        
+        // Chỉ zoom map lần đầu tiên
+        if !self.isInitialLocationSet {
+          let region = MKCoordinateRegion(
+            center: location.coordinate,
+            latitudinalMeters: 500,
+            longitudinalMeters: 500
+          )
+          self.mapView.setRegion(region, animated: true)
+          self.isInitialLocationSet = true
+        }
+        
+        // Bắt đầu theo dõi location updates liên tục
+        self.startTrackingUserLocation()
+      }
     }
   }
   
@@ -844,36 +921,110 @@ extension TruckVC: MKMapViewDelegate {
         switch custom.type {
         case "Location":
           view?.image = .icLocationStop
+          view?.centerOffset = CGPoint(x: 0, y: -5)
+        case "UserLocation":
+          // Custom image cho current location
+          view?.image = .icCurrentLocation
+          view?.centerOffset = CGPoint(x: 0, y: 0)
         default:
           view?.image = .icLocationEmpty
+          view?.centerOffset = CGPoint(x: 0, y: -5)
         }
-        view?.centerOffset = CGPoint(x: 0, y: -5)
         return view
       }
     } else {
-      // MARK: - CustomAnnotation
-      if let customAnno = annotation as? CustomAnnotation {
-        self.currentAnnotation = customAnno
-        let identifier = customAnno.identifier
-        var view = mapView.dequeueReusableAnnotationView(withIdentifier: identifier) as? CustomAnnotationView
+    // MARK: - CustomAnnotation
+    if let customAnno = annotation as? CustomAnnotation {
+      // Xử lý riêng cho UserLocation với MKAnnotationView đơn giản
+      if customAnno.type == "UserLocation" {
+        let identifier = "UserLocationMarker"
+        var view = mapView.dequeueReusableAnnotationView(withIdentifier: identifier)
         
         if view == nil {
-          view = CustomAnnotationView(annotation: customAnno, reuseIdentifier: identifier)
-          view?.delegate = self
+          view = MKAnnotationView(annotation: customAnno, reuseIdentifier: identifier)
+          view?.canShowCallout = false
         } else {
           view?.annotation = customAnno
         }
         
-        // Gán ID annotation
-        view?.annotationID = customAnno.id
-        
-        // Configure tooltip đúng dữ liệu của annotation hiện tại
-        view?.configure(title: customAnno.title ?? "", des: customAnno.subtitle ?? "")
-        
-        // Chọn icon dựa vào type
-        switch customAnno.type {
-        case "Location":
-          view?.image = .icLocationStop
+        view?.image = .icCurrentLocation
+        view?.centerOffset = CGPoint(x: 0, y: 0)
+        return view
+      }
+      
+      // Xử lý các CustomAnnotation khác
+      self.currentAnnotation = customAnno
+      let identifier = customAnno.identifier
+      var view = mapView.dequeueReusableAnnotationView(withIdentifier: identifier) as? CustomAnnotationView
+      
+      if view == nil {
+        view = CustomAnnotationView(annotation: customAnno, reuseIdentifier: identifier)
+        view?.delegate = self
+      } else {
+        view?.annotation = customAnno
+      }
+      
+      // Gán ID annotation
+      view?.annotationID = customAnno.id
+      
+      // Configure tooltip đúng dữ liệu của annotation hiện tại
+      view?.configure(title: customAnno.title ?? "", des: customAnno.subtitle ?? "")
+      
+      // Chọn icon dựa vào type
+      switch customAnno.type {
+      case "Location":
+        view?.image = .icLocationStop
+      case "Gas Station":
+        view?.image = .icPinGas
+      case "Bank":
+        view?.image = .icPinBank
+      case "Car Wash":
+        view?.image = .icPinCarWash
+      case "Pharmacy":
+        view?.image = .icPinPharmacy
+      case "Fast Food":
+        view?.image = .icPinFastFood
+      default:
+        view?.image = .icLocationEmpty
+      }
+      // Ẩn tooltip mặc định (chỉ hiển thị khi tap)
+      view?.hideTooltip()
+      
+      // Tap gesture
+      if view?.gestureRecognizers?.isEmpty ?? true {
+        let tap = UITapGestureRecognizer(target: self, action: #selector(annotationTapped(_:)))
+        view?.addGestureRecognizer(tap)
+      }
+      
+      return view
+    }
+    
+    // MARK: - CustomServiceAnimation
+    else if let customService = annotation as? CustomServiceAnimation {
+      let identifier = customService.identifier
+      var view = mapView.dequeueReusableAnnotationView(withIdentifier: identifier) as? CustomAnnotationView
+      
+      if view == nil {
+        view = CustomAnnotationView(annotation: customService, reuseIdentifier: identifier)
+        view?.delegate = self
+      } else {
+        view?.annotation = customService
+      }
+      
+      // Gán ID annotation
+      view?.annotationID = customService.id
+      
+      // Configure tooltip đúng dữ liệu của annotation hiện tại
+      view?.configure(title: customService.title ?? "", des: customService.subtitle ?? "")
+      
+      // Kiểm tra xem service đã được thêm vào placeGroup chưa
+      let place = Place(id: customService.id, address: customService.title ?? "", fullAddres: customService.subtitle ?? "", coordinate: customService.coordinate, state: nil, type: customService.type)
+        let isInPlaceGroup = PlaceManager.shared.exists(place)
+      
+      // Chọn icon: nếu chưa thêm vào placeGroup → icLocationEmpty, nếu đã thêm → icon theo type
+      if isInPlaceGroup {
+        // Đã thêm vào placeGroup → hiển thị icon theo type
+        switch customService.type {
         case "Gas Station":
           view?.image = .icPinGas
         case "Bank":
@@ -885,87 +1036,24 @@ extension TruckVC: MKMapViewDelegate {
         case "Fast Food":
           view?.image = .icPinFastFood
         default:
-          view?.image = .icLocationEmpty
+          view?.image = .icPinBlank
         }
-        // Ẩn tooltip mặc định (chỉ hiển thị khi tap)
-        view?.hideTooltip()
-        
-        // Tap gesture
-        if view?.gestureRecognizers?.isEmpty ?? true {
-          let tap = UITapGestureRecognizer(target: self, action: #selector(annotationTapped(_:)))
-          view?.addGestureRecognizer(tap)
-        }
-        
-        return view
+      } else {
+        // Chưa thêm vào placeGroup → hiển thị icLocationEmpty
+        view?.image = .icLocationEmpty
       }
       
-      // MARK: - CustomServiceAnimation
-      else if let customService = annotation as? CustomServiceAnimation {
-        let identifier = customService.identifier
-        var view = mapView.dequeueReusableAnnotationView(withIdentifier: identifier) as? CustomAnnotationView
-        
-        if view == nil {
-          view = CustomAnnotationView(annotation: customService, reuseIdentifier: identifier)
-          view?.delegate = self
-        } else {
-          view?.annotation = customService
-        }
-        
-        // Gán ID annotation
-        view?.annotationID = customService.id
-        
-        // Configure tooltip đúng dữ liệu của annotation hiện tại
-        view?.configure(title: customService.title ?? "", des: customService.subtitle ?? "")
-        
-        // Kiểm tra xem service đã được thêm vào placeGroup chưa
-        let place = Place(id: customService.id, address: customService.title ?? "", fullAddres: customService.subtitle ?? "", coordinate: customService.coordinate, state: nil, type: customService.type)
-        let isInPlaceGroup = PlaceManager.shared.exists(place)
-        
-        // Chọn icon: nếu chưa thêm vào placeGroup → icLocationEmpty, nếu đã thêm → icon theo type
-        if isInPlaceGroup {
-          // Đã thêm vào placeGroup → hiển thị icon theo type
-          switch customService.type {
-          case "Gas Station":
-            view?.image = .icPinGas
-          case "Bank":
-            view?.image = .icPinBank
-          case "Car Wash":
-            view?.image = .icPinCarWash
-          case "Pharmacy":
-            view?.image = .icPinPharmacy
-          case "Fast Food":
-            view?.image = .icPinFastFood
-          default:
-            view?.image = .icPinBlank
-          }
-        } else {
-          // Chưa thêm vào placeGroup → hiển thị icLocationEmpty
-          view?.image = .icLocationEmpty
-        }
-        
-        // Ẩn tooltip mặc định (chỉ hiển thị khi tap)
-        view?.hideTooltip()
-        
-        // Tap gesture để hiển thị tooltip
-        if view?.gestureRecognizers?.isEmpty ?? true {
-          let tap = UITapGestureRecognizer(target: self, action: #selector(annotationTapped(_:)))
-          view?.addGestureRecognizer(tap)
-        }
-        
-        return view
-      } else {
-        guard annotation.title == "My Location" else { return nil }
-        
-        let identifier = "UserLocationMarker"
-        var view = mapView.dequeueReusableAnnotationView(withIdentifier: identifier)
-        
-        view = MKAnnotationView(annotation: annotation, reuseIdentifier: identifier)
-        view?.image = .icCurrentLocation
-        view?.centerOffset = CGPoint(x: 0, y: -20)
-        view?.canShowCallout = false
-        view?.annotation = annotation
-        
+      // Ẩn tooltip mặc định (chỉ hiển thị khi tap)
+      view?.hideTooltip()
+      
+      // Tap gesture để hiển thị tooltip
+      if view?.gestureRecognizers?.isEmpty ?? true {
+        let tap = UITapGestureRecognizer(target: self, action: #selector(annotationTapped(_:)))
+        view?.addGestureRecognizer(tap)
       }
+      
+      return view
+    }
     }
     return nil
   }
@@ -980,6 +1068,7 @@ extension TruckVC: UITextFieldDelegate {
         iconTutorialSearch.isHidden = false
       }
       iconRemoveText.isHidden = true
+      searchResults.removeAll()
       return
     }
     
@@ -991,96 +1080,85 @@ extension TruckVC: UITextFieldDelegate {
     searchManager.query = text
   }
   
-  //  @objc private func textFieldDidChange(_ textField: UITextField) {
-  //    guard let text = textField.text, !text.isEmpty else {
-  //      searchResults.removeAll()
-  //      tableView.reloadData()
-  //      tableView.isHidden = true
-  //      return
-  //    }
-  //    searchManager.query = text
-  //  }
+  func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+    textField.resignFirstResponder()
+    guard let keyword = textField.text, !keyword.isEmpty else { return true }
+      tableContainer.isHidden = true
+    
+    let request = MKLocalSearch.Request()
+    request.naturalLanguageQuery = keyword
+    let search = MKLocalSearch(request: request)
+    request.region = mapView.region
+    
+    search.start { [weak self] response, error in
+      guard let self = self,
+            let mapItem = response?.mapItems.first else { return }
+      
+      let coordinate = mapItem.placemark.coordinate
+      DispatchQueue.main.async {
+        let region = MKCoordinateRegion(
+          center: coordinate,
+          latitudinalMeters: 200,
+          longitudinalMeters: 200
+        )
+        self.mapView.setRegion(region, animated: true)
+        
+        // Lấy thông tin đầy đủ từ mapItem giống như tableView
+        let placemark = mapItem.placemark
+        let title = mapItem.name ?? keyword
+        
+        // Format địa chỉ đầy đủ từ placemark
+        var addressParts: [String] = []
+        
+        if let city = placemark.locality {
+          addressParts.append(city)
+        }
+        if let state = placemark.administrativeArea {
+          addressParts.append(state)
+        }
+        
+        if let country = placemark.country {
+          addressParts.append(country)
+        }
+        
+        let subtitle = addressParts.isEmpty ? (placemark.title ?? "") : addressParts.joined(separator: ", ")
+        
+          let annotation = CustomAnnotation(coordinate: coordinate, title: title, subtitle: subtitle, type: "Location", id: keyword)
   
-  //  func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-  //    textField.resignFirstResponder()
-  //    guard let keyword = textField.text, !keyword.isEmpty else { return true }
-  //    tableContainer.isHidden = true
-  //    // noFindAddressView.isHidden = true
-  //
-  //    let request = MKLocalSearch.Request()
-  //    request.naturalLanguageQuery = keyword
-  //    let search = MKLocalSearch(request: request)
-  //    request.region = mapView.region
-  //
-  //    search.start { [weak self] response, error in
-  //      guard let self = self,
-  //            let mapItem = response?.mapItems.first else { return }
-  //
-  //      let coordinate = mapItem.placemark.coordinate
-  //      DispatchQueue.main.async {
-  //        let region = MKCoordinateRegion(
-  //          center: coordinate,
-  //          latitudinalMeters: 200,
-  //          longitudinalMeters: 200
-  //        )
-  //        self.mapView.setRegion(region, animated: true)
-  //
-  //        // Lấy thông tin đầy đủ từ mapItem giống như tableView
-  //        let placemark = mapItem.placemark
-  //        let title = mapItem.name ?? keyword
-  //
-  //        // Format địa chỉ đầy đủ từ placemark
-  //        var addressParts: [String] = []
-  //
-  //        if let city = placemark.locality {
-  //          addressParts.append(city)
-  //        }
-  //        if let state = placemark.administrativeArea {
-  //          addressParts.append(state)
-  //        }
-  //
-  //        if let country = placemark.country {
-  //          addressParts.append(country)
-  //        }
-  //
-  //        let subtitle = addressParts.isEmpty ? (placemark.title ?? "") : addressParts.joined(separator: ", ")
-  //
-  //        let annotation = CustomAnnotation(coordinate: coordinate, title: title, subtitle: subtitle, type: "Location", id: keyword)
-  //
-  //        // Xoá annotation cũ nếu tồn tại
-  //        if let existingAnnotation = self.mapView.annotations.first(where: {
-  //          guard let ann = $0 as? CustomAnnotation else { return false }
-  //          return ann.id == keyword
-  //        }) as? CustomAnnotation {
-  //          self.mapView.removeAnnotation(existingAnnotation)
-  //        }
-  //
-  //        let place = Place(address: title, fullAddres: subtitle , coordinate: coordinate, state: nil)
-  //
-  //        if PlaceManager.shared.exists(place) {
-  //          annotation.type = "Location"
-  //        } else {
-  //          annotation.type = ""
-  //        }
-  //
-  //        self.mapView.addAnnotation(annotation)
-  //
-  //        if !UserDefaultsManager.shared.get(of: Bool.self, key: .tutorial) {
-  //          self.currentPlace = Place(address: title, fullAddres: subtitle , coordinate: coordinate, state: nil)
-  //          self.desAdress = subtitle
-  //          self.address = title
-  //          self.currentCalloutView.configureButton(title: "Add Stop", icon: .icPlus)
-  //          self.showCalloutAnimated()
-  //        } else {
-  //          // Hiển thị tooltip sau khi tìm kiếm
-  //          DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-  //            self.showTooltipForAnnotation(annotation)
-  //          }
-  //        }
-  //      }
-  //    }
-  //    return true
-  //  }
+          // Xoá annotation cũ nếu tồn tại
+          if let existingAnnotation = self.mapView.annotations.first(where: {
+            guard let ann = $0 as? CustomAnnotation else { return false }
+            return ann.id == keyword
+          }) as? CustomAnnotation {
+            self.mapView.removeAnnotation(existingAnnotation)
+          }
+  
+          let place = Place(address: title, fullAddres: subtitle , coordinate: coordinate, state: nil)
+  
+          if PlaceManager.shared.exists(place) {
+            annotation.type = "Location"
+          } else {
+            annotation.type = ""
+          }
+  
+        self.mapView.addAnnotation(annotation)
+        
+          if !UserDefaultsManager.shared.get(of: Bool.self, key: .tutorial) {
+            self.currentPlace = Place(address: title, fullAddres: subtitle , coordinate: coordinate, state: nil)
+            self.desAdress = subtitle
+            self.address = title
+            self.currentCalloutView.configureButton(title: "Add Stop", icon: .icPlus)
+            self.showCalloutAnimated()
+          } else {
+        // Hiển thị tooltip sau khi tìm kiếm
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+          self.showTooltipForAnnotation(annotation)
+            }
+        }
+      }
+    }
+    return true
+  }
 }
 
 // MARK: - Action
@@ -1166,10 +1244,10 @@ extension TruckVC: UITableViewDelegate, UITableViewDataSource {
     let item = searchResults[indexPath.row]
     switch item {
     case .suggestion(let data):
-      let cell = tableView.dequeueReusableCell(HomeSearchCell.self, for: indexPath)
-      cell.backgroundColor = .white
-      cell.selectionStyle = .none
-      cell.configData(data: data)
+    let cell = tableView.dequeueReusableCell(HomeSearchCell.self, for: indexPath)
+    cell.backgroundColor = .white
+    cell.selectionStyle = .none
+    cell.configData(data: data)
       return cell
       
     case .manual(let title):
@@ -1178,7 +1256,7 @@ extension TruckVC: UITableViewDelegate, UITableViewDataSource {
       return cell
     case .userLocation(title: _, subtitle: _, coordinate: _):
       let cell = tableView.dequeueReusableCell(CurrentLocationCell.self, for: indexPath)
-      return cell
+    return cell
     }
   }
   
@@ -1247,11 +1325,7 @@ extension TruckVC: UITableViewDelegate, UITableViewDataSource {
       }
       
       let placemarkTitle = firstItem.placemark.title ?? ""
-      
-      // Optional: kiểm tra title có liên quan đến query
-      guard placemarkTitle.lowercased().contains(query.lowercased()) else {
-        return
-      }
+    
       
       let coordinate = firstItem.placemark.coordinate
       let resolvedSubtitle = subtitle ?? placemarkTitle
@@ -1264,7 +1338,7 @@ extension TruckVC: UITableViewDelegate, UITableViewDataSource {
   
   private func handleLocationSelection(title: String, subtitle: String, coordinate: CLLocationCoordinate2D) {
     let region = MKCoordinateRegion(center: coordinate,
-                                    latitudinalMeters: 200,
+          latitudinalMeters: 200,
                                     longitudinalMeters: 200)
     
     mapView.setRegion(region, animated: true)
@@ -1290,8 +1364,8 @@ extension TruckVC: UITableViewDelegate, UITableViewDataSource {
       currentCalloutView.configureButton(title: "Add Stop", icon: .icPlus)
       showCalloutAnimated()
     } else {
-      DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-        self.showTooltipForAnnotation(annotation)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+          self.showTooltipForAnnotation(annotation)
       }
     }
   }
@@ -1338,10 +1412,10 @@ extension TruckVC: UICollectionViewDelegate {
     } else {
       // Chọn ô mới
       let item = ServiceType.allCases[indexPath.item]
-      self.searchNearby(with: item.name, type: item.title)
-      self.currentQuery = item.name
-      self.currentType = item.title
-      viewModel.action.send(.getIndex(int: indexPath.row))
+    self.searchNearby(with: item.name, type: item.title)
+    self.currentQuery = item.name
+    self.currentType = item.title
+    viewModel.action.send(.getIndex(int: indexPath.row))
     }
     
     collectionView.reloadData()
@@ -1515,5 +1589,156 @@ extension TruckVC {
       }
       mapView.isUserInteractionEnabled = false
     })
+  }
+  
+  // MARK: - User Location Tracking
+  private func removeUserLocationAnnotation() {
+    // Xóa annotation cũ nếu có
+    if let existingAnnotation = userLocationAnnotation {
+      mapView.removeAnnotation(existingAnnotation)
+      userLocationAnnotation = nil
+    }
+    
+    // Xóa tất cả annotations có id "user_location" hoặc title "My Location"
+    let annotationsToRemove = mapView.annotations.filter { annotation in
+      if let customAnn = annotation as? CustomAnnotation {
+        return customAnn.id == "user_location" || customAnn.type == "UserLocation"
+      }
+      return annotation.title == "My Location"
+    }
+    mapView.removeAnnotations(annotationsToRemove)
+  }
+  
+  private func startTrackingUserLocation() {
+    let authStatus = locationManager.authorizationStatus
+    switch authStatus {
+    case .notDetermined:
+      locationManager.requestWhenInUseAuthorization()
+    case .authorizedWhenInUse, .authorizedAlways:
+      locationManager.startUpdatingLocation()
+    default:
+      break
+    }
+  }
+  
+  private func stopTrackingUserLocation() {
+    locationManager.stopUpdatingLocation()
+    locationUpdateTimer?.invalidate()
+    locationUpdateTimer = nil
+  }
+  
+  private func updateUserLocationAnnotation(coordinate: CLLocationCoordinate2D) {
+    guard let annotation = userLocationAnnotation else {
+      // Nếu không có annotation, tạo mới
+      let userAnnotation = CustomAnnotation(
+        coordinate: coordinate,
+        title: "My Location",
+        subtitle: nil,
+        type: "UserLocation",
+        id: "user_location"
+      )
+      userLocationAnnotation = userAnnotation
+      mapView.addAnnotation(userAnnotation)
+      return
+    }
+    
+    // Debounce: Hủy timer cũ nếu có
+    locationUpdateTimer?.invalidate()
+    
+    // Tạo timer mới để update sau 0.5 giây
+    locationUpdateTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { [weak self] _ in
+      guard let self = self, let annotation = self.userLocationAnnotation else { return }
+      
+      // Kiểm tra xem location có thay đổi đáng kể không (ít nhất 3m)
+      if let lastLocation = self.lastUpdateLocation {
+        let distance = CLLocation(latitude: lastLocation.coordinate.latitude, longitude: lastLocation.coordinate.longitude)
+          .distance(from: CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude))
+        
+        // Chỉ update nếu di chuyển ít nhất 3 mét
+        if distance < 3 {
+          return
+        }
+      }
+      
+      // Đảm bảo chỉ có một annotation: xóa tất cả annotations có id "user_location" trước
+      let annotationsToRemove = self.mapView.annotations.filter { ann in
+        if let customAnn = ann as? CustomAnnotation {
+          return customAnn.id == "user_location" && ann !== annotation
+        }
+        return false
+      }
+      if !annotationsToRemove.isEmpty {
+        self.mapView.removeAnnotations(annotationsToRemove)
+      }
+      
+      // Cập nhật coordinate và remove/add lại annotation để MapKit cập nhật vị trí
+      annotation.coordinate = coordinate
+      self.mapView.removeAnnotation(annotation)
+      self.mapView.addAnnotation(annotation)
+      
+      self.lastUpdateLocation = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+    }
+  }
+}
+
+// MARK: - CLLocationManagerDelegate
+extension TruckVC: CLLocationManagerDelegate {
+  func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+    guard let location = locations.last else { return }
+    
+    DispatchQueue.main.async { [weak self] in
+      guard let self = self else { return }
+      
+      // Cập nhật annotation mà không di chuyển map
+      self.updateUserLocationAnnotation(coordinate: location.coordinate)
+      self.currentUserCoordinate = location.coordinate
+    }
+  }
+  
+  func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+    LogManager.show("Location update error: \(error.localizedDescription)")
+  }
+  
+  func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
+    switch status {
+    case .authorizedWhenInUse, .authorizedAlways:
+      if !isInitialLocationSet {
+        // Nếu chưa có location ban đầu, lấy location
+        LocationService.shared.requestCurrentLocation { [weak self] location in
+          guard let self = self else { return }
+          DispatchQueue.main.async {
+            // Xóa annotation cũ nếu có
+            self.removeUserLocationAnnotation()
+            
+            let userAnnotation = CustomAnnotation(
+              coordinate: location.coordinate,
+              title: "My Location",
+              subtitle: nil,
+              type: "UserLocation",
+              id: "user_location"
+            )
+            self.userLocationAnnotation = userAnnotation
+            self.mapView.addAnnotation(userAnnotation)
+            
+            if !self.isInitialLocationSet {
+              let region = MKCoordinateRegion(
+                center: location.coordinate,
+                latitudinalMeters: 500,
+                longitudinalMeters: 500
+              )
+              self.mapView.setRegion(region, animated: true)
+              self.isInitialLocationSet = true
+            }
+            
+            self.startTrackingUserLocation()
+          }
+        }
+      } else {
+        // Nếu đã có location, tiếp tục theo dõi
+        startTrackingUserLocation()
+      }
+    default:
+      break
+    }
   }
 }

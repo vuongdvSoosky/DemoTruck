@@ -150,6 +150,9 @@ class EditGoingVC: BaseViewController {
   var currentTooltipID: String?
   private var isUpdatingAnnotations = false
   private var lastPlaceIds: Set<String?> = []
+  private var searchManager: LocationSearchManager!
+  private var userLocationAnnotation: CustomAnnotation?
+  private var searchResults: [SearchItem] = []
   
   private lazy var searchTextField: UITextField = {
     let textField = UITextField()
@@ -202,18 +205,43 @@ class EditGoingVC: BaseViewController {
   private var searchDelayTimer: Timer?
   private var currentAnnotation: CustomAnnotation?
   
+  private var isInitialLocationSet = false
+  private var lastUpdateLocation: CLLocation?
+  private var locationUpdateTimer: Timer?
+  private lazy var locationManager: CLLocationManager = {
+    let manager = CLLocationManager()
+    manager.delegate = self
+    manager.desiredAccuracy = kCLLocationAccuracyBest
+    return manager
+  }()
+  
+  var currentUserCoordinate: CLLocationCoordinate2D?
+  
   private var viewModel = EditGoingVM()
   
   override func viewDidLoad() {
     super.viewDidLoad()
     setupMap()
     setupTableView()
-    setupSearchCompleter()
-    
     PlaceManager.shared.setStateGoing(with: true)
+  }
+  
+  override func viewWillAppear(_ animated: Bool) {
+    super.viewWillAppear(animated)
+    // Resume tracking nếu đã có location ban đầu
+    if isInitialLocationSet {
+      startTrackingUserLocation()
+    }
+  }
+  
+  override func viewWillDisappear(_ animated: Bool) {
+    super.viewWillDisappear(animated)
+    // Dừng tracking để tiết kiệm pin
+    stopTrackingUserLocation()
   }
 
   override func setProperties() {
+    searchManager = LocationSearchManager()
     searchTextField.delegate = self
     searchTextField.addTarget(self, action: #selector(textFieldDidChange(_:)), for: .editingChanged)
     let tapGesture = UITapGestureRecognizer(target: self, action: #selector(onTapCloseCalloutView(_:)))
@@ -228,6 +256,7 @@ class EditGoingVC: BaseViewController {
   private func setupMap() {
     MapManager.shared.attachMap(to: mapView)
     mapView.delegate = self
+    mapView.showsUserLocation = false
     // Lấy vị trí hiện tại và hiển thị dịch vụ xung quanh
 //    MapManager.shared.requestUserLocation { [weak self] location in
 //      guard let self = self, let location = location else { return }
@@ -286,16 +315,76 @@ class EditGoingVC: BaseViewController {
         }
       }.store(in: &subscriptions)
     
-    viewModel.searchSuggestions
-      .sink { [weak self] _ in
-        self?.tableView.reloadData()
-        self?.updateTableHeight()
+    searchManager.$results
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] results in
+        guard let self else {
+          return
+        }
+        searchResults = results
+        LogManager.show(results.count)
+        updateTableHeight()
+        tableView.reloadData()
+        tableView.isHidden = results.isEmpty
       }
       .store(in: &subscriptions)
+    
+    // Lấy location lần đầu và zoom map
+    LocationService.shared.requestCurrentLocation { [weak self] location in
+      guard let self = self else { return }
+      
+      DispatchQueue.main.async {
+        // Xóa annotation cũ nếu có
+        self.removeUserLocationAnnotation()
+        
+        // Tạo CustomAnnotation cho user location
+        let userAnnotation = CustomAnnotation(
+          coordinate: location.coordinate,
+          title: "My Location",
+          subtitle: nil,
+          type: "UserLocation",
+          id: "user_location"
+        )
+        self.userLocationAnnotation = userAnnotation
+        self.mapView.addAnnotation(userAnnotation)
+        
+        // Chỉ zoom map lần đầu tiên
+        if !self.isInitialLocationSet {
+          let region = MKCoordinateRegion(
+            center: location.coordinate,
+            latitudinalMeters: 500,
+            longitudinalMeters: 500
+          )
+          self.mapView.setRegion(region, animated: true)
+          self.isInitialLocationSet = true
+        }
+        
+        // Bắt đầu theo dõi location updates liên tục
+        self.startTrackingUserLocation()
+      }
+    }
+  }
+  
+  // MARK: - User Location Tracking
+  private func removeUserLocationAnnotation() {
+    // Xóa annotation cũ nếu có
+    if let existingAnnotation = userLocationAnnotation {
+      mapView.removeAnnotation(existingAnnotation)
+      userLocationAnnotation = nil
+    }
+    
+    // Xóa tất cả annotations có id "user_location" hoặc title "My Location"
+    let annotationsToRemove = mapView.annotations.filter { annotation in
+      if let customAnn = annotation as? CustomAnnotation {
+        return customAnn.id == "user_location" || customAnn.type == "UserLocation"
+      }
+      return annotation.title == "My Location"
+    }
+    mapView.removeAnnotations(annotationsToRemove)
   }
   
   func updateTableHeight() {
-    let count = viewModel.searchSuggestions.value.count
+    let count = searchResults.count
     let height: CGFloat
     
     if count >= 4 {
@@ -311,6 +400,24 @@ class EditGoingVC: BaseViewController {
     UIView.animate(withDuration: 0.1) {
       self.view.layoutIfNeeded()
     }
+  }
+  
+  private func startTrackingUserLocation() {
+    let authStatus = locationManager.authorizationStatus
+    switch authStatus {
+    case .notDetermined:
+      locationManager.requestWhenInUseAuthorization()
+    case .authorizedWhenInUse, .authorizedAlways:
+      locationManager.startUpdatingLocation()
+    default:
+      break
+    }
+  }
+  
+  private func stopTrackingUserLocation() {
+    locationManager.stopUpdatingLocation()
+    locationUpdateTimer?.invalidate()
+    locationUpdateTimer = nil
   }
   
   // MARK: - Helper: Cập nhật icon của service annotations dựa trên placeGroup
@@ -433,11 +540,6 @@ class EditGoingVC: BaseViewController {
     tableView.clipsToBounds = true
     tableView.layer.cornerRadius = 12
     tableView.layer.masksToBounds = true
-  }
-  private func setupSearchCompleter() {
-    viewModel.searchCompleter.delegate = self
-    viewModel.searchCompleter.region = MKCoordinateRegion()
-    viewModel.searchCompleter.resultTypes = .address
   }
   
   override func addComponents() {
@@ -596,6 +698,23 @@ extension EditGoingVC: MKMapViewDelegate {
     
     // MARK: - CustomAnnotation
     if let customAnno = annotation as? CustomAnnotation {
+      // Xử lý riêng cho UserLocation với MKAnnotationView đơn giản
+      if customAnno.type == "UserLocation" {
+        let identifier = "UserLocationMarker"
+        var view = mapView.dequeueReusableAnnotationView(withIdentifier: identifier)
+        
+        if view == nil {
+          view = MKAnnotationView(annotation: customAnno, reuseIdentifier: identifier)
+          view?.canShowCallout = false
+        } else {
+          view?.annotation = customAnno
+        }
+        
+        view?.image = .icCurrentLocation
+        view?.centerOffset = CGPoint(x: 0, y: 0)
+        return view
+      }
+      
       self.currentAnnotation = customAnno
       let identifier = customAnno.identifier
       var view = mapView.dequeueReusableAnnotationView(withIdentifier: identifier) as? CustomAnnotationView
@@ -744,15 +863,15 @@ extension EditGoingVC: MKMapViewDelegate {
 // MARK: UITextFieldDelegate
 extension EditGoingVC: UITextFieldDelegate {
   @objc private func textFieldDidChange(_ textField: UITextField) {
-    guard let text = textField.text else {
+    guard let text = textField.text, !text.isEmpty else {
       tableContainer.isHidden = true
-      viewModel.searchSuggestions.value.removeAll()
+      searchResults.removeAll()
       self.iconRemoveText.isHidden = true
       return
     }
     self.iconRemoveText.isHidden = false
     self.address = text
-    viewModel.searchCompleter.queryFragment = text
+    searchManager.query = text
     tableContainer.isHidden = false
   }
   
@@ -907,77 +1026,77 @@ extension EditGoingVC {
 // MARK: - UITableView
 extension EditGoingVC: UITableViewDelegate, UITableViewDataSource {
   func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-    return viewModel.searchSuggestions.value.count
+    return searchResults.count
   }
   
   func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-    let cell = tableView.dequeueReusableCell(CurrentLocationCell.self, for: indexPath)
-    return cell
-//    let item = viewModel.searchSuggestions.value[indexPath.row]
-//    switch item {
-//    case .userLocation(title: _, subtitle: _):
-//      let cell = tableView.dequeueReusableCell(CurrentLocationCell.self, for: indexPath)
-//      return cell
-//    case .suggestion(let data):
-//      let cell = tableView.dequeueReusableCell(HomeSearchCell.self, for: indexPath)
-//      cell.backgroundColor = .white
-//      cell.selectionStyle = .none
-//      cell.configData(data: data)
-//      return cell
-//    case .manual(title: let title):
-//      let cell = tableView.dequeueReusableCell(HomeSearchCell.self, for: indexPath)
-//      cell.configDataManual(data: title)
-//      return cell
-//    }
+    let item = searchResults[indexPath.row]
+    switch item {
+    case .suggestion(let data):
+      let cell = tableView.dequeueReusableCell(HomeSearchCell.self, for: indexPath)
+      cell.backgroundColor = .white
+      cell.selectionStyle = .none
+      cell.configData(data: data)
+      return cell
+    case .manual(title: let title):
+      let cell = tableView.dequeueReusableCell(HomeSearchCell.self, for: indexPath)
+      cell.configDataManual(data: title)
+      return cell
+    case .userLocation(title: let title, subtitle: let subtitle, coordinate: let coordinate):
+      let cell = tableView.dequeueReusableCell(CurrentLocationCell.self, for: indexPath)
+      return cell
+    }
   }
   
-//  func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-//    guard indexPath.row < viewModel.searchSuggestions.value.count else { return }
-//    let item = viewModel.searchSuggestions.value[indexPath.row]
-//    
-//    tableContainer.isHidden = true
-//    searchTextField.resignFirstResponder()
-//    
-//    switch item {
-//      // MARK: - USER LOCATION
-//    case .userLocation(_, _):
-//      MapManager.shared.requestUserLocation { [weak self] location in
-//        guard let self = self, let location = location else { return }
-//        
-//        let geocoder = CLGeocoder()
-//        geocoder.reverseGeocodeLocation(location) { placemarks, error in
-//          guard let placemark = placemarks?.first, error == nil else { return }
-//          
-//          let number = placemark.subThoroughfare ?? ""
-//          let street = placemark.thoroughfare ?? ""
-//          let city = placemark.locality ?? ""
-//          let state = placemark.administrativeArea ?? ""
-//          let country = placemark.country ?? ""
-//          
-//          let houseAddress = [number, street].filter { !$0.isEmpty }.joined(separator: " ")
-//          let fullAddress = [city, state, country].filter { !$0.isEmpty }.joined(separator: ", ")
-//          
-//          DispatchQueue.main.async {
-//            self.handleLocationSelection(
-//              title: houseAddress.isEmpty ? "My Location" : houseAddress,
-//              subtitle: fullAddress,
-//              coordinate: location.coordinate
-//            )
-//          }
-//        }
-//      }
-//      
-//      // MARK: - APPLE SUGGESTION
-//    case .suggestion(let dataSuggestion):
-//      searchTextField.text = dataSuggestion.title
-//      performSearch(query: dataSuggestion.title, subtitle: dataSuggestion.subtitle)
-//      
-//      // MARK: - MANUAL INPUT
-//    case .manual(let title):
-//      searchTextField.text = title
-//      performSearch(query: title, subtitle: nil)
-//    }
-//  }
+  func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+    guard indexPath.row < searchResults.count else { return }
+    let item = searchResults[indexPath.row]
+    
+    tableContainer.isHidden = true
+    searchTextField.resignFirstResponder()
+    
+    switch item {
+      // MARK: - APPLE SUGGESTION
+    case .suggestion(let dataSuggestion):
+      searchTextField.text = dataSuggestion.title
+      performSearch(query: dataSuggestion.title, subtitle: dataSuggestion.subtitle)
+      
+      // MARK: - MANUAL INPUT
+    case .manual(let title):
+      searchTextField.text = title
+      performSearch(query: title, subtitle: nil)
+      
+      // MARK: - USER LOCATION
+    case .userLocation(title: _, subtitle: _, coordinate: _):
+      LocationService.shared.requestCurrentLocation { [weak self] location in
+        guard let self else { return }
+        
+        let geocoder = CLGeocoder()
+        geocoder.reverseGeocodeLocation(location) { placemarks, error in
+          guard let placemark = placemarks?.first, error == nil else { return }
+          
+          let number = placemark.subThoroughfare ?? ""
+          let street = placemark.thoroughfare ?? ""
+          let city = placemark.locality ?? ""
+          let state = placemark.administrativeArea ?? ""
+          let country = placemark.country ?? ""
+          
+          let houseAddress = [number, street].filter { !$0.isEmpty }.joined(separator: " ")
+          let fullAddress = [city, state, country].filter { !$0.isEmpty }.joined(separator: ", ")
+          
+          DispatchQueue.main.async {
+            self.handleLocationSelection(
+              title: houseAddress.isEmpty ? "My Location" : houseAddress,
+              subtitle: fullAddress,
+              coordinate: location.coordinate
+            )
+          }
+        }
+      }
+      
+      break
+    }
+  }
   
   // MARK: - Perform MKLocalSearch and only act if real result exists
   private func performSearch(query: String, subtitle: String?) {
@@ -994,11 +1113,6 @@ extension EditGoingVC: UITableViewDelegate, UITableViewDataSource {
       }
       
       let placemarkTitle = firstItem.placemark.title ?? ""
-      
-      // Optional: kiểm tra title có liên quan đến query
-      guard placemarkTitle.lowercased().contains(query.lowercased()) else {
-        return
-      }
       
       let coordinate = firstItem.placemark.coordinate
       let resolvedSubtitle = subtitle ?? placemarkTitle
@@ -1035,54 +1149,6 @@ extension EditGoingVC: UITableViewDelegate, UITableViewDataSource {
   
   func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
     return 60
-  }
-}
-
-extension EditGoingVC: MKLocalSearchCompleterDelegate {
-  func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
-//    var items: [SearchItem] = []
-//    
-//    items.append(.userLocation(title: "My Location", subtitle: "Current Position"))
-//    
-//    let results = completer.results
-//    
-//    if results.isEmpty {
-//      items.append(.manual(title: completer.queryFragment))
-//    } else {
-//      items.append(contentsOf: results.map { SearchItem.suggestion($0) })
-//    }
-//    
-//    viewModel.searchSuggestions.value = items
-  }
-  
-  func completer(_ completer: MKLocalSearchCompleter, didFailWithError error: Error) {
-    LogManager.show("Completer error: \(error.localizedDescription)")
-  }
-}
-
-extension EditGoingVC {
-  func geocodeAndFormatAddress(_ address: String, completion: @escaping (String) -> Void) {
-    let geocoder = CLGeocoder()
-    geocoder.geocodeAddressString(address) { Placemarks, error in
-      guard let Place = Placemarks?.first else {
-        completion(address)
-        return
-      }
-      
-      let street = [Place.subThoroughfare, Place.thoroughfare].compactMap { $0 }.joined(separator: " ")
-      let city = Place.locality ?? ""
-      let state = Place.administrativeArea ?? ""
-      let zip = Place.postalCode ?? ""
-      let countryCode = Place.isoCountryCode ?? ""
-      
-      let formatted =
-      """
-      \(street)
-      \(city), \(state) \(zip)
-      \(countryCode)
-      """
-      completion(formatted)
-    }
   }
 }
 
@@ -1245,5 +1311,120 @@ extension EditGoingVC {
     
     // Zoom vào khu vực chứa tuyến đường
     mapView.setVisibleMapRect(polyline.boundingMapRect, edgePadding: UIEdgeInsets(top: 50, left: 20, bottom: 50, right: 20), animated: true)
+  }
+}
+
+// MARK: - CLLocationManagerDelegate
+extension EditGoingVC: CLLocationManagerDelegate {
+  func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+    guard let location = locations.last else { return }
+    
+    DispatchQueue.main.async { [weak self] in
+      guard let self = self else { return }
+      
+      // Cập nhật annotation mà không di chuyển map
+      self.updateUserLocationAnnotation(coordinate: location.coordinate)
+      self.currentUserCoordinate = location.coordinate
+    }
+  }
+  
+  func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+    LogManager.show("Location update error: \(error.localizedDescription)")
+  }
+  
+  func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
+    switch status {
+    case .authorizedWhenInUse, .authorizedAlways:
+      if !isInitialLocationSet {
+        // Nếu chưa có location ban đầu, lấy location
+        LocationService.shared.requestCurrentLocation { [weak self] location in
+          guard let self = self else { return }
+          DispatchQueue.main.async {
+            // Xóa annotation cũ nếu có
+            self.removeUserLocationAnnotation()
+            
+            let userAnnotation = CustomAnnotation(
+              coordinate: location.coordinate,
+              title: "My Location",
+              subtitle: nil,
+              type: "UserLocation",
+              id: "user_location"
+            )
+            self.userLocationAnnotation = userAnnotation
+            self.mapView.addAnnotation(userAnnotation)
+            
+            if !self.isInitialLocationSet {
+              let region = MKCoordinateRegion(
+                center: location.coordinate,
+                latitudinalMeters: 500,
+                longitudinalMeters: 500
+              )
+              self.mapView.setRegion(region, animated: true)
+              self.isInitialLocationSet = true
+            }
+            
+            self.startTrackingUserLocation()
+          }
+        }
+      } else {
+        // Nếu đã có location, tiếp tục theo dõi
+        startTrackingUserLocation()
+      }
+    default:
+      break
+    }
+  }
+  
+  private func updateUserLocationAnnotation(coordinate: CLLocationCoordinate2D) {
+    guard let annotation = userLocationAnnotation else {
+      // Nếu không có annotation, tạo mới
+      let userAnnotation = CustomAnnotation(
+        coordinate: coordinate,
+        title: "My Location",
+        subtitle: nil,
+        type: "UserLocation",
+        id: "user_location"
+      )
+      userLocationAnnotation = userAnnotation
+      mapView.addAnnotation(userAnnotation)
+      return
+    }
+    
+    // Debounce: Hủy timer cũ nếu có
+    locationUpdateTimer?.invalidate()
+    
+    // Tạo timer mới để update sau 0.5 giây
+    locationUpdateTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { [weak self] _ in
+      guard let self = self, let annotation = self.userLocationAnnotation else { return }
+      
+      // Kiểm tra xem location có thay đổi đáng kể không (ít nhất 3m)
+      if let lastLocation = self.lastUpdateLocation {
+        let distance = CLLocation(latitude: lastLocation.coordinate.latitude, longitude: lastLocation.coordinate.longitude)
+          .distance(from: CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude))
+        
+        // Chỉ update nếu di chuyển ít nhất 3 mét
+        if distance < 3 {
+          return
+        }
+      }
+      
+      // Đảm bảo chỉ có một annotation: xóa tất cả annotations có id "user_location" trước
+      let annotationsToRemove = self.mapView.annotations.filter { ann in
+        if let customAnn = ann as? CustomAnnotation {
+          return customAnn.id == "user_location" && ann !== annotation
+        }
+        return false
+      }
+      if !annotationsToRemove.isEmpty {
+        self.mapView.removeAnnotations(annotationsToRemove)
+      }
+      
+      // Cập nhật coordinate và remove/add lại annotation để MapKit cập nhật vị trí
+      annotation.coordinate = coordinate
+      self.mapView.removeAnnotation(annotation)
+      self.mapView.addAnnotation(annotation)
+      
+      self.lastUpdateLocation = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+    }
   }
 }

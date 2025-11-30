@@ -385,6 +385,7 @@ class GoingVC: BaseViewController {
   private func setupMapView() {
     MapManager.shared.attachMap(to: mapView)
     mapView.delegate = self
+    mapView.showsUserLocation = true
   }
   
   private func resetTrackingData() {

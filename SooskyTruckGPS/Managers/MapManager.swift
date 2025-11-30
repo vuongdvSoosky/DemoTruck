@@ -34,6 +34,7 @@ final class MapManager: NSObject {
   
   func attachMap(to mapView: MKMapView) {
     self.mapView = mapView
+    mapView.showsCompass = false
   }
   
   // MARK: - Center Map
