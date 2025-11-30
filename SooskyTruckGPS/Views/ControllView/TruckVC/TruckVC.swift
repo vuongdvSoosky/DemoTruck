@@ -144,19 +144,7 @@ class TruckVC: BaseViewController {
     }
     return view
   }()
-  
-  //  private lazy var noFindAddressView: NoFindAddressView = {
-  //    let view = NoFindAddressView()
-  //    view.translatesAutoresizingMaskIntoConstraints = false
-  //    view.isHidden = true
-  //    view.backgroundColor = .clear
-  //    view.layer.shadowColor = UIColor(rgb: 0x000000).cgColor
-  //    view.layer.shadowOpacity = 0.4
-  //    view.layer.shadowRadius = 8
-  //    view.layer.shadowOffset = CGSize(width: 0, height: 2)
-  //    return view
-  //  }()
-  
+
   private let tableContainer: UIView = {
     let view = UIView()
     view.backgroundColor = .clear
@@ -288,6 +276,9 @@ class TruckVC: BaseViewController {
   private var searchManager: LocationSearchManager!
   private var currentTooltipID: String?
   private var searchResults: [SearchItem] = []
+  private var userMarker: DraggableAnnotation?
+  private var trackingUser = false
+  var userAnnotation: MKPointAnnotation?
   
   var currentUserCoordinate: CLLocationCoordinate2D?
   
@@ -445,9 +436,8 @@ class TruckVC: BaseViewController {
   
   private func setupMap() {
     MapManager.shared.attachMap(to: mapView)
-    MapManager.shared.delegate = self
-//    mapView.delegate = self
-    MapManager.shared.startTrackingUser()
+ //   mapView.delegate = self
+   // MapManager.shared.startTrackingUser()
     // Lấy vị trí hiện tại và hiển thị dịch vụ xung quanh
     MapManager.shared.requestUserLocation { [weak self] location in
       self?.searchNearby()
@@ -940,6 +930,22 @@ extension TruckVC: MKMapViewDelegate {
         
         return view
       }
+      else {
+        guard annotation === userAnnotation else { return nil }
+        
+        let identifier = "UserLocationMarker"
+        var view = mapView.dequeueReusableAnnotationView(withIdentifier: identifier)
+        
+        if view == nil {
+          view = MKAnnotationView(annotation: annotation, reuseIdentifier: identifier)
+          view?.image = .icCurrentLocation
+          view?.centerOffset = CGPoint(x: 0, y: -20)
+          view?.canShowCallout = false
+        } else {
+          view?.annotation = annotation
+        }
+        return view
+      }
     }
     return nil
   }
@@ -947,27 +953,23 @@ extension TruckVC: MKMapViewDelegate {
 
 // MARK: UITextFieldDelegate
 extension TruckVC: UITextFieldDelegate {
-  //  @objc private func textFieldDidChange(_ textField: UITextField) {
-  //    guard let text = textField.text, !text.isEmpty else {
-  //      tableContainer.isHidden = true
-  //      //  noFindAddressView.isHidden = true
-  //      if UserDefaultsManager.shared.get(of: Bool.self, key: .tutorial) == false {
-  //        iconTutorialSearch.isHidden = false
-  //      }
-  //
-  ////      viewModel.searchSuggestions.value.removeAll()
-  //      iconRemoveText.isHidden = true
-  //      return
-  //    }
-  //
-  //    iconRemoveText.isHidden = false
-  //    self.address = text
-  ////    viewModel.searchCompleter.queryFragment = text
-  //    tableContainer.isHidden = false
-  //    iconTutorialSearch.isHidden = true
-  //
-  //    searchManager.query = text
-  //  }
+//    @objc private func textFieldDidChange(_ textField: UITextField) {
+//      guard let text = textField.text, !text.isEmpty else {
+//        tableContainer.isHidden = true
+//        if UserDefaultsManager.shared.get(of: Bool.self, key: .tutorial) == false {
+//          iconTutorialSearch.isHidden = false
+//        }
+//        iconRemoveText.isHidden = true
+//        return
+//      }
+//  
+//      iconRemoveText.isHidden = false
+//      self.address = text
+//      tableContainer.isHidden = false
+//      iconTutorialSearch.isHidden = true
+//  
+//      searchManager.query = text
+//    }
   
   @objc private func textFieldDidChange(_ textField: UITextField) {
     guard let text = textField.text, !text.isEmpty else {
@@ -1491,11 +1493,5 @@ extension TruckVC {
       }
       mapView.isUserInteractionEnabled = false
     })
-  }
-}
-
-extension TruckVC: MapManagerDelegate {
-  func currentMarkerDidMove(to coordinate: CLLocationCoordinate2D) {
-    LogManager.show(coordinate)
   }
 }

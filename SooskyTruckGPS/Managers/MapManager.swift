@@ -34,7 +34,7 @@ final class MapManager: NSObject {
   private func setupLocationManager() {
     locationManager.delegate = self
     locationManager.desiredAccuracy = kCLLocationAccuracyBest
-    locationManager.distanceFilter = 1
+  //  locationManager.distanceFilter = 1
   }
   
   // MARK: - Setup Map
@@ -44,7 +44,7 @@ final class MapManager: NSObject {
     //    mapView.showsUserLocation = true
     //    mapView.setUserTrackingMode(.followWithHeading, animated: true)
     //    mapView.showsCompass = false
-    mapView.delegate = self
+//    mapView.delegate = self
   }
   
   // MARK: - Request Location
@@ -316,37 +316,37 @@ extension MapManager {
 }
 
 // MARK: - MKMapViewDelegate
-extension MapManager: MKMapViewDelegate {
-  
-  func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
-    guard annotation === userAnnotation else { return nil }
-    
-    let identifier = "UserLocationMarker"
-    var view = mapView.dequeueReusableAnnotationView(withIdentifier: identifier)
-    
-    if view == nil {
-      view = MKAnnotationView(annotation: annotation, reuseIdentifier: identifier)
-      view?.image = .icCurrentLocation
-      view?.centerOffset = CGPoint(x: 0, y: -20)
-      view?.canShowCallout = false
-    } else {
-      view?.annotation = annotation
-    }
-    return view
-  }
-  
-  func mapView(_ mapView: MKMapView, annotationView view: MKAnnotationView,
-               didChange newState: MKAnnotationView.DragState,
-               fromOldState oldState: MKAnnotationView.DragState) {
-    
-    if newState == .ending || newState == .canceling {
-      view.dragState = .none
-      if let coord = view.annotation?.coordinate {
-        delegate?.currentMarkerDidMove(to: coord)
-      }
-    }
-  }
-}
+//extension MapManager: MKMapViewDelegate {
+//  
+//  func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
+//    guard annotation === userAnnotation else { return nil }
+//    
+//    let identifier = "UserLocationMarker"
+//    var view = mapView.dequeueReusableAnnotationView(withIdentifier: identifier)
+//    
+//    if view == nil {
+//      view = MKAnnotationView(annotation: annotation, reuseIdentifier: identifier)
+//      view?.image = .icCurrentLocation
+//      view?.centerOffset = CGPoint(x: 0, y: -20)
+//      view?.canShowCallout = false
+//    } else {
+//      view?.annotation = annotation
+//    }
+//    return view
+//  }
+//  
+//  func mapView(_ mapView: MKMapView, annotationView view: MKAnnotationView,
+//               didChange newState: MKAnnotationView.DragState,
+//               fromOldState oldState: MKAnnotationView.DragState) {
+//    
+//    if newState == .ending || newState == .canceling {
+//      view.dragState = .none
+//      if let coord = view.annotation?.coordinate {
+//        delegate?.currentMarkerDidMove(to: coord)
+//      }
+//    }
+//  }
+//}
 
 // MARK: - Draggable annotation model
 class DraggableAnnotation: NSObject, MKAnnotation {
@@ -358,14 +358,14 @@ class DraggableAnnotation: NSObject, MKAnnotation {
 }
 
 extension MapManager {
-  func startTrackingUser() {
-    trackingUser = true
-    locationManager.requestWhenInUseAuthorization()
-    locationManager.startUpdatingLocation()
-  }
-  
-  func stopTrackingUser() {
-    trackingUser = false
-    locationManager.stopUpdatingLocation()
-  }
+//  func startTrackingUser() {
+//    trackingUser = true
+//    locationManager.requestWhenInUseAuthorization()
+//    locationManager.startUpdatingLocation()
+//  }
+//  
+//  func stopTrackingUser() {
+//    trackingUser = false
+//    locationManager.stopUpdatingLocation()
+//  }
 }
