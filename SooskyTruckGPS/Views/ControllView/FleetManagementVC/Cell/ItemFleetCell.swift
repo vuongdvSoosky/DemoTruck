@@ -206,6 +206,7 @@ class ItemFleetCell: BaseCollectionViewCell {
     departureStackView.snp.makeConstraints { make in
       make.top.equalTo(dateLabel.snp.bottom).inset(-12)
       make.left.equalTo(iconTruck1.snp.right).inset(-8)
+      make.right.equalToSuperview().inset(8)
       make.height.equalTo(36)
     }
     
@@ -218,6 +219,7 @@ class ItemFleetCell: BaseCollectionViewCell {
     destinationStackView.snp.makeConstraints { make in
       make.top.equalTo(numberOfStop.snp.bottom).inset(-12)
       make.left.equalTo(iconTruck1.snp.right).inset(-8)
+      make.right.equalToSuperview().inset(8)
       make.height.equalTo(36)
       make.bottom.equalToSuperview().inset(12)
     }
