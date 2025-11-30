@@ -1,17 +1,17 @@
 {
   "images" : [
     {
-      "filename" : "Mark done horse.png",
+      "filename" : "truck premium.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "Mark done horse@2x.png",
+      "filename" : "truck premium@2x.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
-      "filename" : "Mark done horse@3x.png",
+      "filename" : "truck premium@3x.png",
       "idiom" : "universal",
       "scale" : "3x"
     }

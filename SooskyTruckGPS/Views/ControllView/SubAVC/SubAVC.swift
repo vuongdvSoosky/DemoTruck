@@ -11,20 +11,16 @@ class SubAVC: StoreManager {
   
   @IBOutlet private weak var subcribeLabel: UILabel!
   @IBOutlet private weak var yearlyLabel: UILabel!
-  @IBOutlet private weak var weeklyLabel: UILabel!
   @IBOutlet private weak var monthlyLabel: UILabel!
-  
   @IBOutlet private weak var termsLabel: UILabel!
   @IBOutlet private weak var restoreLabel: UILabel!
   @IBOutlet private weak var privacyLabel: UILabel!
   @IBOutlet private weak var contentLabel: UILabel!
   @IBOutlet private weak var yearlyView: UIView!
-  @IBOutlet private weak var weaklyView: UIView!
   @IBOutlet private weak var monthlyView: UIView!
   @IBOutlet var desLabel: [UILabel]!
   
   @IBOutlet weak var premiumLabel: UILabel!
-  @IBOutlet weak var weeklyPrice: UILabel!
   @IBOutlet weak var yearPrice: UILabel!
   @IBOutlet weak var monthPrice: UILabel!
   
@@ -49,8 +45,6 @@ class SubAVC: StoreManager {
     contentLabel.font = AppFont.font(.regularText, size: 14)
     desLabel.forEach({$0.font = AppFont.font(.mediumText, size: 18)})
     yearlyLabel.font = AppFont.font(.boldText, size: 17)
-    weeklyLabel.font = AppFont.font(.boldText, size: 17)
-    weeklyPrice.font = AppFont.font(.boldText, size: 17)
     yearPrice.font = AppFont.font(.boldText, size: 17)
     monthlyLabel.font = AppFont.font(.boldText, size: 17)
     monthPrice.font = AppFont.font(.boldText, size: 17)
@@ -60,28 +54,16 @@ class SubAVC: StoreManager {
   }
   
   @IBAction func onTapYearlyView(_ sender: Any) {
-    setupYearlyView(with: 0, boderColor: UIColor(rgb: 0xDFA683), background: UIColor(rgb: 0xC96C32))
+    setupYearlyView(with: 3.5, boderColor: UIColor(rgb: 0xF26101), background: .clear)
     
-    setupWeaklyView(with: 2, boderColor: UIColor(rgb: 0xDFA683), background: .clear)
-    
-    setupMonthlyView(with: 2, boderColor: UIColor(rgb: 0xDFA683), background: .clear)
-    
+    setupMonthlyView(with: 3.5, boderColor: UIColor(rgb: 0xB8B8B8), background: .clear)
     viewModel.action.send(.chosePacket(registeredPurchase: .yearly))
   }
   
-  @IBAction func onTapWeaklyView(_ sender: Any) {
-    setupWeaklyView(with: 0, boderColor: UIColor(rgb: 0xDFA683), background: UIColor(rgb: 0xC96C32))
-    
-    setupYearlyView(with: 2, boderColor: UIColor(rgb: 0xDFA683), background: .clear)
-    setupMonthlyView(with: 2, boderColor: UIColor(rgb: 0xDFA683), background: .clear)
-    viewModel.action.send(.chosePacket(registeredPurchase: .weekly))
-  }
-  
   @IBAction func onTapMonthlyView(_ sender: Any) {
-    setupMonthlyView(with: 0, boderColor: UIColor(rgb: 0xDFA683), background: UIColor(rgb: 0xC96C32))
+    setupMonthlyView(with: 3.5, boderColor: UIColor(rgb: 0xF26101), background: .clear)
     
-    setupWeaklyView(with: 2, boderColor: UIColor(rgb: 0xDFA683),background: .clear)
-    setupYearlyView(with: 2, boderColor: UIColor(rgb: 0xDFA683),background: .clear)
+    setupYearlyView(with: 3.5, boderColor: UIColor(rgb: 0xB8B8B8),background: .clear)
     viewModel.action.send(.chosePacket(registeredPurchase: .monthly))
   }
   
@@ -114,19 +96,13 @@ class SubAVC: StoreManager {
 }
 
 extension SubAVC {
-  private func setupYearlyView(with boderWidth: CGFloat = 0, boderColor: UIColor = UIColor(rgb: 0xDFA683), background: UIColor = .clear) {
+  private func setupYearlyView(with boderWidth: CGFloat = 0, boderColor: UIColor = UIColor(rgb: 0xF26101), background: UIColor = .clear) {
     yearlyView.layer.borderWidth = boderWidth
     yearlyView.layer.borderColor = boderColor.cgColor
     yearlyView.backgroundColor = background
   }
-  
-  private func setupWeaklyView(with boderWidth: CGFloat = 0, boderColor: UIColor = UIColor(rgb: 0xDFA683), background: UIColor = .clear) {
-    weaklyView.layer.borderWidth = boderWidth
-    weaklyView.layer.borderColor = boderColor.cgColor
-    weaklyView.backgroundColor = background
-  }
-  
-  private func setupMonthlyView(with boderWidth: CGFloat = 0, boderColor: UIColor = UIColor(rgb: 0xDFA683), background: UIColor = .clear) {
+    
+  private func setupMonthlyView(with boderWidth: CGFloat = 0, boderColor: UIColor = UIColor(rgb: 0xB8B8B8), background: UIColor = .clear) {
     monthlyView.layer.borderWidth = boderWidth
     monthlyView.layer.borderColor = boderColor.cgColor
     monthlyView.backgroundColor = background

@@ -291,8 +291,13 @@ class FleetManagementVC: BaseViewController {
   override func setProperties() {
     saveRouteView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapSaveRouteView)))
     historyTabView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapHistory)))
-    setSelectedTab(0)
-    
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {[weak self] in
+      guard let self else {
+        return
+      }
+      setSelectedTab(0)
+    }
+  
     collectionView.delegate = self
     collectionView.dataSource = self
     collectionView.register(cell: ItemFleetCell.self)

@@ -14,10 +14,8 @@ class SubB0VC: StoreManager {
   @IBOutlet var contentLabel: [UILabel]!
   @IBOutlet weak var desLabel: UILabel!
   @IBOutlet weak var yearLable: UILabel!
-  @IBOutlet weak var weeklyLabel: UILabel!
   @IBOutlet weak var monthlyLabel: UILabel!
   @IBOutlet weak var priceYearlyLabel: UILabel!
-  @IBOutlet weak var priceWeeklyLabel: UILabel!
   @IBOutlet weak var priceMonthyLabel: UILabel!
   @IBOutlet weak var termsLabel: UILabel!
   @IBOutlet weak var restoreLabel: UILabel!
@@ -25,10 +23,8 @@ class SubB0VC: StoreManager {
   
   @IBOutlet weak var imageChooseYear: UIImageView!
   @IBOutlet weak var imageChooseMonth: UIImageView!
-  @IBOutlet weak var imageChooseWeek: UIImageView!
   
   @IBOutlet weak var yearlyView: UIView!
-  @IBOutlet weak var weeklyView: UIView!
   @IBOutlet weak var mainScrollView: UIScrollView!
   @IBOutlet weak var monthlyView: UIView!
   
@@ -49,10 +45,8 @@ class SubB0VC: StoreManager {
     desLabel.font = AppFont.font(.regularText, size: 14)
     termsLabel.font = AppFont.font(.lightText, size: 14)
     privacyLabel.font = AppFont.font(.lightText, size: 14)
-    weeklyLabel.font = AppFont.font(.bold, size: 17)
     monthlyLabel.font = AppFont.font(.bold, size: 17)
     yearLable.font = AppFont.font(.bold, size: 17)
-    priceWeeklyLabel.font = AppFont.font(.bold, size: 17)
     priceYearlyLabel.font = AppFont.font(.bold, size: 17)
     priceMonthyLabel.font = AppFont.font(.bold, size: 17)
     restoreLabel.font = AppFont.font(.semiBoldText, size: 18)
@@ -76,37 +70,25 @@ class SubB0VC: StoreManager {
   }
   
   @IBAction func onTapYearView(_ sender: Any) {
-    setupYearlyView(with: 0, boderColor: UIColor(rgb: 0xC96C32), textColor: UIColor(rgb: 0xFAF7F3), priceColor: UIColor(rgb: 0xFAF7F3))
-    
-    setupWeaklyView(with: 2, boderColor: UIColor(rgb: 0xFFFEE9), textColor: UIColor(rgb: 0x1A1A1A), priceColor: UIColor(rgb: 0x1A1A1A))
-    setupMonthlyView(with: 2, boderColor: UIColor(rgb: 0xFFFEE9), textColor: UIColor(rgb: 0x1A1A1A), priceColor: UIColor(rgb: 0x1A1A1A))
+    setupYearlyView(with: 3.5, boderColor: UIColor(rgb: 0xC96C32), textColor: UIColor(rgb: 0xFAF7F3), priceColor: UIColor(rgb: 0xFAF7F3))
+  
+    setupMonthlyView(with: 3.5, boderColor: UIColor(rgb: 0xFFFEE9), textColor: UIColor(rgb: 0x1A1A1A), priceColor: UIColor(rgb: 0x1A1A1A))
     self.purchaseProduct(type: .yearly)
     
-//    imageChooseYear.image = .icChooseSub
-//    imageChooseWeek.image = .icUnChooseSub
-//    imageChooseMonth.image = .icUnChooseSub
+    imageChooseYear.image = .icChooseSub
+    imageChooseMonth.image = .icUnChooseSub
   }
   
-  @IBAction func onTapWeeklyView(_ sender: Any) {
-    setupWeaklyView(with: 0, boderColor: UIColor(rgb: 0xC96C32), textColor: UIColor(rgb: 0xFAF7F3), priceColor: UIColor(rgb: 0xFAF7F3))
-    setupYearlyView(with: 2, boderColor: UIColor(rgb: 0xFFFEE9), textColor: UIColor(rgb: 0x1A1A1A), priceColor: UIColor(rgb: 0x1A1A1A))
-    setupMonthlyView(with: 2, boderColor: UIColor(rgb: 0xFFFEE9), textColor: UIColor(rgb: 0x1A1A1A), priceColor: UIColor(rgb: 0x1A1A1A))
-    self.purchaseProduct(type: .weekly)
-//    imageChooseWeek.image = .icChooseSub
-//    
-//    imageChooseMonth.image = .icUnChooseSub
-//    imageChooseYear.image = .icUnChooseSub
-  }
+
   
   @IBAction func onTapMonthly(_ sender: Any) {
-    setupMonthlyView(with: 0, boderColor: UIColor(rgb: 0xC96C32), textColor: UIColor(rgb: 0xFAF7F3), priceColor: UIColor(rgb: 0xFAF7F3))
-    setupWeaklyView(with: 2, boderColor: UIColor(rgb: 0xFFFEE9), textColor: UIColor(rgb: 0x1A1A1A), priceColor: UIColor(rgb: 0x1A1A1A))
-    setupYearlyView(with: 2, boderColor: UIColor(rgb: 0xFFFEE9), textColor: UIColor(rgb: 0x1A1A1A), priceColor: UIColor(rgb: 0x1A1A1A))
+    setupMonthlyView(with: 3.5, boderColor: UIColor(rgb: 0xC96C32), textColor: UIColor(rgb: 0xFAF7F3), priceColor: UIColor(rgb: 0xFAF7F3))
+    
+    setupYearlyView(with: 3.5, boderColor: UIColor(rgb: 0xFFFEE9), textColor: UIColor(rgb: 0x1A1A1A), priceColor: UIColor(rgb: 0x1A1A1A))
     
     self.purchaseProduct(type: .monthly)
-//    imageChooseMonth.image = .icChooseSub
-//    imageChooseYear.image = .icUnChooseSub
-//    imageChooseWeek.image = .icUnChooseSub
+    imageChooseMonth.image = .icChooseSub
+    imageChooseYear.image = .icUnChooseSub
   }
   
   @IBAction func onTapSubcribe(_ sender: Any) {
@@ -130,15 +112,6 @@ extension SubB0VC {
     yearlyView.backgroundColor = boderColor
     yearLable.textColor = textColor
     priceYearlyLabel.textColor = priceColor
-  }
-  
-  private func setupWeaklyView(with boderWidth: CGFloat = 2, boderColor: UIColor = UIColor(rgb: 0xC96C32),
-                               textColor: UIColor = UIColor(rgb: 0x1A1A1A),
-                               priceColor: UIColor = UIColor(rgb: 0x1A1A1A)) {
-    weeklyView.layer.borderWidth = boderWidth
-    weeklyView.backgroundColor = boderColor
-    weeklyLabel.textColor = textColor
-    priceWeeklyLabel.textColor = priceColor
   }
   
   private func setupMonthlyView(with boderWidth: CGFloat = 2, boderColor: UIColor = UIColor(rgb: 0xC96C32),
