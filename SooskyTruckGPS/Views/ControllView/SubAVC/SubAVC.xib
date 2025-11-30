@@ -102,10 +102,10 @@
                                                             <rect key="frame" x="0.0" y="0.0" width="301" height="24"/>
                                                             <subviews>
                                                                 <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" verticalHuggingPriority="251" image="icCheckSubA" translatesAutoresizingMaskIntoConstraints="NO" id="gum-bq-Nda">
-                                                                    <rect key="frame" x="0.0" y="0.0" width="24" height="24"/>
+                                                                    <rect key="frame" x="10" y="0.0" width="24" height="24"/>
                                                                 </imageView>
                                                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Auto-avoid restricted roads" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="hBK-Lo-QMf">
-                                                                    <rect key="frame" x="36" y="1.3333333333333428" width="239" height="21.666666666666668"/>
+                                                                    <rect key="frame" x="46" y="1.3333333333333428" width="239" height="21.666666666666668"/>
                                                                     <fontDescription key="fontDescription" name="SFProText-Medium" family="SF Pro Text" pointSize="18"/>
                                                                     <color key="textColor" red="0.20000000000000001" green="0.14901960784313725" blue="0.26666666666666666" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
                                                                     <nil key="highlightedColor"/>
@@ -114,7 +114,7 @@
                                                             <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                             <constraints>
                                                                 <constraint firstItem="hBK-Lo-QMf" firstAttribute="centerY" secondItem="sjV-df-h7w" secondAttribute="centerY" id="8VH-oW-hL0"/>
-                                                                <constraint firstItem="gum-bq-Nda" firstAttribute="leading" secondItem="sjV-df-h7w" secondAttribute="leading" id="Goa-b5-CHs"/>
+                                                                <constraint firstItem="gum-bq-Nda" firstAttribute="leading" secondItem="sjV-df-h7w" secondAttribute="leading" constant="10" id="Goa-b5-CHs"/>
                                                                 <constraint firstItem="hBK-Lo-QMf" firstAttribute="leading" secondItem="gum-bq-Nda" secondAttribute="trailing" constant="12" id="I2g-4g-8Vq"/>
                                                                 <constraint firstItem="gum-bq-Nda" firstAttribute="centerY" secondItem="sjV-df-h7w" secondAttribute="centerY" id="Lje-OE-8pZ"/>
                                                                 <constraint firstAttribute="height" constant="24" id="dnZ-I9-Trh"/>
@@ -124,10 +124,10 @@
                                                             <rect key="frame" x="0.0" y="40" width="301" height="24"/>
                                                             <subviews>
                                                                 <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" verticalHuggingPriority="251" image="icCheckSubA" translatesAutoresizingMaskIntoConstraints="NO" id="jUL-lH-TQz">
-                                                                    <rect key="frame" x="0.0" y="0.0" width="24" height="24"/>
+                                                                    <rect key="frame" x="10" y="0.0" width="24" height="24"/>
                                                                 </imageView>
                                                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Optimize multi-stop routes" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="mDH-KT-3Nk">
-                                                                    <rect key="frame" x="36.000000000000014" y="1.3333333333333144" width="233.33333333333337" height="21.666666666666668"/>
+                                                                    <rect key="frame" x="46.000000000000014" y="1.3333333333333144" width="233.33333333333337" height="21.666666666666668"/>
                                                                     <fontDescription key="fontDescription" name="SFProText-Medium" family="SF Pro Text" pointSize="18"/>
                                                                     <color key="textColor" red="0.20000000000000001" green="0.14901960784313725" blue="0.26666666666666666" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
                                                                     <nil key="highlightedColor"/>
@@ -135,7 +135,7 @@
                                                             </subviews>
                                                             <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                             <constraints>
-                                                                <constraint firstItem="jUL-lH-TQz" firstAttribute="leading" secondItem="KB3-Qb-XJ8" secondAttribute="leading" id="NnN-aS-DXB"/>
+                                                                <constraint firstItem="jUL-lH-TQz" firstAttribute="leading" secondItem="KB3-Qb-XJ8" secondAttribute="leading" constant="10" id="NnN-aS-DXB"/>
                                                                 <constraint firstItem="mDH-KT-3Nk" firstAttribute="centerY" secondItem="KB3-Qb-XJ8" secondAttribute="centerY" id="TTg-cc-9pX"/>
                                                                 <constraint firstItem="mDH-KT-3Nk" firstAttribute="leading" secondItem="jUL-lH-TQz" secondAttribute="trailing" constant="12" id="f5d-D6-a6J"/>
                                                                 <constraint firstItem="jUL-lH-TQz" firstAttribute="centerY" secondItem="KB3-Qb-XJ8" secondAttribute="centerY" id="mjf-v7-iqD"/>
@@ -146,10 +146,10 @@
                                                             <rect key="frame" x="0.0" y="80" width="301" height="24"/>
                                                             <subviews>
                                                                 <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" verticalHuggingPriority="251" image="icCheckSubA" translatesAutoresizingMaskIntoConstraints="NO" id="aHk-24-oJB">
-                                                                    <rect key="frame" x="0.0" y="0.0" width="24" height="24"/>
+                                                                    <rect key="frame" x="10" y="0.0" width="24" height="24"/>
                                                                 </imageView>
                                                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Unlimited route calculations" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="ro1-4b-MNy">
-                                                                    <rect key="frame" x="36" y="1.3333333333333144" width="243" height="21.666666666666668"/>
+                                                                    <rect key="frame" x="46" y="1.3333333333333144" width="243" height="21.666666666666668"/>
                                                                     <fontDescription key="fontDescription" name="SFProText-Medium" family="SF Pro Text" pointSize="18"/>
                                                                     <color key="textColor" red="0.20000000000000001" green="0.14901960784313725" blue="0.26666666666666666" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
                                                                     <nil key="highlightedColor"/>
@@ -158,7 +158,7 @@
                                                             <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                             <constraints>
                                                                 <constraint firstAttribute="height" constant="24" id="5au-86-jyA"/>
-                                                                <constraint firstItem="aHk-24-oJB" firstAttribute="leading" secondItem="TVx-Sb-Cmz" secondAttribute="leading" id="DFy-uw-kaS"/>
+                                                                <constraint firstItem="aHk-24-oJB" firstAttribute="leading" secondItem="TVx-Sb-Cmz" secondAttribute="leading" constant="10" id="DFy-uw-kaS"/>
                                                                 <constraint firstItem="aHk-24-oJB" firstAttribute="centerY" secondItem="TVx-Sb-Cmz" secondAttribute="centerY" id="FTm-pL-bcg"/>
                                                                 <constraint firstItem="ro1-4b-MNy" firstAttribute="centerY" secondItem="TVx-Sb-Cmz" secondAttribute="centerY" id="brx-D2-35E"/>
                                                                 <constraint firstItem="ro1-4b-MNy" firstAttribute="leading" secondItem="aHk-24-oJB" secondAttribute="trailing" constant="12" id="nzm-AL-0Yc"/>

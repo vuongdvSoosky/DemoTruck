@@ -28,6 +28,10 @@ class SubB0VC: StoreManager {
   @IBOutlet weak var mainScrollView: UIScrollView!
   @IBOutlet weak var monthlyView: UIView!
   
+  @IBOutlet weak var subscribeLabel: UILabel!
+  @IBOutlet weak var proView: UIView!
+  @IBOutlet weak var subcribeView: UIView!
+  
   private let viewModel = IAPViewModel()
   
   override func viewDidLoad() {
@@ -35,13 +39,14 @@ class SubB0VC: StoreManager {
     setProperties()
 //    viewModel.action.send(.chosePacket(registeredPurchase: .yearly))
     AppManager.shared.setStateShouldShowOpenAds(false)
+    setColor()
 //    setupYearlyView()
   }
   
   private func setProperties() {
     unlimitedLable.font = AppFont.font(.boldText, size: 32)
     premiumLabel.font = AppFont.font(.heavy, size: 20)
-    contentLabel.forEach({$0.font = AppFont.font(.mediumText, size: 18)})
+    contentLabel.forEach({$0.font = AppFont.font(.mediumText, size: 20)})
     desLabel.font = AppFont.font(.regularText, size: 14)
     termsLabel.font = AppFont.font(.lightText, size: 14)
     privacyLabel.font = AppFont.font(.lightText, size: 14)
@@ -50,8 +55,23 @@ class SubB0VC: StoreManager {
     priceYearlyLabel.font = AppFont.font(.bold, size: 17)
     priceMonthyLabel.font = AppFont.font(.bold, size: 17)
     restoreLabel.font = AppFont.font(.semiBoldText, size: 18)
+    subscribeLabel.font = AppFont.font(.boldText, size: 20)
     
     mainScrollView.contentInsetAdjustmentBehavior = .never
+  }
+
+  private func setColor() {
+    DispatchQueue.main.async {
+      let color: [UIColor] = [UIColor(rgb: 0xF28E01), UIColor(rgb: 0xF26101)]
+      self.subcribeView.addArrayColorGradient(arrayColor: color, startPoint: CGPoint(x: 0.5, y: 0), endPoint: CGPoint(x: 0.5, y: 1))
+      self.subcribeView.cornerRadius = 20
+      self.subcribeView.clipsToBounds = true
+      
+      let proviewColors: [UIColor] = [UIColor(rgb: 0xFFD138), UIColor(rgb: 0xF58300)]
+      self.proView.addArrayColorGradient(arrayColor: proviewColors, startPoint: CGPoint(x: 0.5, y: 0), endPoint: CGPoint(x: 0.5, y: 1))
+      self.proView.cornerRadius = 14
+      self.proView.clipsToBounds = true
+    }
   }
   
   // MARK: - Action
@@ -70,21 +90,19 @@ class SubB0VC: StoreManager {
   }
   
   @IBAction func onTapYearView(_ sender: Any) {
-    setupYearlyView(with: 3.5, boderColor: UIColor(rgb: 0xC96C32), textColor: UIColor(rgb: 0xFAF7F3), priceColor: UIColor(rgb: 0xFAF7F3))
+    setupYearlyView(with: 3.5, boderColor: UIColor(rgb: 0xF26101))
   
-    setupMonthlyView(with: 3.5, boderColor: UIColor(rgb: 0xFFFEE9), textColor: UIColor(rgb: 0x1A1A1A), priceColor: UIColor(rgb: 0x1A1A1A))
+    setupMonthlyView(with: 2, boderColor: UIColor(rgb: 0xFFC096))
     self.purchaseProduct(type: .yearly)
     
     imageChooseYear.image = .icChooseSub
     imageChooseMonth.image = .icUnChooseSub
   }
   
-
-  
   @IBAction func onTapMonthly(_ sender: Any) {
-    setupMonthlyView(with: 3.5, boderColor: UIColor(rgb: 0xC96C32), textColor: UIColor(rgb: 0xFAF7F3), priceColor: UIColor(rgb: 0xFAF7F3))
+    setupMonthlyView(with: 3.5, boderColor: UIColor(rgb: 0xF26101))
     
-    setupYearlyView(with: 3.5, boderColor: UIColor(rgb: 0xFFFEE9), textColor: UIColor(rgb: 0x1A1A1A), priceColor: UIColor(rgb: 0x1A1A1A))
+    setupYearlyView(with: 2, boderColor: UIColor(rgb: 0xFFC096))
     
     self.purchaseProduct(type: .monthly)
     imageChooseMonth.image = .icChooseSub
@@ -99,26 +117,31 @@ class SubB0VC: StoreManager {
     viewModel.action.send(.back)
   }
   
+  @IBAction func onTapSubscribe(_ sender: Any) {
+    
+  }
+  
   override func offSub() {
     viewModel.action.send(.back)
   }
 }
 
 extension SubB0VC {
-  private func setupYearlyView(with boderWidth: CGFloat = 2, boderColor: UIColor = UIColor(rgb: 0xC96C32),
-                               textColor: UIColor = UIColor(rgb: 0x1A1A1A),
-                               priceColor: UIColor = UIColor(rgb: 0x1A1A1A)) {
+  private func setupYearlyView(with boderWidth: CGFloat = 3.5, boderColor: UIColor = UIColor(rgb: 0xF26101),
+                               textColor: UIColor = UIColor(rgb: 0x332644),
+                               priceColor: UIColor = UIColor(rgb: 0x332644)) {
     yearlyView.layer.borderWidth = boderWidth
-    yearlyView.backgroundColor = boderColor
+    yearlyView.layer.borderColor = boderColor.cgColor
     yearLable.textColor = textColor
+    
     priceYearlyLabel.textColor = priceColor
   }
   
-  private func setupMonthlyView(with boderWidth: CGFloat = 2, boderColor: UIColor = UIColor(rgb: 0xC96C32),
-                                textColor: UIColor = UIColor(rgb: 0x1A1A1A),
-                                priceColor: UIColor = UIColor(rgb: 0x1A1A1A)) {
+  private func setupMonthlyView(with boderWidth: CGFloat = 2, boderColor: UIColor = UIColor(rgb: 0xFFC096),
+                                textColor: UIColor = UIColor(rgb: 0x332644),
+                                priceColor: UIColor = UIColor(rgb: 0x332644)) {
     monthlyView.layer.borderWidth = boderWidth
-    monthlyView.backgroundColor = boderColor
+    monthlyView.layer.borderColor = boderColor.cgColor
     
     monthlyLabel.textColor = textColor
     priceMonthyLabel.textColor = priceColor

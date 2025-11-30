@@ -43,7 +43,7 @@ class SubAVC: StoreManager {
     restoreLabel.font = AppFont.font(.semiBold, size: 18)
     subcribeLabel.font = AppFont.font(.bold, size: 20)
     contentLabel.font = AppFont.font(.regularText, size: 14)
-    desLabel.forEach({$0.font = AppFont.font(.mediumText, size: 18)})
+    desLabel.forEach({$0.font = AppFont.font(.mediumText, size: 20)})
     yearlyLabel.font = AppFont.font(.boldText, size: 17)
     yearPrice.font = AppFont.font(.boldText, size: 17)
     monthlyLabel.font = AppFont.font(.boldText, size: 17)
