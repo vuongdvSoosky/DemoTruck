@@ -21,6 +21,7 @@ final class UserDefaultsManager {
     case showOnboard
     case truckType
     case lockFeature
+    case tutorialListView
   }
   
   func set<T>(_ value: T?, key: KeyUserDefaults) {

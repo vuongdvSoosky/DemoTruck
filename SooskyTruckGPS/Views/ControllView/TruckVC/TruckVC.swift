@@ -120,7 +120,6 @@ class TruckVC: BaseViewController {
       } else {
         searchTextField.text = ""
         self.hideCalloutAnimated()
-        UserDefaultsManager.shared.set(true, key: .tutorial)
         tutorialView.isHidden = true
         hideOverlay()
       }
@@ -670,6 +669,7 @@ class TruckVC: BaseViewController {
           self.iconTutorialSearch.image = .icSearchTutorial2
           self.iconTutorialSearch.isHidden = false
           self.hideCalloutAnimated()
+          UserDefaultsManager.shared.set(true, key: .tutorialListView)
           searchTextField.text = ""
           showOverlay()
         }
@@ -1023,6 +1023,12 @@ extension TruckVC: MKMapViewDelegate {
         view?.canShowCallout = false
       } else {
         view?.annotation = annotation
+      }
+      
+      if UserDefaultsManager.shared.get(of: Bool.self, key: .tutorialListView) {
+        tutorialView.isHidden = true
+        hideOverlay()
+        UserDefaultsManager.shared.set(true, key: .tutorial)
       }
       
       if let custom = annotation as? CustomAnnotation {
@@ -1691,27 +1697,13 @@ extension TruckVC {
     currentCalloutView.alpha = 0
     currentCalloutView.transform = CGAffineTransform(translationX: 0, y: 20)
     currentCalloutView.isHidden = false
-    if !UserDefaultsManager.shared.get(of: Bool.self, key: .tutorial) {
-      self.iconTutorialAddStop.isHidden = false
-      
-      // Đảm bảo view hierarchy đúng khi hiển thị callout
-      // Kiểm tra xem có đang trong trạng thái showTutorialCaculate không
-      let isInTutorialCaculate = self.iconTutorialSearch.image == .icSearchTutorial2 && !self.iconTutorialSearch.isHidden
-      
-      // Đưa tutorialView xuống dưới currentCalloutView và iconTutorialAddStop
-      self.view.insertSubview(self.tutorialView, belowSubview: self.currentCalloutView)
-      self.view.insertSubview(self.tutorialView, belowSubview: self.iconTutorialAddStop)
-      
-      // Luôn đưa viewList xuống dưới tutorialView khi showCalloutAnimated được gọi
-      // (vì hàm này được gọi khi user chọn location trong tutorial mode)
-      self.view.insertSubview(self.viewList, belowSubview: self.tutorialView)
-      
-      // Đảm bảo currentCalloutView và iconTutorialAddStop luôn ở trên cùng
-      self.view.bringSubviewToFront(self.currentCalloutView)
-      self.view.bringSubviewToFront(self.iconTutorialAddStop)
-    } else {
-      self.view.insertSubview(tutorialView, aboveSubview: searchView)
+    
+    if UserDefaultsManager.shared.get(of: Bool.self, key: .tutorial) {
+      tutorialView.isHidden = true
+      hideOverlay()
+      UserDefaultsManager.shared.set(true, key: .tutorial)
     }
+    
     // Animation hiện lên
     UIView.animate(withDuration: 0.5,
                    delay: 0,
