@@ -17,6 +17,7 @@ class FleetManagementVM: BaseViewModel {
     case removeItemHistory(item: RouteResponseRealm)
     case calendar
     case filterData(selectedDate: (Date, Date))
+    case iap
   }
   
   let action = PassthroughSubject<Action, Never>()
@@ -86,6 +87,8 @@ extension FleetManagementVM {
                                                "date": selectedDate.value])
     case .filterData(selectedDate: let selectedDate):
       filterItems(from: selectedDate.0, to: selectedDate.1)
+    case .iap:
+      router.route(to: .iap)
     }
   }
 }

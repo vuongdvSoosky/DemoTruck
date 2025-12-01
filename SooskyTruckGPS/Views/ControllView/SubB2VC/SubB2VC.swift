@@ -33,9 +33,6 @@ class SubB2VC: StoreManager {
   @IBOutlet weak var offerView: UIView!
   
   @IBOutlet weak var perYearLabel: UILabel!
-  
-  @IBOutlet weak var perWeeklyLabel: UILabel!
-  
   @IBOutlet weak var imageChooseMonth: UIImageView!
   @IBOutlet weak var imageChooseYear: UIImageView!
   private let viewModel = IAPViewModel()
@@ -60,11 +57,10 @@ class SubB2VC: StoreManager {
     yearLable.font = AppFont.font(.bold, size: 17)
     priceMonthyLabel.font = AppFont.font(.bold, size: 17)
     priceYearlyLabel.font = AppFont.font(.bold, size: 17)
-    restoreLabel.font = AppFont.font(.semiBoldText, size: 18)
+    restoreLabel.font = AppFont.font(.boldText, size: 18)
     bestOffer.font = AppFont.font(.boldText, size: 13)
     priceOnYear.font = AppFont.font(.mediumText, size: 14)
     perYearLabel.font = AppFont.font(.mediumText, size: 16)
-    perWeeklyLabel.font = AppFont.font(.mediumText, size: 16)
     mainScrollView.contentInsetAdjustmentBehavior = .never
     
     DispatchQueue.main.async {[weak self] in
@@ -126,7 +122,7 @@ class SubB2VC: StoreManager {
     imageChooseMonth.image = .icChooseSub
     imageChooseYear.image = .icUnChooseSub
     
-    viewModel.action.send(.chosePacket(registeredPurchase: .weekly))
+    viewModel.action.send(.chosePacket(registeredPurchase: .monthly))
   }
   
   @IBAction func onTapSubcribe(_ sender: Any) {

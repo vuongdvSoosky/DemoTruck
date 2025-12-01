@@ -28,7 +28,7 @@ class SettingsVC: BaseViewController {
   private lazy var icPremium: UIImageView = {
     let image = UIImageView()
     image.translatesAutoresizingMaskIntoConstraints = false
-//    image.image = .icPremium
+    image.image = .icPremium
     image.isUserInteractionEnabled = true
     image.isHidden = true
     return image
@@ -90,7 +90,7 @@ class SettingsVC: BaseViewController {
     icPremium.snp.makeConstraints { make in
       make.centerY.equalTo(self.titleVC.snp.centerY)
       make.trailing.equalToSuperview().inset(20)
-      make.height.width.equalTo(44)
+      make.height.width.equalTo(40)
     }
     
     collectionView.snp.makeConstraints { make in
@@ -126,7 +126,7 @@ extension SettingsVC: UICollectionViewDelegateFlowLayout {
   func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
     switch viewModel.listItem.value[indexPath.row] {
       
-    case .tutorial, .rate, .feedback, .termOfUse, .privacy:
+    case .rate, .feedback, .termOfUse, .privacy:
       return CGSize(width: self.collectionView.frame.width, height: 28)
     case .moreApp:
       if AppManager.shared.displaySub == 0 {
@@ -148,8 +148,6 @@ extension SettingsVC: UICollectionViewDelegateFlowLayout {
 extension SettingsVC: UICollectionViewDelegate {
   func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
     switch viewModel.listItem.value[indexPath.row] {
-    case .tutorial:
-      viewModel.action.send(.tutorial)
     case .rate:
       StoreReviewHelper.rateApp(appId: AppText.appID)
     case .feedback:
@@ -235,7 +233,6 @@ extension SettingsVC : MFMailComposeViewControllerDelegate {
 
 
 struct StoreReviewHelper {
-  
   static func requestReview() {
     if #available(iOS 14.0, *) {
       if let scene = UIApplication.shared.connectedScenes.first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene {

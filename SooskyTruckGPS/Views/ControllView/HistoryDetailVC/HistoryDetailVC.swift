@@ -93,6 +93,16 @@ class HistoryDetailVC: BaseViewController {
     return image
   }()
   
+  private lazy var icPremium: UIImageView = {
+    let image = UIImageView()
+    image.translatesAutoresizingMaskIntoConstraints = false
+    image.image = .icPremium
+    image.isUserInteractionEnabled = true
+    image.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapPremium)))
+    image.isHidden = true
+    return image
+  }()
+  
   // MARK: - MapView
   private lazy var mapView: MKMapView = {
     let map = MKMapView()
@@ -121,7 +131,7 @@ class HistoryDetailVC: BaseViewController {
   
   override func addComponents() {
     self.view.addSubview(containerView)
-    self.containerView.addSubviews(mapView, iconBack, viewListStackView, icDirection)
+    self.containerView.addSubviews(mapView, icPremium, iconBack, viewListStackView, icDirection)
   }
   
   override func setConstraints() {
@@ -133,6 +143,12 @@ class HistoryDetailVC: BaseViewController {
       make.top.equalTo(self.view.snp.topMargin).offset(16)
       make.left.equalToSuperview().inset(20)
       make.width.height.equalTo(36)
+    }
+    
+    icPremium.snp.makeConstraints { make in
+      make.centerY.equalTo(iconBack.snp.centerY)
+      make.right.equalToSuperview().inset(20)
+      make.width.height.equalTo(40)
     }
     
     mapView.snp.makeConstraints { make in
@@ -169,6 +185,15 @@ class HistoryDetailVC: BaseViewController {
   }
   
   override func binding() {
+    AppManager.shared.$hasSub
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] hasSub in
+        guard let self else {
+          return
+        }
+        icPremium.isHidden = hasSub
+      }.store(in: &subscriptions)
+    
     PlaceManager.shared.$placesRouter
       .receive(on: DispatchQueue.main)
       .sink { [weak self] router in
@@ -316,6 +341,10 @@ extension HistoryDetailVC {
   
   @objc private func onTapDirection() {
     self.showCurrentLocation(mapView)
+  }
+  
+  @objc private func onTapPremium() {
+    viewModel.action.send(.iap)
   }
 }
 

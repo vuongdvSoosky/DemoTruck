@@ -14,6 +14,7 @@ class FleetManagementRouter: Router {
     case saveRouterVC
     case historyVC
     case calendar
+    case iap
   }
 }
 
@@ -29,6 +30,13 @@ extension FleetManagementRouter {
       goToHistory(context, parameters: parameters)
     case .calendar:
       showPopupCalendar(parameters: parameters)
+    case .iap:
+      switch AppManager.shared.displaySub {
+      case 0:
+        context.push(to: SubAVC(), animated: true)
+      default:
+        context.push(to: SubB0VC(), animated: true)
+      }
     }
   }
 }
@@ -62,10 +70,6 @@ extension FleetManagementRouter {
     guard let parameters = parameters,
           let handler = parameters["handlerDate"] as? RangeDateHandler,
           let date = parameters["date"] as? (Date, Date) else {
-      return
-    }
-    
-    guard let context = context() else {
       return
     }
     

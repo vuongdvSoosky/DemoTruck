@@ -14,6 +14,8 @@ class TruckRouter: Router {
     case viewlist
     case loadingVC
     case truckProFile
+    case iap
+    case lockFeature
   }
 }
 
@@ -30,6 +32,24 @@ extension TruckRouter {
       context.push(to: loadingVC, animated: true)
     case .truckProFile:
       showTruckProfileView(parameters)
+    case .iap:
+      switch AppManager.shared.displaySub {
+      case 0:
+        context.push(to: SubAVC(), animated: true)
+      default:
+        context.push(to: SubB0VC(), animated: true)
+      }
+    case .lockFeature:
+      switch AppManager.shared.displaySub {
+      case 1:
+        let vc = SubB1VC()
+        context.push(to: vc, animated: true)
+      case 2:
+        let vc = SubB2VC()
+        context.push(to: vc, animated: true)
+      default:
+       break
+      }
     }
   }
 }

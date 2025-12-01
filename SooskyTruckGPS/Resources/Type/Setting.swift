@@ -8,7 +8,6 @@
 import UIKit
 
 enum Setting: CaseIterable {
-  case tutorial
   case rate
   case feedback
   case privacy
@@ -16,8 +15,6 @@ enum Setting: CaseIterable {
   case moreApp
   var title: String {
     switch self {
-    case .tutorial:
-      return "Tutorials"
     case .rate:
       return "Rate App"
     case .feedback:
@@ -33,8 +30,6 @@ enum Setting: CaseIterable {
   
   var icon: UIImage {
     switch self {
-    case .tutorial:
-      return .icTutorial
     case .rate:
       return .icRateApp
     case .feedback:

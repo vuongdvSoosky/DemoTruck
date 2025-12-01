@@ -37,10 +37,10 @@ class SubB0VC: StoreManager {
   override func viewDidLoad() {
     super.viewDidLoad()
     setProperties()
-//    viewModel.action.send(.chosePacket(registeredPurchase: .yearly))
+    viewModel.action.send(.chosePacket(registeredPurchase: .yearly))
     AppManager.shared.setStateShouldShowOpenAds(false)
     setColor()
-//    setupYearlyView()
+    setupYearlyView()
   }
   
   private func setProperties() {
@@ -54,7 +54,7 @@ class SubB0VC: StoreManager {
     yearLable.font = AppFont.font(.bold, size: 17)
     priceYearlyLabel.font = AppFont.font(.bold, size: 17)
     priceMonthyLabel.font = AppFont.font(.bold, size: 17)
-    restoreLabel.font = AppFont.font(.semiBoldText, size: 18)
+    restoreLabel.font = AppFont.font(.boldText, size: 18)
     subscribeLabel.font = AppFont.font(.boldText, size: 20)
     
     mainScrollView.contentInsetAdjustmentBehavior = .never
@@ -91,9 +91,7 @@ class SubB0VC: StoreManager {
   
   @IBAction func onTapYearView(_ sender: Any) {
     setupYearlyView(with: 3.5, boderColor: UIColor(rgb: 0xF26101))
-  
     setupMonthlyView(with: 2, boderColor: UIColor(rgb: 0xFFC096))
-    self.purchaseProduct(type: .yearly)
     
     imageChooseYear.image = .icChooseSub
     imageChooseMonth.image = .icUnChooseSub
@@ -109,16 +107,12 @@ class SubB0VC: StoreManager {
     imageChooseYear.image = .icUnChooseSub
   }
   
-  @IBAction func onTapSubcribe(_ sender: Any) {
-    self.purchaseProduct(type: viewModel.registeredPurchase)
-  }
-  
   @IBAction func onTapBack(_ sender: Any) {
     viewModel.action.send(.back)
   }
   
   @IBAction func onTapSubscribe(_ sender: Any) {
-    
+    self.purchaseProduct(type: viewModel.registeredPurchase)
   }
   
   override func offSub() {

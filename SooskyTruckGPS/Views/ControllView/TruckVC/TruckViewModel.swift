@@ -14,6 +14,8 @@ class TruckViewModel: BaseViewModel {
     case caculatorRoute
     case getIndex(int: Int)
     case truckProfile
+    case iap
+    case lockFeature
   }
   
   let action = PassthroughSubject<Action, Never>()
@@ -60,6 +62,10 @@ extension TruckViewModel {
         actionTutorialTruckProFile.send(())
       }
       router.route(to: .truckProFile, parameters: ["Handler": handler])
+    case .iap:
+      router.route(to: .iap)
+    case .lockFeature:
+      router.route(to: .lockFeature)
     }
   }
 }

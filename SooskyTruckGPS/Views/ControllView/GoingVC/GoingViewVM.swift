@@ -69,14 +69,13 @@ extension GoingViewVM {
         object: trackingRecords
       )
       
-      LogManager.show(PlaceManager.shared.placeGroup.nameRouter)
       routeRealm.nameRouter = PlaceManager.shared.placeGroup.nameRouter
       routeRealm.addPlaces(PlaceManager.shared.placeGroup.places)
       RealmService.shared.add(routeRealm)
       
       PlaceManager.shared.setPlaceGroup([], name: "My Route")
       self.router.route(to: .finish)
-      
+      CreditManager.shared.createCredit(for: .finish)
     case .getDuration(time: let time):
       duration = time
     case .edit:

@@ -25,7 +25,6 @@ class TruckVC: BaseViewController {
     view.isHidden = true
     return view
   }()
-  
   private lazy var searchView: UIView = {
     let view = UIView()
     view.translatesAutoresizingMaskIntoConstraints = false
@@ -156,7 +155,6 @@ class TruckVC: BaseViewController {
     }
     return view
   }()
-  
   private let tableContainer: UIView = {
     let view = UIView()
     view.backgroundColor = .clear
@@ -231,6 +229,15 @@ class TruckVC: BaseViewController {
     image.image = .icDirection
     image.isUserInteractionEnabled = true
     image.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapDirection)))
+    return image
+  }()
+  private lazy var icPremium: UIImageView = {
+    let image = UIImageView()
+    image.translatesAutoresizingMaskIntoConstraints = false
+    image.image = .icPremium
+    image.isHidden = true
+    image.isUserInteractionEnabled = true
+    image.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapPremium)))
     return image
   }()
   
@@ -309,8 +316,8 @@ class TruckVC: BaseViewController {
     setupMap()
     setupTableView()
     showTutorial()
+    UserDefaultsManager.shared.set(true, key: .showOnboard)
   }
-  
   override func viewWillAppear(_ animated: Bool) {
     super.viewWillAppear(animated)
     // Resume tracking nếu đã có location ban đầu
@@ -347,7 +354,7 @@ class TruckVC: BaseViewController {
   }
   
   override func addComponents() {
-    self.view.addSubviews(mapView, searchView, viewList, collectionView, icDirection,
+    self.view.addSubviews(mapView, searchView, viewList, collectionView, icPremium, icDirection,
                           tutorialView, iconTruck, iconTutorialTruck, iconTutorialSearch,
                           currentCalloutView, iconTutorialList, caculatorRouteStackView,
                           iconTutorialAddStop, iconTutorialCaculate, tableContainer)
@@ -388,6 +395,12 @@ class TruckVC: BaseViewController {
       make.left.equalToSuperview().inset(16)
       make.right.equalToSuperview()
       make.height.equalTo(56)
+    }
+    
+    icPremium.snp.makeConstraints { make in
+      make.top.equalTo(collectionView.snp.bottom).offset(18)
+      make.width.height.equalTo(48)
+      make.right.equalToSuperview().inset(20)
     }
     
     iconTruck.snp.makeConstraints { make in
@@ -480,6 +493,15 @@ class TruckVC: BaseViewController {
   }
   
   override func binding() {
+    AppManager.shared.$hasSub
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] hasSub in
+        guard let self else {
+          return
+        }
+        icPremium.isHidden = hasSub
+      }.store(in: &subscriptions)
+    
     PlaceManager.shared.$placeGroup
       .receive(on: DispatchQueue.main)
       .sink { [weak self] places in
@@ -1177,11 +1199,15 @@ extension TruckVC {
   }
   
   @objc private func onTapCaculatorRoute() {
-    viewModel.action.send(.caculatorRoute)
-    UserDefaultsManager.shared.set(true, key: .tutorial)
-    
-    hideOverlay()
-    tutorialView.isHidden = true
+    if AppManager.shared.hasSub {
+      viewModel.action.send(.caculatorRoute)
+    } else {
+      if CreditManager.shared.isCreditExceeded(for: .finish) {
+        viewModel.action.send(.lockFeature)
+      } else {
+        viewModel.action.send(.caculatorRoute)
+      }
+    }
   }
   
   @objc private func onTapIconTruckProfile() {
@@ -1204,6 +1230,10 @@ extension TruckVC {
   
   @objc private func onTapDirection() {
     self.showCurrentLocation(mapView)
+  }
+  
+  @objc private func onTapPremium() {
+    viewModel.action.send(.iap)
   }
 }
 

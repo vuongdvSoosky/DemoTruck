@@ -34,14 +34,14 @@ enum Onboard: CaseIterable {
     }
   }
   
-  var image: UIImage {
-    switch self {
-    case .onboard1:
-      return .icOnboard1
-    case .onboard2:
-      return .icOnboard2
-    case .onboard3:
-      return .icOnboard3
-    }
-  }
+//  var image: UIImage {
+//    switch self {
+//    case .onboard1:
+//      return .icOnboard1
+//    case .onboard2:
+//      return .icOnboard2
+//    case .onboard3:
+//      return .icOnboard3
+//    }
+//  }
 }

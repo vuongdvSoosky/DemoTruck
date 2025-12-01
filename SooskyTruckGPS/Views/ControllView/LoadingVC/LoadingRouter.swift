@@ -40,9 +40,9 @@ extension LoadingRouter {
       case 1:
         context.push(to: SubB1VC(), animated: true)
       case 2:
-        context.push(to: SubB2VC(), animated: true)
+        context.push(to: SubB1VC(), animated: true)
       case 3:
-        context.push(to: SubB3VC(), animated: true)
+        context.push(to: SubB2VC(), animated: true)
       default:
         break
       }

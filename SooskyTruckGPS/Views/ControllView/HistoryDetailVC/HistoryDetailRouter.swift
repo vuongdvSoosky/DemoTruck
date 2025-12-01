@@ -15,6 +15,7 @@ class HistoryDetailRouter: Router {
     case loadingVC
     case go
     case back
+    case iap
   }
 }
 
@@ -34,6 +35,13 @@ extension HistoryDetailRouter {
       context.push(to: goingVC, animated: true)
     case .back:
       context.pop(animated: true)
+    case .iap:
+      switch AppManager.shared.displaySub {
+      case 0:
+        context.push(to: SubAVC(), animated: true)
+      default:
+        context.push(to: SubB0VC(), animated: true)
+      }
     }
   }
 }

@@ -18,6 +18,9 @@ final class UserDefaultsManager {
     case showIAPForReportView
     case requestLocation
     case tutorial
+    case showOnboard
+    case truckType
+    case lockFeature
   }
   
   func set<T>(_ value: T?, key: KeyUserDefaults) {

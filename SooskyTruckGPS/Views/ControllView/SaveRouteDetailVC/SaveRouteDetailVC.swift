@@ -898,6 +898,18 @@ extension SaveRouteDetailVC {
   }
   
   @objc private func onTapCaculatorRoute() {
+    if AppManager.shared.hasSub {
+      validateButtonGO()
+    } else {
+      if CreditManager.shared.isCreditExceeded(for: .finish) {
+        viewModel.action.send(.lockFeature)
+      } else {
+        validateButtonGO()
+      }
+    }
+  }
+  
+  private func validateButtonGO() {
     if viewModel.isEditLocation {
       viewModel.action.send(.caculatorRoute)
     } else {

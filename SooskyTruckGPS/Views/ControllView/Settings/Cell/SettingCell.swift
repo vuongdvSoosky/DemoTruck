@@ -51,7 +51,8 @@ class SettingCell: BaseCollectionViewCell {
   
   private lazy var titleItem: UILabel = {
      let title = UILabel()
-    title.font = AppFont.font(.regularText, size: 20)
+    title.font = AppFont.font(.regularText, size: 17)
+    title.textColor = UIColor(rgb: 0x111111)
     return title
   }()
   

@@ -6,6 +6,5 @@
 //
 
 enum CreditType {
-  case go
-  case session
+  case finish
 }

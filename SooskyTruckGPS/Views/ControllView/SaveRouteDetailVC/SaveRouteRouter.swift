@@ -15,6 +15,7 @@ class SaveRouteRouter: Router {
     case loadingVC
     case go
     case back
+    case lockFeature
   }
 }
 
@@ -34,6 +35,17 @@ extension SaveRouteRouter {
       context.push(to: goingVC, animated: true)
     case .back:
       context.pop(animated: true)
+    case .lockFeature:
+      switch AppManager.shared.displaySub {
+      case 1:
+        let vc = SubB1VC()
+        context.push(to: vc, animated: true)
+      case 2:
+        let vc = SubB2VC()
+        context.push(to: vc, animated: true)
+      default:
+       break
+      }
     }
   }
 }

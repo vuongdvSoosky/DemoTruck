@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import SnapKit
 
 class ServerErrorView: BaseView {
   // MARK: - UIView
@@ -18,70 +19,45 @@ class ServerErrorView: BaseView {
     let view = UIView()
     view.backgroundColor = UIColor(rgb: 0xFEFEFE)
     view.cornerRadius = 12
+    
     let icon = UIImageView()
     icon.image = .icServerError
-    icon.contentMode = .scaleAspectFill
-    
-    view.addSubview(icon)
-    
+    icon.contentMode = .scaleAspectFit
     icon.snp.makeConstraints { make in
-      make.top.equalToSuperview().inset(16)
       make.width.height.equalTo(100)
-      make.centerX.equalToSuperview()
     }
     
-    let discardLabel = UILabel()
-    let discardText = "Server is under maintenance"
-//    discardLabel.setLineSpacing()
-    discardLabel.text = discardText
-    discardLabel.font = AppFont.font(.boldText, size: 21)
-    discardLabel.textColor = UIColor(rgb: 0xF26101)
-    discardLabel.numberOfLines = 0
-    discardLabel.textAlignment = .center
+    let titleLabel = UILabel()
+    titleLabel.text = "Server is under maintenance"
+    titleLabel.font = AppFont.font(.boldText, size: 21)
+    titleLabel.textColor = UIColor(rgb: 0xF26101)
+    titleLabel.textAlignment = .center
+    titleLabel.setLineSpacing()
+    titleLabel.numberOfLines = 0
     
-    let desLabel = UILabel()
-    let desLabelText = "We’re making a few updates to keep things running smoothly. Your route will be ready again shortly. Thanks for your patience"
-    desLabel.font = AppFont.font(.regularText, size: 17)
-    desLabel.textColor = UIColor(rgb: 0x332644)
-    desLabel.textAlignment = .center
-    desLabel.numberOfLines = 0
-    desLabel.text = discardText
-  
-    let stackView = UIView()
+    let descLabel = UILabel()
+    descLabel.text = "We’re making a few updates to keep things running smoothly. Your route will be ready again shortly. Thanks for your patience"
+    descLabel.font = AppFont.font(.regularText, size: 17)
+    descLabel.textColor = UIColor(rgb: 0x332644)
+    descLabel.textAlignment = .center
+    descLabel.setLineSpacing()
+    descLabel.numberOfLines = 0
     
-    [discardLabel, desLabel].forEach({stackView.addSubview($0)})
+    let stack = UIStackView(arrangedSubviews: [icon, titleLabel, descLabel, confirmView])
+    stack.axis = .vertical
+    stack.spacing = 16
+    stack.alignment = .fill
+    stack.distribution = .equalSpacing
     
-    discardLabel.snp.makeConstraints { make in
-      make.top.equalToSuperview()
-      make.centerX.equalToSuperview()
-    }
+    view.addSubview(stack)
     
-    desLabel.snp.makeConstraints { make in
-      make.top.equalTo(discardLabel.snp.bottom).inset(-16)
-      make.left.right.equalToSuperview()
-    }
-    
-    view.addSubviews(stackView)
-   
-    stackView.snp.makeConstraints { make in
-      make.top.equalTo(icon.snp.bottom).inset(-20)
+    stack.snp.makeConstraints { make in
+      make.top.bottom.equalToSuperview().inset(20)
       make.leading.trailing.equalToSuperview().inset(20)
-      make.height.equalTo(60)
     }
     
-    let horizontalStackView = UIStackView()
-    horizontalStackView.axis = .horizontal
-    horizontalStackView.distribution = .fillEqually
-    horizontalStackView.spacing = 10
-    
-    [confirmView].forEach({horizontalStackView.addArrangedSubview($0)})
-    view.addSubviews(horizontalStackView)
-    
-    horizontalStackView.snp.makeConstraints { make in
-      make.top.equalTo(stackView.snp.bottom).inset(-16)
-      make.leading.trailing.equalToSuperview().inset(20)
+    confirmView.snp.makeConstraints { make in
       make.height.equalTo(48)
-      make.bottom.equalToSuperview().inset(16)
     }
     
     return view
@@ -94,7 +70,7 @@ class ServerErrorView: BaseView {
     let label = UILabel()
     label.text = "Okay"
     label.textColor = UIColor(rgb: 0xFFFFFF)
-    label.font = AppFont.font(.mediumText, size: 15)
+    label.font = AppFont.font(.bold, size: 15)
     
     view.addSubview(label)
     
@@ -122,19 +98,14 @@ class ServerErrorView: BaseView {
   }
   
   override func setConstraints() {
-    containerView.frame = bounds
-    containerView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-    
     containerView.snp.makeConstraints { make in
       make.edges.equalToSuperview()
     }
     
     mainDiscardView.snp.makeConstraints { make in
       make.center.equalToSuperview()
-      make.width.equalTo(330)
-      make.height.equalTo(262)
+      make.leading.trailing.equalToSuperview().inset(32)
     }
-    layoutIfNeeded()
   }
   
   private func setupAction() {

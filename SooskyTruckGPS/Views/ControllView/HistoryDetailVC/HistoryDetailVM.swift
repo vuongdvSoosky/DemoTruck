@@ -13,6 +13,7 @@ class HistoryDetailVM: BaseViewModel {
   enum Action {
     case viewList
     case back
+    case iap
   }
   
   let action = PassthroughSubject<Action, Never>()
@@ -54,6 +55,8 @@ extension HistoryDetailVM {
                                                "RouteResponseRealm": item.value as Any])
     case .back:
       router.route(to: .back)
+    case .iap:
+      router.route(to: .iap)
     }
   }
 }

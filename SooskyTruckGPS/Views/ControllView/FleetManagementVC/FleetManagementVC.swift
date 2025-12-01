@@ -211,7 +211,17 @@ class FleetManagementVC: BaseViewController {
     return scrollView
   }()
   
-  private var selectedTab: Int = 0
+  // MARK: UIImageView
+  private lazy var icPremium: UIImageView = {
+    let image = UIImageView()
+    image.translatesAutoresizingMaskIntoConstraints = false
+    image.image = .icPremium
+    image.isHidden = true
+    image.isUserInteractionEnabled = true
+    image.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapPremium)))
+    return image
+  }()
+  
   private var gradientLayers: [CAGradientLayer] = []
   
   private let viewModel = FleetManagementVM()
@@ -231,7 +241,7 @@ class FleetManagementVC: BaseViewController {
   var handlerActionDeleted: Handler?
   
   override func addComponents() {
-    self.view.addSubviews(titleVC, tabView, calenderView, mainScrollView)
+    self.view.addSubviews(titleVC, icPremium, tabView, calenderView, mainScrollView)
     mainScrollView.addSubviews(contentView)
     contentView.addSubviews(saveView, historyView)
   }
@@ -241,6 +251,12 @@ class FleetManagementVC: BaseViewController {
       make.top.equalTo(self.view.snp.topMargin).inset(16)
       make.left.equalToSuperview().inset(20)
       make.height.equalTo(33)
+    }
+    
+    icPremium.snp.makeConstraints { make in
+      make.centerY.equalTo(titleVC.snp.centerY)
+      make.right.equalToSuperview().inset(20)
+      make.height.width.equalTo(40)
     }
     
     tabView.snp.makeConstraints { make in
@@ -291,12 +307,6 @@ class FleetManagementVC: BaseViewController {
   override func setProperties() {
     saveRouteView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapSaveRouteView)))
     historyTabView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapHistory)))
-    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {[weak self] in
-      guard let self else {
-        return
-      }
-      setSelectedTab(0)
-    }
   
     collectionView.delegate = self
     collectionView.dataSource = self
@@ -310,6 +320,15 @@ class FleetManagementVC: BaseViewController {
   }
   
   override func binding() {
+    AppManager.shared.$hasSub
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] hasSub in
+        guard let self else {
+          return
+        }
+        icPremium.isHidden = hasSub
+      }.store(in: &subscriptions)
+    
     viewModel.saveRouteItems
       .receive(on: DispatchQueue.main)
       .sink { [weak self] places in
@@ -324,16 +343,7 @@ class FleetManagementVC: BaseViewController {
         }
         collectionView.reloadData()
       }.store(in: &subscriptions)
-    
-    viewModel.indexForMainScrollView
-      .receive(on: DispatchQueue.main)
-      .sink { [weak self] index in
-        guard let self else {
-          return
-        }
-        scrollToPage(index: index)
-      }.store(in: &subscriptions)
-    
+  
     viewModel.itemHistory
       .receive(on: DispatchQueue.main)
       .sink { [weak self] itemHistory in
@@ -354,23 +364,25 @@ class FleetManagementVC: BaseViewController {
   // Action
   @objc private func onTapSaveRouteView() {
     setSelectedTab(0)
-    viewModel.action.send(.getIndexToScroll(index: 0))
+    scrollToPage(index: 0)
   }
   
   @objc private func onTapHistory() {
     setSelectedTab(1)
-    viewModel.action.send(.getIndexToScroll(index: 1))
+    scrollToPage(index: 1)
   }
   
   @objc private func onTapCalendar() {
     viewModel.action.send(.calendar)
   }
+  
+  @objc private func onTapPremium() {
+    viewModel.action.send(.iap)
+  }
 }
 
 extension FleetManagementVC {
   private func setSelectedTab(_ index: Int) {
-    selectedTab = index
-    
     removeGradient(from: saveRouteView)
     removeGradient(from: historyTabView)
     
@@ -507,13 +519,13 @@ extension FleetManagementVC {
   func reloadDataHistoryTab() {
     viewModel.fetchData()
     setSelectedTab(1)
-    viewModel.action.send(.getIndexToScroll(index: 1))
+    scrollToPage(index: 1)
   }
   
   func reloadDataForSavedTab() {
     viewModel.fetchData()
     setSelectedTab(0)
-    viewModel.action.send(.getIndexToScroll(index: 0))
+    scrollToPage(index: 0)
   }
 }
 

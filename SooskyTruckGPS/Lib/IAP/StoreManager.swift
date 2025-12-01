@@ -9,9 +9,8 @@ import StoreKit
 import UIKit
 
 enum RegisteredPurchase: String {
-  case weekly = "weekly1"
-  case yearly = "yearly1"
-  case monthly = "monthly1"
+  case yearly = "yearly"
+  case monthly = "monthly"
 }
 
 extension Notification.Name{
@@ -58,7 +57,6 @@ class StoreManager: UIViewController {
   
   func fetchProducts() async throws {
     let fetchedProducts = try await Product.products(for: Set([
-      self.appBundleId + "." + RegisteredPurchase.weekly.rawValue,
       self.appBundleId + "." + RegisteredPurchase.yearly.rawValue,
       self.appBundleId + "." + RegisteredPurchase.monthly.rawValue
     ]))

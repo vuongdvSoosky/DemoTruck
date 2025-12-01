@@ -21,7 +21,6 @@ class BlockQueueManager {
   
   func startFllow() {
     self.state = .startTracking
-    CreditManager.shared.createCredit(for: .go)
   }
   
   func pauseFllow() {

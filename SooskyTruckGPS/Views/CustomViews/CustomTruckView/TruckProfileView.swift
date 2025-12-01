@@ -180,7 +180,6 @@ class TruckProfileView: BaseView {
           return
         }
         switch type {
-          
         case .big:
           changeStateBigTruckView()
         case .small:
@@ -197,6 +196,17 @@ class TruckProfileView: BaseView {
   override func setProperties() {
     if UserDefaultsManager.shared.get(of: Bool.self, key: .tutorial) {
       iconTutorialTruckProfile.isHidden = true
+    }
+    
+    let truckType = UserDefaultsManager.shared.get(of: String.self, key: .truckType)
+    LogManager.show(truckType)
+    switch truckType {
+    case "truck":
+      changeStateBigTruckView()
+    case "small-truck":
+      changeStateSmallTruckView()
+    default:
+      break
     }
   }
   
@@ -268,6 +278,7 @@ class TruckProfileView: BaseView {
     if UserDefaultsManager.shared.get(of: Bool.self, key: .tutorial) == false {
       handler?()
     }
+    UserDefaultsManager.shared.set(TruckTypeManager.shared.truckTypes?.rawValue, key: .truckType)
     self.dismissSlideView()
   }
   
@@ -295,5 +306,11 @@ class TruckProfileView: BaseView {
     
     bigTruckView.borderWidth = 0
     icChooseBigTruck.image = .icUnChooseTruck
+  }
+}
+
+extension TruckProfileView {
+  func setupForSurveyVC() {
+    containerView.backgroundColor = .clear
   }
 }

@@ -17,6 +17,7 @@ class SaveRouteDetailVM: BaseViewModel {
     case caculateRoute
     case go
     case back
+    case lockFeature
   }
   
   let action = PassthroughSubject<Action, Never>()
@@ -66,6 +67,8 @@ extension SaveRouteDetailVM {
       router.route(to: .go)
     case .back:
       router.route(to: .back)
+    case .lockFeature:
+      router.route(to: .lockFeature)
     }
   }
 }
