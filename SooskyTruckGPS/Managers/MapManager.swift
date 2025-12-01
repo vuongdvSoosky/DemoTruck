@@ -125,11 +125,11 @@ extension MapManager {
     let request = MKLocalSearch.Request()
     request.naturalLanguageQuery = query
     request.region = mapView.region
+    LogManager.show(query)
     
     let search = MKLocalSearch(request: request)
     search.start { [weak self] response, error in
       guard let self = self, let response = response else {
-        LogManager.show("Không tìm thấy kết quả: \(error?.localizedDescription ?? "Unknown")")
         return
       }
       
@@ -137,6 +137,7 @@ extension MapManager {
         // Chỉ xóa các service annotations cũ, giữ lại Location annotations
         let serviceAnnotations = mapView.annotations.filter { $0 is CustomServiceAnimation }
         mapView.removeAnnotations(serviceAnnotations)
+        LogManager.show(response.mapItems.count)
         
         // Tạo CustomServiceAnimation với đầy đủ thông tin
         for item in response.mapItems {

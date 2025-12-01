@@ -471,29 +471,43 @@ class EditGoingVC: BaseViewController {
         existingAnnotation.subtitle = place.fullAddres
         // Giữ type từ place nếu có, nếu không thì set "Location"
         existingAnnotation.type = place.type ?? "Location"
+        // Cập nhật state để giữ nguyên trạng thái
+        existingAnnotation.state = place.state
         
         // Force update view để đảm bảo icon được cập nhật
         if let annotationView = mapView.view(for: existingAnnotation) as? CustomAnnotationView {
-          // Chọn icon dựa vào type (có thể là Location hoặc Service type)
-          switch existingAnnotation.type {
-          case "Location":
-            annotationView.image = .icLocationStop
-          case "Gas Station":
-            annotationView.image = .icPinGas
-          case "Bank":
-            annotationView.image = .icPinBank
-          case "Car Wash":
-            annotationView.image = .icPinCarWash
-          case "Pharmacy":
-            annotationView.image = .icPinPharmacy
-          case "Fast Food":
-            annotationView.image = .icPinFastFood
-          default:
-            // Nếu type không hợp lệ, kiểm tra lại từ place
-            if place.type == "Location" {
-              annotationView.image = .icLocationStop
+          // Chọn icon dựa vào state nếu có, nếu không thì dựa vào type
+          if let state = place.state {
+            // Hiển thị icon dựa trên state (true/false)
+            if state {
+              // state == true → hiển thị icLocationFinish
+              annotationView.image = .icLocationFinish
             } else {
-              annotationView.image = .icLocationEmpty
+              // state == false → hiển thị icLocationFailed
+              annotationView.image = .icLocationFailed
+            }
+          } else {
+            // Nếu state là nil, hiển thị icon dựa vào type
+            switch existingAnnotation.type {
+            case "Location":
+              annotationView.image = .icLocationStop
+            case "Gas Station":
+              annotationView.image = .icPinGas
+            case "Bank":
+              annotationView.image = .icPinBank
+            case "Car Wash":
+              annotationView.image = .icPinCarWash
+            case "Pharmacy":
+              annotationView.image = .icPinPharmacy
+            case "Fast Food":
+              annotationView.image = .icPinFastFood
+            default:
+              // Nếu type không hợp lệ, kiểm tra lại từ place
+              if place.type == "Location" {
+                annotationView.image = .icLocationStop
+              } else {
+                annotationView.image = .icLocationEmpty
+              }
             }
           }
           
@@ -1014,7 +1028,7 @@ extension EditGoingVC {
   @objc private func onTapBack() {
     viewModel.action.send(.back)
     PlaceManager.shared.setStateGoing(with: false)
-    PlaceManager.shared.syncPlaceGroupFromGoing()
+    PlaceManager.shared.syncGoingGroupFromPlace()
   }
 }
 

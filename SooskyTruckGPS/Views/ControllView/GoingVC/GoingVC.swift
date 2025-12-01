@@ -333,7 +333,7 @@ class GoingVC: BaseViewController {
         displayRouteOnMap(route: router, mapView: mapView)
       }.store(in: &subscriptions)
     
-    PlaceManager.shared.$goingPlaceGroup
+    PlaceManager.shared.$placeGroup
       .receive(on: DispatchQueue.main)
       .map { $0.places }
       .removeDuplicates { oldPlaces, newPlaces in

@@ -35,7 +35,7 @@ extension EditGoingRouter {
       }
       context.push(to: loadingVC, animated: true)
       context.removeViewController(EditGoingVC.self)
-      
+      context.removeViewController(GoingVC.self)
     case .go:
       let goingVC = GoingVC()
       context.push(to: goingVC, animated: true)

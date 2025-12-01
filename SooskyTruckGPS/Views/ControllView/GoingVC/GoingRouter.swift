@@ -30,6 +30,7 @@ extension GoingRouter {
       tabbarVC.setSelectIndex(navigate: .diary)
       tabbarVC.reloadFleetManagementVC()
       context.push(to: tabbarVC, animated: true)
+      context.removeViewController(GoingVC.self)
     case .edit:
       gotoSaveRoute(context, parameters: parameters)
     }
