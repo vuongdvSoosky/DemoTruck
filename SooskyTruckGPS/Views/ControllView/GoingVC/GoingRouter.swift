@@ -26,11 +26,21 @@ extension GoingRouter {
     case .arrievedView:
       showArrivedView(parameters: parameters)
     case .finish:
-      let tabbarVC = TabbarVC()
-      tabbarVC.setSelectIndex(navigate: .diary)
-      tabbarVC.reloadFleetManagementVC()
-      context.push(to: tabbarVC, animated: true)
-      context.removeViewController(GoingVC.self)
+      // Tìm TabbarVC cũ trong navigation stack
+      if let existingTabbarVC = context.getController(ofClass: TabbarVC.self) {
+        // Nếu tìm thấy TabbarVC cũ, pop về đó
+        existingTabbarVC.setSelectIndex(navigate: .diary)
+        existingTabbarVC.reloadFleetManagementVC()
+        context.popToViewController(existingTabbarVC, animated: true)
+        context.removeViewController(GoingVC.self)
+      } else {
+        // Nếu không tìm thấy, tạo mới như cũ
+        let tabbarVC = TabbarVC()
+        tabbarVC.setSelectIndex(navigate: .diary)
+        tabbarVC.reloadFleetManagementVC()
+        context.push(to: tabbarVC, animated: true)
+        context.removeViewController(GoingVC.self)
+      }
     case .edit:
       gotoSaveRoute(context, parameters: parameters)
     }
