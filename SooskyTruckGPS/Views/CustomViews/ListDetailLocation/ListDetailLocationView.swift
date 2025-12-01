@@ -31,23 +31,16 @@ class ListDetailLocationView: BaseView {
     return view
   }()
   
-  private lazy var titleLabel: UILabel = {
-    let label = UILabel()
-    label.font = AppFont.font(.bold, size: 17)
-    label.text = "Route name"
-    label.textColor = UIColor(rgb: 0xF26101)
-    label.textAlignment = .left
-    return label
-  }()
-  
-  private lazy var routeNameLabel: UILabel = {
-    let label = UILabel()
-    label.font = AppFont.font(.mediumText, size: 22)
-    label.textColor = UIColor(rgb: 0x332644)
-    label.text = "Highway Supply Chain Network"
-    label.textAlignment = .left
-    label.numberOfLines = 0
-    return label
+  private lazy var routeNameTextView: UITextView = {
+    let textView = UITextView()
+    textView.font = AppFont.font(.mediumText, size: 22)
+    textView.textColor = UIColor(rgb: 0x332644)
+    textView.text = "My Route"
+    textView.textAlignment = .left
+    textView.isScrollEnabled = false
+    textView.backgroundColor = .clear
+    textView.delegate = self
+    return textView
   }()
   
   private lazy var iconClose: UIImageView = {
@@ -57,6 +50,16 @@ class ListDetailLocationView: BaseView {
     icon.contentMode = .scaleAspectFit
     icon.isUserInteractionEnabled = true
     icon.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapClose)))
+    return icon
+  }()
+  
+  private lazy var iconEditNameRoute: UIImageView = {
+    let icon = UIImageView()
+    icon.translatesAutoresizingMaskIntoConstraints = false
+    icon.image = .icEditNameRoute
+    icon.contentMode = .scaleAspectFit
+    icon.isUserInteractionEnabled = true
+    icon.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapEditName)))
     return icon
   }()
 
@@ -76,11 +79,12 @@ class ListDetailLocationView: BaseView {
   private lazy var places: [Place] = []
   var handlerActionDeleted: Handler?
   private var itemRouter: RouteResponseRealm?
+  var nameRoute: String = "My Route"
   
   override func addComponents() {
     addSubviews(containerView, closeView)
     addSubviews(contentView)
-    contentView.addSubviews(iconClose, titleLabel, routeNameLabel, collectionView)
+    contentView.addSubviews(iconClose, routeNameTextView, collectionView, iconEditNameRoute)
   }
   
   override func setConstraints() {
@@ -105,18 +109,20 @@ class ListDetailLocationView: BaseView {
       make.width.height.equalTo(24)
     }
     
-    titleLabel.snp.makeConstraints { make in
+    routeNameTextView.snp.makeConstraints { make in
       make.top.equalTo(iconClose.snp.bottom).offset(0)
       make.left.equalToSuperview().inset(12)
     }
     
-    routeNameLabel.snp.makeConstraints { make in
-      make.top.equalTo(titleLabel.snp.bottom).offset(8)
-      make.left.right.equalToSuperview().inset(12)
+    iconEditNameRoute.snp.makeConstraints { make in
+      make.top.equalTo(iconClose.snp.bottom).offset(8)
+      make.width.height.equalTo(28)
+      make.left.equalTo(routeNameTextView.snp.right).inset(-8)
+      make.right.lessThanOrEqualToSuperview().inset(12)
     }
     
     collectionView.snp.makeConstraints { make in
-      make.top.equalTo(routeNameLabel.snp.bottom).offset(0)
+      make.top.equalTo(routeNameTextView.snp.bottom).offset(0)
       make.left.right.equalToSuperview().inset(12)
       make.bottom.equalToSuperview().offset(-24)
     }
@@ -130,21 +136,26 @@ class ListDetailLocationView: BaseView {
   }
   
   override func binding() {
-    PlaceManager.shared.$placeGroup
+    PlaceManager.shared.$goingPlaceGroup
       .receive(on: DispatchQueue.main)
       .sink { [weak self] places in
         guard let self else {
           return
         }
         self.places = places.places
-        routeNameLabel.text = places.nameRouter
+        routeNameTextView.text = places.nameRouter
         collectionView.reloadData()
       }.store(in: &subscriptions)
   }
   
   // MARK: - Action
   @objc private func onTapClose() {
+    self.endEditing(true)
     self.dismissSlideView()
+  }
+  
+  @objc private func onTapEditName() {
+    routeNameTextView.becomeFirstResponder()
   }
 }
 
@@ -161,6 +172,7 @@ extension ListDetailLocationView: UICollectionViewDataSource {
     let cell = collectionView.dequeueReusableCell(DetailRouteCell.self, for: indexPath)
     let item = self.places[indexPath.row]
     let lastIndex = places.count - 1
+    
     cell.configData(item, itemRoute: self.itemRouter)
     cell.onDeleteTapped = { [weak self]  in
       guard let self else {
@@ -187,7 +199,7 @@ extension ListDetailLocationView: UICollectionViewDataSource {
   private func hideDeleteModeForOtherCells(except currentIndexPath: IndexPath) {
     for indexPath in collectionView.indexPathsForVisibleItems {
       if indexPath != currentIndexPath {
-        if let cell = collectionView.cellForItem(at: indexPath) as? ListLocationCell {
+        if let cell = collectionView.cellForItem(at: indexPath) as? DetailRouteCell {
           cell.hideDeleteModeCell()
         }
       }
@@ -200,7 +212,7 @@ extension ListDetailLocationView: UICollectionViewDelegateFlowLayout {
                       layout collectionViewLayout: UICollectionViewLayout,
                       sizeForItemAt indexPath: IndexPath) -> CGSize {
     let width = collectionView.frame.width
-    let item = PlaceManager.shared.placeGroup.places[indexPath.row]
+    let item = places[indexPath.row]
     return CGSize(width: width, height: item.state != nil ? 86 : 64)
   }
   
@@ -211,7 +223,7 @@ extension ListDetailLocationView: UICollectionViewDelegateFlowLayout {
   }
   
   func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {
-    return UIEdgeInsets(top: 16, left: 0, bottom: 0, right: 0)
+    return UIEdgeInsets(top: 16, left: 0, bottom: 16, right: 0)
   }
 }
 
@@ -220,3 +232,28 @@ extension ListDetailLocationView {
     self.itemRouter = item
   }
 }
+
+extension ListDetailLocationView: UITextViewDelegate {
+  
+  func textView(_ textView: UITextView,
+                shouldChangeTextIn range: NSRange,
+                replacementText text: String) -> Bool {
+    
+    if text == "\n" {
+      textView.resignFirstResponder()
+      return false
+    }
+    
+    let currentText = textView.text ?? ""
+    guard let stringRange = Range(range, in: currentText) else { return false }
+    let updatedText = currentText.replacingCharacters(in: stringRange, with: text)
+    
+    return updatedText.count <= 30
+  }
+  
+  func textViewDidChange(_ textView: UITextView) {
+    nameRoute = textView.text ?? ""
+    PlaceManager.shared.renamePlaceGroup(nameRoute.trimmingSpacesOnly())
+  }
+}
+

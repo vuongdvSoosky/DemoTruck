@@ -94,7 +94,7 @@ class ListLocationView: BaseView {
   override func addComponents() {
     addSubviews(containerView, closeView)
     addSubviews(contentView)
-    contentView.addSubviews(iconClose, titleLabel, routeNameTextView, iconEditNameRoute, collectionView)
+    contentView.addSubviews(iconClose, routeNameTextView, iconEditNameRoute, collectionView)
   }
   
   override func setConstraints() {
@@ -118,23 +118,17 @@ class ListLocationView: BaseView {
       make.right.equalToSuperview().inset(12)
       make.width.height.equalTo(24)
     }
-    
-    titleLabel.snp.makeConstraints { make in
-      make.top.equalTo(iconClose.snp.bottom).offset(0)
-      make.left.equalToSuperview().inset(12)
-      make.height.equalTo(0)
-    }
-    
+        
     routeNameTextView.snp.makeConstraints { make in
-      make.top.equalTo(titleLabel.snp.bottom).offset(0)
+      make.top.equalTo(iconClose.snp.bottom).offset(0)
       make.left.equalToSuperview().inset(8)
     }
     
     iconEditNameRoute.snp.makeConstraints { make in
-      make.top.equalTo(titleLabel.snp.bottom).offset(8)
+      make.top.equalTo(iconClose.snp.bottom).offset(8)
       make.width.height.equalTo(28)
-      make.left.equalTo(routeNameTextView.snp.right).inset(8)
-      make.right.equalToSuperview().inset(12)
+      make.left.equalTo(routeNameTextView.snp.right).inset(-8)
+      make.right.lessThanOrEqualToSuperview().inset(12)
     }
     
     collectionView.snp.makeConstraints { make in

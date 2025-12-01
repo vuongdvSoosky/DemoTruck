@@ -954,7 +954,7 @@ extension SaveRouteDetailVC: UITableViewDelegate, UITableViewDataSource {
       let cell = tableView.dequeueReusableCell(HomeSearchCell.self, for: indexPath)
       cell.configDataManual(data: title)
       return cell
-    case .userLocation(title: let title, subtitle: let subtitle, coordinate: let coordinate):
+    case .userLocation(title: _, subtitle: _, coordinate: _):
       let cell = tableView.dequeueReusableCell(CurrentLocationCell.self, for: indexPath)
       return cell
     }
@@ -1062,28 +1062,6 @@ extension SaveRouteDetailVC: UITableViewDelegate, UITableViewDataSource {
   
   func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
     return 66
-  }
-}
-
-extension SaveRouteDetailVC: MKLocalSearchCompleterDelegate {
-  func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
-//    var items: [SearchItem] = []
-//    
-//    items.append(.userLocation(title: "My Location", subtitle: "Current Position"))
-//    
-//    let results = completer.results
-//    
-//    if results.isEmpty {
-//      items.append(.manual(title: completer.queryFragment))
-//    } else {
-//      items.append(contentsOf: results.map { SearchItem.suggestion($0) })
-//    }
-//    
-//    viewModel.searchSuggestions.value = items
-  }
-  
-  func completer(_ completer: MKLocalSearchCompleter, didFailWithError error: Error) {
-    LogManager.show("Completer error: \(error.localizedDescription)")
   }
 }
 

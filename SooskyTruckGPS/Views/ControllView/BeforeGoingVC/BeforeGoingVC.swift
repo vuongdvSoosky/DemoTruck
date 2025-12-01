@@ -321,8 +321,6 @@ class BeforeGoingVC: BaseViewController {
   
   override func setColor() {
     self.view.backgroundColor = UIColor(rgb: 0xFFFFFF)
-    let colors = [UIColor(rgb: 0xF28E01), UIColor(rgb: 0xF26101)]
-    goView.addArrayColorGradient(arrayColor: colors, startPoint: CGPoint(x: 0, y: 0.5), endPoint: CGPoint(x: 1, y: 0.5))
     tabView.addShadow()
   }
   
@@ -372,10 +370,30 @@ class BeforeGoingVC: BaseViewController {
         }
         self.isGoing = isGoing
         if isGoing {
-          saveLabel.text = "Cancel"
-          saveLabel.font = AppFont.font(.mediumText, size: 20)
+          saveView.isHidden = true
+          titleVC.text = "Adjusted Route"
+          iconBack.isHidden = true
+          iconBack.snp.updateConstraints { make in
+            make.width.height.equalTo(0)
+          }
+          titleVC.snp.updateConstraints { make in
+            make.left.equalTo(self.iconBack.snp.right).offset(0)
+          }
+          gradientGoView()
+        } else {
+          gradientGoView()
         }
       }.store(in: &subscriptions)
+  }
+  
+  private func gradientGoView() {
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {[weak self] in
+      guard let self else {
+        return
+      }
+      let colors = [UIColor(rgb: 0xF28E01), UIColor(rgb: 0xF26101)]
+      goView.addArrayColorGradient(arrayColor: colors, startPoint: CGPoint(x: 0, y: 0.5), endPoint: CGPoint(x: 1, y: 0.5))
+    }
   }
   
   private func updateAnnotations(for places: [Place]) {
@@ -767,12 +785,5 @@ extension BeforeGoingVC {
     annotationView.showTooltip()
     annotationView.configure(title: annotation.title ?? "", des: annotation.subtitle ?? "")
     annotationView.hideButton()
-  }
-}
-
-extension BeforeGoingVC {
-  func setupForEditGoing() {
-    saveLabel.text = "Cancel"
-    saveLabel.font = AppFont.font(.mediumText, size: 20)
   }
 }

@@ -120,7 +120,7 @@ class SurveyVC: BaseViewController {
     let label = UILabel()
     label.translatesAutoresizingMaskIntoConstraints = false
     label.text = "What Kind Of Truck Are You Driving?"
-    label.textColor = UIColor(rgb: 0x332644)
+    label.textColor = UIColor(rgb: 0xF26101)
     label.numberOfLines = 0
     label.font = AppFont.font(.heavy, size: 28)
     label.textAlignment = .center
@@ -141,7 +141,7 @@ class SurveyVC: BaseViewController {
     }
     
     let label = UILabel()
-    label.text = "Save"
+    label.text = "Continue"
     label.font = AppFont.font(.bold, size: 20)
     label.textColor = UIColor(rgb: 0xFFFFFF)
     label.textAlignment = .center
@@ -180,7 +180,7 @@ class SurveyVC: BaseViewController {
     
     saveView.snp.makeConstraints { make in
       make.left.right.equalToSuperview().inset(20)
-      make.bottom.equalToSuperview().inset(24)
+      make.bottom.equalToSuperview().inset(63)
       make.height.equalTo(60)
     }
     
@@ -230,7 +230,7 @@ extension SurveyVC {
       let colors = [UIColor(rgb: 0xF28E01), UIColor(rgb: 0xF26101)]
       self.saveView.addArrayColorGradient(arrayColor: colors, startPoint: CGPoint(x: 0, y: 0.5), endPoint: CGPoint(x: 1, y: 0.5))
       self.saveView.isUserInteractionEnabled = true
-      self.saveView.cornerRadius = 12
+      self.saveView.cornerRadius = 20
       self.saveView.clipsToBounds = true
     }
   }

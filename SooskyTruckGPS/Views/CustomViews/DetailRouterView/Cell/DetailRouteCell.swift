@@ -11,6 +11,16 @@ import SnapKit
 class DetailRouteCell: BaseCollectionViewCell {
   
   // MARK: - UIView
+  private let deleteButton: UIButton = {
+    let button = UIButton()
+    button.backgroundColor = .systemRed
+    button.layer.cornerRadius = 12
+    button.setImage(.icTrashButton, for: .normal)
+    button.tintColor = .white
+    button.translatesAutoresizingMaskIntoConstraints = false
+    return button
+  }()
+  
   private lazy var containerView: UIView = {
     let view = UIView()
     view.backgroundColor = .clear
@@ -203,14 +213,27 @@ class DetailRouteCell: BaseCollectionViewCell {
   var itemPlace: Place?
   
   override func addComponents() {
+    self.contentView.addSubview(deleteButton)
     self.contentView.addSubview(containerView)
     self.containerView.addSubviews(icon, lineView, inforView)
+  }
+  
+  override func prepareForReuse() {
+    super.prepareForReuse()
+    hideDeleteMode()
   }
   
   override func setConstraints() {
     containerView.snp.makeConstraints { make in
       make.top.equalToSuperview().inset(4)
       make.left.right.bottom.equalToSuperview()
+    }
+    
+    deleteButton.snp.makeConstraints { make in
+      make.top.equalTo(contentView).inset(4)
+      make.bottom.equalTo(contentView).inset(-4)
+      make.right.equalTo(contentView).offset(-8)
+      make.width.equalTo(deleteButtonWidth)
     }
     
     icon.snp.makeConstraints { make in
@@ -236,10 +259,30 @@ class DetailRouteCell: BaseCollectionViewCell {
   
   override func setProperties() {
     containerView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapChooseItem)))
+    
+    // Add left swipe gesture to show delete mode
+    let leftSwipeGesture = UISwipeGestureRecognizer(target: self, action: #selector(handleLeftSwipe(_:)))
+    leftSwipeGesture.direction = .left
+    containerView.addGestureRecognizer(leftSwipeGesture)
+    
+    // Add right swipe gesture to hide delete mode
+    let rightSwipeGesture = UISwipeGestureRecognizer(target: self, action: #selector(handleRightSwipe(_:)))
+    rightSwipeGesture.direction = .right
+    containerView.addGestureRecognizer(rightSwipeGesture)
+    
+    // Add delete button action
+    deleteButton.addTarget(self, action: #selector(deleteButtonTapped), for: .touchUpInside)
+    containerView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapChoosePlace)))
   }
   
   override func setColor() {
     inforView.addShadow()
+  }
+  
+  func hideDeleteModeCell() {
+    if isDeleteMode {
+      hideDeleteMode()
+    }
   }
   
   @objc private func onTapChooseItem() {
@@ -247,6 +290,53 @@ class DetailRouteCell: BaseCollectionViewCell {
       return
     }
     onChooseItemPlace?(Place)
+  }
+  
+  // MARK: - Gesture Handlers
+  @objc private func handleLeftSwipe(_ gesture: UISwipeGestureRecognizer) {
+    if !isDeleteMode {
+      showDeleteMode()
+    }
+  }
+  
+  @objc private func handleRightSwipe(_ gesture: UISwipeGestureRecognizer) {
+    if isDeleteMode {
+      hideDeleteMode()
+    }
+  }
+  
+  @objc private func handleTap(_ gesture: UITapGestureRecognizer) {
+    if isDeleteMode {
+      hideDeleteMode()
+    }
+  }
+  
+  @objc private func deleteButtonTapped() {
+    onDeleteTapped?()
+  }
+  
+  @objc private func onTapChoosePlace() {
+    guard let itemPlace = itemPlace else { return }
+    onChooseItemPlace?(itemPlace)
+  }
+}
+
+extension DetailRouteCell {
+  private func showDeleteMode() {
+    isDeleteMode = true
+    onDeleteModeChanged?(true)
+    UIView.animate(withDuration: 0.3, delay: 0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0, options: .curveEaseInOut) {
+      let translationX = -(self.deleteButtonWidth + self.spacingBetweenDeleteAndContainer)
+      self.containerView.transform = CGAffineTransform(translationX: translationX, y: 0)
+    }
+  }
+  
+  private func hideDeleteMode() {
+    isDeleteMode = false
+    onDeleteModeChanged?(false)
+    UIView.animate(withDuration: 0.3, delay: 0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0, options: .curveEaseInOut) {
+      self.containerView.transform = .identity
+    }
   }
 }
 

@@ -257,12 +257,6 @@ class EditGoingVC: BaseViewController {
     MapManager.shared.attachMap(to: mapView)
     mapView.delegate = self
     mapView.showsUserLocation = false
-    // Lấy vị trí hiện tại và hiển thị dịch vụ xung quanh
-//    MapManager.shared.requestUserLocation { [weak self] location in
-//      guard let self = self, let location = location else { return }
-//      MapManager.shared.centerMap(on: location, zoom: 0.02)
-//      searchNearby()
-//    }
   }
   
   override func binding() {
@@ -1020,7 +1014,7 @@ extension EditGoingVC {
   @objc private func onTapBack() {
     viewModel.action.send(.back)
     PlaceManager.shared.setStateGoing(with: false)
-    PlaceManager.shared.syncGoingGroupFromPlace()
+    PlaceManager.shared.syncPlaceGroupFromGoing()
   }
 }
 

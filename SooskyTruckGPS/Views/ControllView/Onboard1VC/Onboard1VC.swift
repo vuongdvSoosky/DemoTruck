@@ -37,7 +37,7 @@ class Onboard1VC: BaseViewController {
   private lazy var titleDesVC: UILabel = {
     let label = UILabel()
     label.translatesAutoresizingMaskIntoConstraints = false
-    let text = "Enter your stops and let AI find the fastest, safest route — designed for truck drivers"
+    let text = "Enter your stops and let AI find the fastest & safest route. Every optimized route helps you deliver faster & reduce fuel waste"
     label.textColor = UIColor(rgb: 0x111111)
     label.font = AppFont.font(.regularText, size: 17)
     label.numberOfLines = 0
