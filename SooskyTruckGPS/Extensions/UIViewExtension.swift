@@ -410,3 +410,9 @@ extension UIView {
     return nil
   }
 }
+
+extension UIView {
+  func removeGradient() {
+    layer.sublayers?.removeAll(where: { $0 is CAGradientLayer })
+  }
+}

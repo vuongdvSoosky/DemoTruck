@@ -306,6 +306,9 @@ class EditGoingVC: BaseViewController {
             let colors = [UIColor(rgb: 0xF28E01), UIColor(rgb: 0xF26101)]
             caculatorRouteStackView.addArrayColorGradient(arrayColor: colors, startPoint: CGPoint(x: 0, y: 0.5), endPoint: CGPoint(x: 1, y: 0.5))
           }
+        } else {
+          caculatorRouteStackView.isUserInteractionEnabled = false
+          caculatorRouteStackView.removeGradient()
         }
       }.store(in: &subscriptions)
     

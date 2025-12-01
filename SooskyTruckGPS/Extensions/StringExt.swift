@@ -91,3 +91,17 @@ extension String {
     return self.components(separatedBy: ",").first?.trimmingCharacters(in: .whitespacesAndNewlines) ?? self
   }
 }
+
+extension String {
+    /// Lấy phần text trước dấu ',' đầu tiên
+    var beforeFirstComma: String {
+        return self.components(separatedBy: ",").first?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+    }
+    
+    /// Lấy phần text sau dấu ',' đầu tiên
+    var afterFirstComma: String {
+        let parts = self.components(separatedBy: ",")
+        guard parts.count > 1 else { return "" }
+        return parts.dropFirst().joined(separator: ",").trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+}

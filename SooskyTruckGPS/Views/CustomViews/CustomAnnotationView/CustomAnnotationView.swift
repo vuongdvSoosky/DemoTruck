@@ -256,8 +256,8 @@ class CustomAnnotationView: MKAnnotationView {
   }
   
   func configure(title: String, des: String) {
-    titleLabel.text = title
-    subtitleLabel.text = des
+    titleLabel.text = title.beforeFirstComma
+    subtitleLabel.text = des.afterFirstComma
     guard let coordinate = annotation?.coordinate else {
       return
     }
