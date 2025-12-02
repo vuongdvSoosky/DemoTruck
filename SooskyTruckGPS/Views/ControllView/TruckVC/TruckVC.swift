@@ -1372,7 +1372,7 @@ extension TruckVC {
   
   @objc private func onTapCaculatorRoute() {
     
-    if AppManager.shared.hasSub {
+    if AppManager.shared.hasSub || !AppManager.shared.showAds {
       viewModel.action.send(.caculatorRoute)
     } else {
       if CreditManager.shared.isCreditExceeded(for: .finish) {

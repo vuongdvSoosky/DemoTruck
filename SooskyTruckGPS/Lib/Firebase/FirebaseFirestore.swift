@@ -25,7 +25,7 @@ class FireBaseFirestore {
   init() {}
   
   func getConfigApp(complete: @escaping ((Bool) -> Void)) {
-    listener = db.collection("Config").document("vfon5Ab9F2mIiLkWxjBL").addSnapshotListener { documentSnapshot, error in
+    listener = db.collection("Config").document("oQ8u9TB7TIixYyFA8VLw").addSnapshotListener { documentSnapshot, error in
       if error != nil{
         NotificationCenter.default.post(name: .configFirebase, object: nil)
         return
