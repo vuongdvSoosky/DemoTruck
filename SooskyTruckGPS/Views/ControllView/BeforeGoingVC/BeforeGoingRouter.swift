@@ -29,10 +29,19 @@ extension BeforeGoingRouter {
       let goingVC = GoingVC()
       context.push(to: goingVC, animated: true)
     case .save:
-      let tabberVC = TabbarVC()
-      tabberVC.setSelectIndex(navigate: .diary)
-      tabberVC.reloadFleetManagementTabSaveVC()
-      context.remake(maxLength: 0, to: tabberVC)
+      // Tìm TabbarVC cũ trong navigation stack
+      if let existingTabbarVC = context.getController(ofClass: TabbarVC.self) {
+        // Nếu tìm thấy TabbarVC cũ, pop về đó
+        existingTabbarVC.setSelectIndex(navigate: .diary)
+        existingTabbarVC.reloadFleetManagementTabSaveVC()
+        context.popToViewController(existingTabbarVC, animated: true)
+      } else {
+        // Nếu không tìm thấy, tạo mới như cũ
+        let tabbarVC = TabbarVC()
+        tabbarVC.setSelectIndex(navigate: .diary)
+        tabbarVC.reloadFleetManagementTabSaveVC()
+        context.push(to: tabbarVC, animated: true)
+      }
     }
   }
 }

@@ -331,6 +331,10 @@ class TruckVC: BaseViewController {
   
   override func viewWillAppear(_ animated: Bool) {
     super.viewWillAppear(animated)
+    
+    // Đảm bảo MapManager được attach lại với mapView
+    MapManager.shared.attachMap(to: mapView)
+    
     // Resume tracking nếu đã có location ban đầu
     if isInitialLocationSet {
       startTrackingUserLocation()
@@ -340,8 +344,17 @@ class TruckVC: BaseViewController {
     // Chỉ search nếu có cả query và type (đảm bảo service đã được chọn)
     if !currentQuery.isEmpty && !currentType.isEmpty {
       // Delay lâu hơn để đảm bảo mapView đã sẵn sàng và location đã được set
-      DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+      DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) { [weak self] in
         guard let self = self else { return }
+        // Kiểm tra lại mapView.region có hợp lệ không trước khi search
+        guard self.mapView.region.span.latitudeDelta > 0 && self.mapView.region.span.longitudeDelta > 0 else {
+          // Nếu region chưa hợp lệ, đợi thêm một chút
+          DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+            guard let self = self else { return }
+            self.searchNearby(with: self.currentQuery, type: self.currentType)
+          }
+          return
+        }
         self.searchNearby(with: self.currentQuery, type: self.currentType)
       }
     }
