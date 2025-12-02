@@ -15,6 +15,7 @@ class LoadingRouter: Router {
     case iap
     case beforGoing
     case showError
+    case nointernet
   }
 }
 
@@ -48,6 +49,16 @@ extension LoadingRouter {
       }
     case .showError:
       showErrorView(context)
+    case .nointernet:
+        guard let topVC = UIApplication.topViewController() else { return }
+        
+        let alert = UIAlertController(
+            title: "No internet connection",
+            message: "You need an internet connection to use this feature. Please check your network and try again",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "OK", style: .cancel))
+        topVC.present(alert, animated: true)
     }
   }
 }

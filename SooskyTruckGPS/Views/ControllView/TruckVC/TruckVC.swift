@@ -10,6 +10,7 @@ import SnapKit
 import MapKit
 import Toast
 import CoreLocation
+import AppTrackingTransparency
 
 class TruckVC: BaseViewController {
   // MARK: - UIView
@@ -319,6 +320,13 @@ class TruckVC: BaseViewController {
     setupTableView()
     showTutorial()
     UserDefaultsManager.shared.set(true, key: .showOnboard)
+    
+    if UserDefaultsManager.shared.get(of: Bool.self, key: .showATT) == false {
+      showAdsTracking()
+      AppManager.shared.setStateShouldShowOpenAds(false)
+    } else {
+      AppManager.shared.setStateShouldShowOpenAds(true)
+    }
   }
   
   override func viewWillAppear(_ animated: Bool) {
@@ -1406,7 +1414,7 @@ extension TruckVC: UITableViewDelegate, UITableViewDataSource {
       
       // MARK: - USER LOCATION
     case .userLocation(title: _, subtitle: _, coordinate: _):
-      LocationService.shared.requestCurrentLocation { [weak self] location in
+      LocationService.shared.requestCurrentLocation(from: self) { [weak self] location in
         guard let self else { return }
         
         let geocoder = CLGeocoder()
@@ -1861,6 +1869,31 @@ extension TruckVC: CLLocationManagerDelegate {
       }
     default:
       break
+    }
+  }
+}
+
+extension TruckVC {
+  private func showAdsTracking(completion: (() -> Void)? = nil) {
+    if #available(iOS 14, *) {
+      ATTrackingManager.requestTrackingAuthorization { status in
+        UserDefaultsManager.shared.set(true, key: .showATT)
+        DispatchQueue.main.async {
+          switch status {
+          case .authorized, .denied, .restricted, .notDetermined:
+            AppManager.shared.isCheckTracking = (status == .authorized)
+          @unknown default:
+            AppManager.shared.isCheckTracking = false
+          }
+          
+          completion?()
+        }
+      }
+      AppManager.shared.setStateShouldShowOpenAds(true)
+    } else {
+      AppManager.shared.isCheckTracking = true
+      AppManager.shared.setStateShouldShowOpenAds(true)
+      completion?()
     }
   }
 }

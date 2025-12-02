@@ -62,6 +62,15 @@ extension LoadingVM {
 
 extension LoadingVM {
   private func requestAPIPlaces() {
+    guard let isConnected = NetworkMonitor.shared.isConnected else {
+      return
+    }
+    guard isConnected else {
+          LogManager.show("[Network Error] No internet connection")
+          router.route(to: .nointernet)
+          return
+        }
+    
     // Sử dụng filtered places nếu có, nếu không thì dùng places từ PlaceManager
     let placesToUse = filteredPlacesForAPI ?? PlaceManager.shared.placeGroup.places
     let points: [[Double]] = placesToUse.map { [$0.coordinate.longitude, $0.coordinate.latitude] }

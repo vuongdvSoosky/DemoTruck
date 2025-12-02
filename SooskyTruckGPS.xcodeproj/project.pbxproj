@@ -28,7 +28,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		0A9A7A702EB85C8E00295B2A /* SooskyTruckGPS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SooskyTruckGPS.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		0A9A7A702EB85C8E00295B2A /* Truck GPS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Truck GPS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -85,7 +85,7 @@
 		0A9A7A712EB85C8E00295B2A /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				0A9A7A702EB85C8E00295B2A /* SooskyTruckGPS.app */,
+				0A9A7A702EB85C8E00295B2A /* Truck GPS.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -130,7 +130,7 @@
 				0AD7BCAF2EB8665F00ADADDB /* GoogleMobileAds */,
 			);
 			productName = SooskyTruckGPS;
-			productReference = 0A9A7A702EB85C8E00295B2A /* SooskyTruckGPS.app */;
+			productReference = 0A9A7A702EB85C8E00295B2A /* Truck GPS.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -214,7 +214,7 @@
 				INFOPLIST_FILE = SooskyTruckGPS/Info.plist;
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "This app requires location access to track your trips. Please enable location permissions in settings to proceed";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "This app requires location access to track your trips. Please enable location permissions in settings to proceed";
-				INFOPLIST_KEY_NSUserTrackingUsageDescription = "We use your Identifier for Advertisers (IDFA) to track activity across apps. This helps show you content and ads most relevant to your Horse Riding tracking journey.";
+				INFOPLIST_KEY_NSUserTrackingUsageDescription = "We use your Identifier for Advertisers (IDFA) to track activity across apps. This helps show you content and ads most relevant to your Truck GPS tracking journey.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = LaunchScreen;
@@ -228,7 +228,7 @@
 				);
 				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = hn.SooskyTruckGPS.test;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = "Truck GPS";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
@@ -252,7 +252,7 @@
 				INFOPLIST_FILE = SooskyTruckGPS/Info.plist;
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "This app requires location access to track your trips. Please enable location permissions in settings to proceed";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "This app requires location access to track your trips. Please enable location permissions in settings to proceed";
-				INFOPLIST_KEY_NSUserTrackingUsageDescription = "We use your Identifier for Advertisers (IDFA) to track activity across apps. This helps show you content and ads most relevant to your Horse Riding tracking journey.";
+				INFOPLIST_KEY_NSUserTrackingUsageDescription = "We use your Identifier for Advertisers (IDFA) to track activity across apps. This helps show you content and ads most relevant to your Truck GPS tracking journey.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = LaunchScreen;
@@ -266,7 +266,7 @@
 				);
 				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = hn.SooskyTruckGPS.test;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = "Truck GPS";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
 				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;

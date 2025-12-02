@@ -56,8 +56,24 @@ extension MapManager {
   func searchNearbyService(_ query: String,
                            radius: CLLocationDistance = 5000,
                            completion: @escaping ([MKMapItem]) -> Void) {
+    guard let isConnected = NetworkMonitor.shared.isConnected else {
+      return
+    }
     
-    
+    guard isConnected else {
+            LogManager.show("[Network Error] No internet connection")
+            if let topVC = UIApplication.topViewController() {
+                let alert = UIAlertController(
+                    title: "No internet connection",
+                    message: "You need an internet connection to use this feature. Please check your network and try again",
+                    preferredStyle: .alert
+                )
+                alert.addAction(UIAlertAction(title: "OK", style: .cancel))
+                topVC.present(alert, animated: true)
+            }
+            completion([])
+            return
+        }
     
     locationManager.requestCurrentLocation { [weak self] location in
       guard let self = self else {
@@ -118,6 +134,22 @@ extension MapManager {
 extension MapManager {
   func searchServiceAroundVisibleRegion(_ query: String,
                                         type: String) {
+    guard let isConnected = NetworkMonitor.shared.isConnected else {
+      return
+    }
+    guard isConnected else {
+            LogManager.show("[Network Error] No internet connection")
+            if let topVC = UIApplication.topViewController() {
+                let alert = UIAlertController(
+                    title: "No internet connection",
+                    message: "Please check your network and try again",
+                    preferredStyle: .alert
+                )
+                alert.addAction(UIAlertAction(title: "OK", style: .cancel))
+                topVC.present(alert, animated: true)
+            }
+            return
+        }
     guard let mapView = mapView else {
       return
     }
@@ -182,6 +214,23 @@ extension MapManager {
                            to end: CLLocationCoordinate2D,
                            completion: @escaping (Bool) -> Void) {
     
+    guard let isConnected = NetworkMonitor.shared.isConnected else {
+      return
+    }
+    guard isConnected else {
+            LogManager.show("[Network Error] No internet connection")
+            if let topVC = UIApplication.topViewController() {
+                let alert = UIAlertController(
+                    title: "No internet connection",
+                    message: "Please check your network and try again",
+                    preferredStyle: .alert
+                )
+                alert.addAction(UIAlertAction(title: "OK", style: .cancel))
+                topVC.present(alert, animated: true)
+            }
+            completion(false)
+            return
+        }
     let startPlacemark = MKPlacemark(coordinate: start)
     let endPlacemark = MKPlacemark(coordinate: end)
     

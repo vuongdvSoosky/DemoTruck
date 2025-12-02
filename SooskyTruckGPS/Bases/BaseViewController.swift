@@ -33,7 +33,6 @@ class BaseViewController: UIViewController, ViewProtocol {
     setupAction()
     setupNotiView()
     hideButtonItem()
-    self.bindingInternet()
     DispatchQueue.main.async { [weak self] in
       guard let self else {
         return
@@ -70,74 +69,39 @@ class BaseViewController: UIViewController, ViewProtocol {
     self.navigationItem.hidesBackButton = true
   }
   
-    func showCurrentLocation(_ mapView: MKMapView) {
-      LocationService.shared.checkAndRequestAuthorization { [weak self] status in
-        guard let self = self else { return }
-  
-        switch status {
-        case .authorizedWhenInUse, .authorizedAlways:
-          LocationService.shared.requestCurrentLocation { location in
-            let coordinate = location.coordinate
-  
-            DispatchQueue.main.async {
-              let region = MKCoordinateRegion(center: coordinate,
-                                              latitudinalMeters: 1000,
-                                              longitudinalMeters: 1000)
-  
-              mapView.setRegion(region, animated: true)
-            }
-          }
-          UserDefaultsManager.shared.set(true, key: .requestLocation)
-  
-        case .denied, .restricted:
+  func showCurrentLocation(_ mapView: MKMapView) {
+    LocationService.shared.checkAndRequestAuthorization { [weak self] status in
+      guard let self = self else { return }
+      
+      switch status {
+      case .authorizedWhenInUse, .authorizedAlways:
+        LocationService.shared.requestCurrentLocation { location in
+          let coordinate = location.coordinate
+          
           DispatchQueue.main.async {
-            LocationService.shared.showSettingsAlert(from: self)
+            let region = MKCoordinateRegion(center: coordinate,
+                                            latitudinalMeters: 1000,
+                                            longitudinalMeters: 1000)
+            
+            mapView.setRegion(region, animated: true)
           }
-          UserDefaultsManager.shared.set(false, key: .requestLocation)
-  
-        case .notDetermined:
-          break
-  
-        @unknown default:
-          break
         }
+        UserDefaultsManager.shared.set(true, key: .requestLocation)
+        
+      case .denied, .restricted:
+        DispatchQueue.main.async {
+          LocationService.shared.showSettingsAlert(from: self)
+        }
+        UserDefaultsManager.shared.set(false, key: .requestLocation)
+        
+      case .notDetermined:
+        break
+        
+      @unknown default:
+        break
       }
     }
-  
-//  func showCurrentLocation(_ mapView: MKMapView) {
-//    LocationService.shared.checkAndRequestAuthorization { [weak self] status in
-//      guard let self else { return }
-//      
-//      switch status {
-//      case .authorizedWhenInUse, .authorizedAlways:
-//        LocationService.shared.requestCurrentLocation { [weak self] location in
-//          guard let self else { return }
-//          let coordinate = location.coordinate
-//          
-//          DispatchQueue.main.async {
-//            if !self.didSetInitialRegion {
-//              self.didSetInitialRegion = true
-//              
-//              let region = MKCoordinateRegion(center: coordinate,
-//                                              latitudinalMeters: 1500,
-//                                              longitudinalMeters: 1500)
-//             // mapView.setRegion(region, animated: true)
-////              mapView.setUserTrackingMode(.follow, animated: true)
-//            } else {
-//            //  mapView.setCenter(coordinate, animated: true)
-//            }
-//          }
-//        }
-//        UserDefaultsManager.shared.set(true, key: .requestLocation)
-//      case .denied, .restricted:
-//        LocationService.shared.showSettingsAlert(from: self)
-//        UserDefaultsManager.shared.set(false, key: .requestLocation)
-//        
-//      case .notDetermined: break
-//      @unknown default: break
-//      }
-//    }
-//  }
+  }
   
   func removeSubs() {
     subscriptions.forEach { $0.cancel() }
@@ -185,7 +149,14 @@ class BaseViewController: UIViewController, ViewProtocol {
       }.store(in: &subscriptions)
   }
   
-  private func showNoConnectionView() {}
+  private func showNoConnectionView() {
+    let alert = UIAlertController(title: "No internet connection",
+                                  message: "You need an internet connection to use this feature. Please check your network and try again",
+                                  preferredStyle: .alert)
+    
+    alert.addAction(UIAlertAction(title: "OK", style: .cancel))
+    present(alert, animated: true)
+  }
   
   func showAlertRemoveSession(_ completionHandler: (() -> Void)? = nil) {
     let alert = UIAlertController(title: "Delete This Session?",

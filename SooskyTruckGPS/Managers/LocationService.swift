@@ -39,13 +39,11 @@ class LocationService: NSObject, CLLocationManagerDelegate {
   }
   
   func startTrackingUser() {
-//    trackingUser = true
     locationManager.requestWhenInUseAuthorization()
     locationManager.startUpdatingLocation()
   }
   
   func stopTrackingUser() {
-//    trackingUser = false
     locationManager.stopUpdatingLocation()
   }
   
@@ -64,25 +62,41 @@ class LocationService: NSObject, CLLocationManagerDelegate {
   // MARK: - Location
   
   func requestCurrentLocation(from viewController: UIViewController? = nil,
-                             onUpdate: @escaping (CLLocation) -> Void) {
-      self.onLocationUpdate = onUpdate
-      let status = CLLocationManager.authorizationStatus()
-
-      switch status {
-      case .notDetermined:
-          locationManager.requestWhenInUseAuthorization()
-
-      case .authorizedWhenInUse, .authorizedAlways:
-          locationManager.startUpdatingLocation()
-
-      case .restricted, .denied:
-          if let vc = viewController {
-              showSettingsAlert(from: vc)
-          }
-
-      @unknown default:
-          break
+                              onUpdate: @escaping (CLLocation) -> Void) {
+    guard let isConnected = NetworkMonitor.shared.isConnected else {
+      return
+    }
+    guard isConnected else {
+      LogManager.show("[Network Error] No internet connection")
+      if let topVC = UIApplication.topViewController() {
+        let alert = UIAlertController(
+          title: "No internet connection",
+          message: "Please check your network and try again",
+          preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "OK", style: .cancel))
+        topVC.present(alert, animated: true)
       }
+      
+      return
+    }
+    self.onLocationUpdate = onUpdate
+    let status = locationManager.authorizationStatus
+    
+    switch status {
+    case .notDetermined:
+      locationManager.requestWhenInUseAuthorization()
+      
+    case .authorizedWhenInUse, .authorizedAlways:
+      locationManager.startUpdatingLocation()
+      
+    case .restricted, .denied:
+      if let vc = viewController {
+        showSettingsAlert(from: vc)
+      }
+    @unknown default:
+      break
+    }
   }
   
   func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
