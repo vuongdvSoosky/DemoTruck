@@ -226,15 +226,18 @@ class GoingVC: BaseViewController {
   override func viewDidLoad() {
     super.viewDidLoad()
     setupMapView()
-    
-    DispatchQueue.main.async { [weak self] in
-      guard let self else {
-        return
+    // 410 ATLANTIC AVE, BROOKLYN, NY 11217
+    if UserDefaultsManager.shared.get(of: Bool.self, key: .tutorialGoing) == false {
+      viewModel.action.send(.tutorial)
+    } else {
+      DispatchQueue.main.async { [weak self] in
+        guard let self else {
+          return
+        }
+        onTapGoView()
       }
-      onTapGoView()
     }
   }
-  
   
   override func setProperties() {
     collectionView.delegate = self
@@ -428,6 +431,15 @@ class GoingVC: BaseViewController {
         self.startTrackingUserLocation()
       }
     }
+    
+    viewModel.actionTutorial
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] in
+        guard let self else {
+          return
+        }
+        onTapGoView()
+      }.store(in: &subscriptions)
   }
   
   private func setupMapView() {

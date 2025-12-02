@@ -17,6 +17,7 @@ class GoingViewVM: BaseViewModel {
     case getDuration(time: Double)
     case finish
     case edit
+    case tutorial
   }
   
   let action = PassthroughSubject<Action, Never>()
@@ -25,6 +26,8 @@ class GoingViewVM: BaseViewModel {
   let timeTracking = CurrentValueSubject<String, Never>("00:00:00")
   let speed: Double = 0.0
   var duration: Double = 0.0
+  let actionTutorial = PassthroughSubject<Void, Never>()
+  
   private let router = GoingRouter()
   
   override init() {
@@ -80,6 +83,15 @@ extension GoingViewVM {
       duration = time
     case .edit:
       router.route(to: .edit)
+    case .tutorial:
+      let handler: Handler = {[weak self] in
+        guard let self else {
+          return
+        }
+        actionTutorial.send(())
+      }
+      
+      router.route(to: .tutorial, parameters: ["Handler": handler])
     }
   }
 }

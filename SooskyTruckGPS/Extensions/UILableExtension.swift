@@ -232,3 +232,40 @@ extension UILabel {
     self.attributedText = attributed
   }
 }
+
+extension UILabel {
+  /// Set attributed text with normal/bold fonts, bold keywords & line spacing
+  func setAttributedText(
+    _ text: String,
+    boldParts: [String],
+    normalFont: UIFont,
+    boldFont: UIFont,
+    textColor: UIColor = .black,
+    lineSpacing: CGFloat = 6,
+    textAlignment: NSTextAlignment = .center
+  ) {
+    let paragraphStyle = NSMutableParagraphStyle()
+    paragraphStyle.lineSpacing = lineSpacing
+    paragraphStyle.alignment = textAlignment
+    
+    let attributed = NSMutableAttributedString(
+      string: text,
+      attributes: [
+        .font: normalFont,
+        .foregroundColor: textColor,
+        .paragraphStyle: paragraphStyle
+      ]
+    )
+    
+    boldParts.forEach { boldText in
+      let range = (text as NSString).range(of: boldText)
+      if range.location != NSNotFound {
+        attributed.addAttributes([
+          .font: boldFont
+        ], range: range)
+      }
+    }
+    
+    self.attributedText = attributed
+  }
+}

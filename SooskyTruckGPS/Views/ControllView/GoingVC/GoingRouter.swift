@@ -14,6 +14,7 @@ class GoingRouter: Router {
     case arrievedView
     case finish
     case edit
+    case tutorial
   }
 }
 
@@ -43,6 +44,8 @@ extension GoingRouter {
       }
     case .edit:
       gotoSaveRoute(context, parameters: parameters)
+    case .tutorial:
+      showTutorialView(parameters)
     }
   }
 }
@@ -66,5 +69,20 @@ extension GoingRouter {
   private func gotoSaveRoute(_ context: UINavigationController, parameters: [String: Any]? = nil) {
     let saveRouteVC = EditGoingVC()
     context.pushViewController(saveRouteVC, animated: true)
+  }
+  
+  func showTutorialView(_ parameters: [String: Any]? = nil) {
+    guard let parameters = parameters,
+          let handler = parameters["Handler"] as? Handler else {
+      return
+    }
+    
+    guard let topVC = UIApplication.topViewController() else {
+      return
+    }
+    
+    let view = TutorialArriedView()
+    view.handlerAction = handler
+    view.showSlideView(view: topVC.view)
   }
 }
