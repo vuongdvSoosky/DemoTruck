@@ -28,7 +28,7 @@ class BeforeGoingVC: BaseViewController {
     
     icDirection.snp.makeConstraints { make in
       make.bottom.equalToSuperview().inset(168)
-      make.width.height.equalTo(48)
+      make.width.height.equalTo(44)
       make.right.equalToSuperview().inset(20)
     }
     
@@ -40,7 +40,7 @@ class BeforeGoingVC: BaseViewController {
     compassButton.snp.makeConstraints { make in
       make.bottom.equalTo(icDirection.snp.top).inset(-30)
       make.right.equalToSuperview().inset(20)
-      make.width.height.equalTo(48)
+      make.width.height.equalTo(44)
     }
     
     return view

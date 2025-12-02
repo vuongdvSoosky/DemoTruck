@@ -164,7 +164,7 @@ class HistoryDetailVC: BaseViewController {
     
     icDirection.snp.makeConstraints { make in
       make.bottom.equalTo(viewListStackView.snp.top).inset(-40)
-      make.width.height.equalTo(48)
+      make.width.height.equalTo(44)
       make.right.equalToSuperview().inset(20)
     }
     

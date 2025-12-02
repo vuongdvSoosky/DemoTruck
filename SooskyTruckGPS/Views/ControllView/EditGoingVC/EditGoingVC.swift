@@ -646,7 +646,7 @@ class EditGoingVC: BaseViewController {
     
     icDirection.snp.makeConstraints { make in
       make.bottom.equalTo(caculatorRouteStackView.snp.top).inset(-12)
-      make.width.height.equalTo(48)
+      make.width.height.equalTo(44)
       make.right.equalToSuperview().inset(20)
     }
     

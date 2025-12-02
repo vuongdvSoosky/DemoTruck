@@ -288,7 +288,7 @@ class GoingVC: BaseViewController {
     
     icDirection.snp.makeConstraints { make in
       make.centerY.equalToSuperview().offset(55)
-      make.width.height.equalTo(48)
+      make.width.height.equalTo(44)
       make.right.equalToSuperview().inset(20)
     }
     
