@@ -16,6 +16,7 @@ class TruckRouter: Router {
     case truckProFile
     case iap
     case lockFeature
+    case showAdsTracking
   }
 }
 
@@ -50,6 +51,13 @@ extension TruckRouter {
       default:
        break
       }
+    case .showAdsTracking:
+      DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {[weak self] in
+        guard let self else {
+          return
+        }
+        showAdsTracking(parameters)
+      }
     }
   }
 }
@@ -82,5 +90,20 @@ extension TruckRouter {
     let listView = TruckProfileView()
     listView.handler = handler
     listView.showSlideView(view: topVC.view)
+  }
+  
+  private func showAdsTracking(_ parameters: [String: Any]? = nil) {
+    guard let topVC = UIApplication.topViewController() else {
+      return
+    }
+    
+    guard let parameters = parameters ,
+    let handler = parameters["Handler"] as? Handler else {
+      return
+    }
+    
+    let view = AdsTrackingView()
+    view.handlerAction = handler
+    view.showView(view: topVC.view)
   }
 }

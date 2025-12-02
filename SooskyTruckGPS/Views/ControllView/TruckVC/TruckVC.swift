@@ -321,12 +321,13 @@ class TruckVC: BaseViewController {
     showTutorial()
     UserDefaultsManager.shared.set(true, key: .showOnboard)
     
-    if UserDefaultsManager.shared.get(of: Bool.self, key: .showATT) == false {
-      showAdsTracking()
-      AppManager.shared.setStateShouldShowOpenAds(false)
-    } else {
-      AppManager.shared.setStateShouldShowOpenAds(true)
-    }
+//    if UserDefaultsManager.shared.get(of: Bool.self, key: .showATT) == false {
+//      viewModel.action.send(.showAdsTracking)
+//      AppManager.shared.setStateShouldShowOpenAds(false)
+//    } else {
+//      AppManager.shared.setStateShouldShowOpenAds(true)
+//    }
+    viewModel.action.send(.showAdsTracking)
   }
   
   override func viewWillAppear(_ animated: Bool) {
@@ -732,6 +733,15 @@ class TruckVC: BaseViewController {
         self.startTrackingUserLocation()
       }
     }
+    
+    viewModel.showATT
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] in
+        guard let self else {
+          return
+        }
+        showAdsTracking()
+      }.store(in: &subscriptions)
   }
   
   func updateTableHeight() {

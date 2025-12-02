@@ -16,6 +16,7 @@ class TruckViewModel: BaseViewModel {
     case truckProfile
     case iap
     case lockFeature
+    case showAdsTracking
   }
   
   let action = PassthroughSubject<Action, Never>()
@@ -23,6 +24,7 @@ class TruckViewModel: BaseViewModel {
   let index = CurrentValueSubject<Int?, Never>(nil)
   let actionTutorialTruckProFile = PassthroughSubject<Void, Never>()
   let showTutorialCaculate = PassthroughSubject<Void, Never>()
+  let showATT = PassthroughSubject<Void, Never>()
   
   private let router = TruckRouter()
   
@@ -66,6 +68,14 @@ extension TruckViewModel {
       router.route(to: .iap)
     case .lockFeature:
       router.route(to: .lockFeature)
+    case .showAdsTracking:
+      let handler = { [weak self] in
+        guard let self else {
+          return
+        }
+        showATT.send(())
+      }
+      router.route(to: .showAdsTracking, parameters: ["Handler": handler])
     }
   }
 }
