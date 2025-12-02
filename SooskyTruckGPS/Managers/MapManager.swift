@@ -142,7 +142,7 @@ extension MapManager {
             if let topVC = UIApplication.topViewController() {
                 let alert = UIAlertController(
                     title: "No internet connection",
-                    message: "Please check your network and try again",
+                    message: "You need an internet connection to use this feature. Please check your network and try again",
                     preferredStyle: .alert
                 )
                 alert.addAction(UIAlertAction(title: "OK", style: .cancel))
@@ -222,7 +222,7 @@ extension MapManager {
             if let topVC = UIApplication.topViewController() {
                 let alert = UIAlertController(
                     title: "No internet connection",
-                    message: "Please check your network and try again",
+                    message: "You need an internet connection to use this feature. Please check your network and try again",
                     preferredStyle: .alert
                 )
                 alert.addAction(UIAlertAction(title: "OK", style: .cancel))

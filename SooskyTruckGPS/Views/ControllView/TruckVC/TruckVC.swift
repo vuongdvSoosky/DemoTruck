@@ -432,26 +432,12 @@ class TruckVC: BaseViewController {
     currentPlace = nil
   }
   
-  deinit {
-    // Cleanup khi view controller bị deallocate
-    //    subscriptions.removeAll()
-    //    searchDelayTimer?.invalidate()
-    //    locationUpdateTimer?.invalidate()
-    //    stopTrackingUserLocation()
-    //    locationManager.delegate = nil
-    //    mapView.delegate = nil
-    //    searchTextField.delegate = nil
-    //    collectionView.delegate = nil
-    //    collectionView.dataSource = nil
-    //    tableView.delegate = nil
-    //    tableView.dataSource = nil
-  }
-  
   private func showTutorial() {
     if UserDefaultsManager.shared.get(of: Bool.self, key: .tutorial) == false {
       showOverlay()
       iconTutorialTruck.isHidden = false
       tutorialView.isHidden = false
+      UserDefaultsManager.shared.set(false, key: .tutorialListView)
     }
   }
   
@@ -1046,12 +1032,6 @@ extension TruckVC: MKMapViewDelegate {
         view?.annotation = annotation
       }
       
-      if UserDefaultsManager.shared.get(of: Bool.self, key: .tutorialListView) {
-        tutorialView.isHidden = true
-        hideOverlay()
-        UserDefaultsManager.shared.set(true, key: .tutorial)
-      }
-      
       if let custom = annotation as? CustomAnnotation {
         switch custom.type {
         case "Location":
@@ -1216,6 +1196,12 @@ extension TruckVC: UITextFieldDelegate {
     iconTutorialSearch.isHidden = true
     
     searchManager.query = text
+    
+    if UserDefaultsManager.shared.get(of: Bool.self, key: .tutorialListView) {
+      tutorialView.isHidden = true
+      hideOverlay()
+      UserDefaultsManager.shared.set(true, key: .tutorial)
+    }
   }
   
   func textFieldShouldReturn(_ textField: UITextField) -> Bool {

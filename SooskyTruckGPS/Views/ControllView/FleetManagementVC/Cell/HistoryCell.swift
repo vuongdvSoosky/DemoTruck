@@ -71,7 +71,7 @@ class HistoryCell: BaseCollectionViewCell {
     let stackView = UIStackView()
     stackView.axis = .horizontal
     stackView.spacing = 4
-    stackView.alignment = .fill
+    stackView.alignment = .center
     [iconDistance,distanceLabel].forEach({stackView.addArrangedSubview($0)})
     
     view.addSubview(stackView)
@@ -89,7 +89,7 @@ class HistoryCell: BaseCollectionViewCell {
     let stackView = UIStackView()
     stackView.axis = .horizontal
     stackView.spacing = 4
-    stackView.alignment = .fill
+    stackView.alignment = .center
     [iconTime,timeLabel].forEach({stackView.addArrangedSubview($0)})
     
     view.addSubview(stackView)
@@ -143,42 +143,93 @@ class HistoryCell: BaseCollectionViewCell {
     }
   }
   
-  override func setConstraints() {
-    containerView.snp.makeConstraints { make in
-      make.edges.equalToSuperview().inset(4)
-    }
-    
-    deleteButton.snp.makeConstraints { make in
-      make.top.equalTo(contentView).inset(4)
-      make.bottom.equalTo(contentView).inset(10)
-      make.trailing.equalTo(contentView).offset(-4)
-      make.width.equalTo(deleteButtonWidth)
-    }
-    
-    routeName.snp.makeConstraints { make in
-      make.top.equalToSuperview().offset(12)
-      make.left.right.equalToSuperview().inset(12)
-    }
-    
-    dateLabel.snp.makeConstraints { make in
-      make.top.equalTo(routeName.snp.bottom).inset(-8)
-      make.left.equalToSuperview().inset(12)
-      make.right.equalToSuperview().inset(-12)
-    }
-    
-    distanceView.snp.makeConstraints { make in
-      make.top.equalTo(dateLabel.snp.bottom).inset(-12)
-      make.left.equalToSuperview().inset(12)
-      make.bottom.equalToSuperview().inset(12)
-    }
-    
-    timeView.snp.makeConstraints { make in
-      make.top.equalTo(dateLabel.snp.bottom).inset(-12)
-      make.left.equalTo(distanceView.snp.right).inset(-12)
-      make.bottom.equalToSuperview().inset(12)
-    }
-  }
+//  override func setConstraints() {
+//    containerView.snp.makeConstraints { make in
+//      make.edges.equalToSuperview().inset(4)
+//    }
+//    
+//    deleteButton.snp.makeConstraints { make in
+//      make.top.equalTo(contentView).inset(4)
+//      make.bottom.equalTo(contentView).inset(10)
+//      make.trailing.equalTo(contentView).offset(-4)
+//      make.width.equalTo(deleteButtonWidth)
+//    }
+//    
+//    routeName.snp.makeConstraints { make in
+//      make.top.equalToSuperview().offset(12)
+//      make.left.right.equalToSuperview().inset(12)
+//    }
+//    
+//    dateLabel.snp.makeConstraints { make in
+//      make.top.equalTo(routeName.snp.bottom).inset(-8)
+//      make.left.equalToSuperview().inset(12)
+//      make.right.equalToSuperview().inset(-12)
+//    }
+//    
+//    distanceView.snp.makeConstraints { make in
+//      make.top.equalTo(dateLabel.snp.bottom).inset(-12)
+//      make.left.equalToSuperview().inset(12)
+//      make.bottom.equalToSuperview().inset(12)
+//    }
+//    
+//    timeView.snp.makeConstraints { make in
+//      make.top.equalTo(dateLabel.snp.bottom).inset(-12)
+//      make.left.equalTo(distanceView.snp.right).inset(-12)
+//      make.bottom.equalToSuperview().inset(12)
+//    }
+//  }
+//
   
+  override func setConstraints() {
+      // Container view
+      containerView.snp.makeConstraints { make in
+          make.top.left.bottom.equalToSuperview().inset(4)
+          make.right.equalToSuperview().inset(4)
+      }
+
+      // Delete button
+      deleteButton.snp.makeConstraints { make in
+          make.top.equalTo(containerView.snp.top)
+          make.bottom.equalTo(containerView.snp.bottom)
+          make.trailing.equalToSuperview().inset(4)
+          make.width.equalTo(deleteButtonWidth)
+      }
+
+      // Route name
+      routeName.snp.makeConstraints { make in
+          make.top.equalToSuperview().offset(12)
+          make.left.right.equalToSuperview().inset(12)
+      }
+
+      // Date label
+      dateLabel.snp.makeConstraints { make in
+          make.top.equalTo(routeName.snp.bottom).offset(8)
+          make.left.right.equalToSuperview().inset(12)
+      }
+
+      // Distance view
+      distanceView.snp.makeConstraints { make in
+          make.top.equalTo(dateLabel.snp.bottom).offset(12)
+          make.left.equalToSuperview().inset(12)
+          make.bottom.equalToSuperview().inset(12)
+      }
+
+      // Time view
+      timeView.snp.makeConstraints { make in
+          make.top.equalTo(distanceView.snp.top)
+          make.left.equalTo(distanceView.snp.right).offset(12)
+          make.bottom.equalTo(distanceView.snp.bottom)
+          make.right.lessThanOrEqualToSuperview().inset(12)
+      }
+
+      // Update icon sizes in stackViews
+      iconDistance.snp.makeConstraints { make in
+          make.width.height.equalTo(24)
+      }
+      iconTime.snp.makeConstraints { make in
+          make.width.height.equalTo(24)
+      }
+  }
   override func setProperties() {
     // Add left swipe gesture to show delete mode
     let leftSwipeGesture = UISwipeGestureRecognizer(target: self, action: #selector(handleLeftSwipe(_:)))
