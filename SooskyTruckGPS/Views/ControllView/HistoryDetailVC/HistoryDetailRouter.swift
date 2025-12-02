@@ -53,11 +53,15 @@ extension HistoryDetailRouter {
     }
     guard let parameters = parameters,
           let handler = parameters["Handler"] as? Handler,
-          let itemRoute = parameters["RouteResponseRealm"] as? RouteResponseRealm else {
+          let itemRoute = parameters["RouteResponseRealm"] as? RouteResponseRealm,
+          let historyVC = parameters["HistoryVC"] as? Bool else {
       return
     }
     
     let listView = ListDetailLocationView()
+    if historyVC {
+      listView.setUpForHistoryVC()
+    }
     listView.handlerActionDeleted = handler
     listView.setItem(itemRoute)
     listView.showSlideView(view: topVC.view)

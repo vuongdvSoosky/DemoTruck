@@ -411,5 +411,13 @@ extension DetailRouteCell {
     stateView.isHidden = false
     emtyView.isHidden = false
   }
+  
+  func disableTrashButton() {
+    containerView.isUserInteractionEnabled = false
+  }
+  
+  func enableTrashButton() {
+    containerView.isUserInteractionEnabled = true
+  }
 }
 

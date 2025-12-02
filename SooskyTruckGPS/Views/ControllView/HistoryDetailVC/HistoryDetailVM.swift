@@ -52,7 +52,9 @@ extension HistoryDetailVM {
         isEditLocation = true
       }
       router.route(to: .viewlist, parameters: ["Handler": handler,
-                                               "RouteResponseRealm": item.value as Any])
+                                               "RouteResponseRealm": item.value as Any,
+                                               "HistoryVC": true])
+      PlaceManager.shared.setStateHistory(with: true)
     case .back:
       router.route(to: .back)
     case .iap:

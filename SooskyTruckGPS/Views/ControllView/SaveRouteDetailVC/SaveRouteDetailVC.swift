@@ -28,7 +28,7 @@ class SaveRouteDetailVC: BaseViewController {
     iconSearch.contentMode = .scaleAspectFit
     iconSearch.image = .icSearch
     
-    [iconSearch, searchTextField, iconRemoveText, loadingView].forEach({view.addSubview($0)})
+    [iconSearch, searchTextField, iconRemoveText, mainLoadingView].forEach({view.addSubview($0)})
     
     iconSearch.snp.makeConstraints { make in
       make.width.height.equalTo(24)
@@ -48,7 +48,7 @@ class SaveRouteDetailVC: BaseViewController {
       make.right.equalToSuperview().inset(18)
     }
     
-    loadingView.snp.makeConstraints { make in
+    mainLoadingView.snp.makeConstraints { make in
       make.width.height.equalTo(22)
       make.centerY.equalTo(searchTextField.snp.centerY)
       make.left.equalTo(searchTextField.snp.right).offset(12)
@@ -203,6 +203,18 @@ class SaveRouteDetailVC: BaseViewController {
     }
     return view
   }()
+  
+  private lazy var mainLoadingView: UIView = {
+    let view = UIView()
+    view.translatesAutoresizingMaskIntoConstraints = false
+    view.backgroundColor = UIColor(rgb: 0xFCFCFC)
+    view.isHidden = true
+    view.addSubview(loadingView)
+    loadingView.snp.makeConstraints { make in
+      make.edges.equalToSuperview().inset(6)
+    }
+    return view
+  }()
   private var address: String = ""
   private var desAdress: String = ""
   private var currentQuery = ""
@@ -245,6 +257,9 @@ class SaveRouteDetailVC: BaseViewController {
     collectionView.delegate = self
     collectionView.dataSource = self
     collectionView.register(cell: ItemServiceCell.self)
+    
+    mainLoadingView.layer.cornerRadius = 15
+    mainLoadingView.layer.masksToBounds = true
   }
   
   private func setupMap() {

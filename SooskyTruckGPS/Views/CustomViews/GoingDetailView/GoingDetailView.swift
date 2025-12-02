@@ -170,6 +170,10 @@ class GoingDetailView: BaseView {
     collectionView.isHidden = true
   }
   
+  func reloadCollectionView() {
+    collectionView.reloadData()
+  }
+  
   override func binding() {
     PlaceManager.shared.$goingPlaceGroup
       .receive(on: DispatchQueue.main)
@@ -179,7 +183,9 @@ class GoingDetailView: BaseView {
         }
         stopLabel.text = "\(place.places.count) more waypoint"
         titleRoute.text = place.nameRouter
-        collectionView.reloadData()
+        DispatchQueue.main.async {
+          self.collectionView.reloadData()
+        }
       }.store(in: &subscriptions)
     
     PlaceManager.shared.$placesRouter
@@ -270,6 +276,7 @@ extension GoingDetailView: UICollectionViewDelegateFlowLayout {
                       sizeForItemAt indexPath: IndexPath) -> CGSize {
     let width = collectionView.frame.width
     let item = PlaceManager.shared.goingPlaceGroup.places[indexPath.row]
+    LogManager.show("State", item.state ?? "Nil")
     return CGSize(width: width, height: item.state != nil ? 86 : 64)
   }
   

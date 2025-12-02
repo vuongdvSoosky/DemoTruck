@@ -28,7 +28,7 @@ class EditGoingVC: BaseViewController {
     iconSearch.contentMode = .scaleAspectFit
     iconSearch.image = .icSearch
     
-    [iconSearch, searchTextField, iconRemoveText, loadingView].forEach({view.addSubview($0)})
+    [iconSearch, searchTextField, iconRemoveText, mainLoadingView].forEach({view.addSubview($0)})
     
     iconSearch.snp.makeConstraints { make in
       make.width.height.equalTo(24)
@@ -48,11 +48,10 @@ class EditGoingVC: BaseViewController {
       make.right.equalToSuperview().inset(18)
     }
     
-    loadingView.snp.makeConstraints { make in
-      make.width.height.equalTo(22)
+    mainLoadingView.snp.makeConstraints { make in
+      make.width.height.equalTo(30)
       make.centerY.equalTo(searchTextField.snp.centerY)
-      make.left.equalTo(searchTextField.snp.right).offset(12)
-      make.right.equalToSuperview().inset(18)
+      make.right.equalToSuperview().inset(14)
     }
     
     return view
@@ -76,6 +75,18 @@ class EditGoingVC: BaseViewController {
       make.center.equalToSuperview()
     }
     
+    return view
+  }()
+  
+  private lazy var mainLoadingView: UIView = {
+    let view = UIView()
+    view.translatesAutoresizingMaskIntoConstraints = false
+    view.backgroundColor = UIColor(rgb: 0xFCFCFC)
+    view.isHidden = true
+    view.addSubview(loadingView)
+    loadingView.snp.makeConstraints { make in
+      make.edges.equalToSuperview().inset(6)
+    }
     return view
   }()
   
@@ -265,6 +276,9 @@ class EditGoingVC: BaseViewController {
     collectionView.delegate = self
     collectionView.dataSource = self
     collectionView.register(cell: ItemServiceCell.self)
+    
+    mainLoadingView.layer.cornerRadius = 15
+    mainLoadingView.layer.masksToBounds = true
   }
   
   private func setupMap() {
@@ -1464,11 +1478,13 @@ extension EditGoingVC: CLLocationManagerDelegate {
 extension EditGoingVC {
   private func startLoading() {
     loadingView.isHidden = false
+    mainLoadingView.isHidden = false
     loadingView.startAnimating()
   }
   
   private func stopLoading() {
     loadingView.isHidden = true
+    mainLoadingView.isHidden = true
     loadingView.stopAnimating()
   }
 }

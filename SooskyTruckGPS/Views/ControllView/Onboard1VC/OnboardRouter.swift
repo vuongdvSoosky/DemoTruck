@@ -25,8 +25,8 @@ extension OnboardRouter {
     }
     switch route {
     case .next:
-      let ratingVC = RatingVC()
-      context.push(to: ratingVC, animated: true)
+      let surveyVC = SurveyVC()
+      context.push(to: surveyVC, animated: true)
     case .rating:
       let ratingVC = RatingVC()
       context.push(to: ratingVC, animated: true)

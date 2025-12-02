@@ -66,6 +66,7 @@ class LocationService: NSObject, CLLocationManagerDelegate {
     guard let isConnected = NetworkMonitor.shared.isConnected else {
       return
     }
+    
     guard isConnected else {
       LogManager.show("[Network Error] No internet connection")
       if let topVC = UIApplication.topViewController() {

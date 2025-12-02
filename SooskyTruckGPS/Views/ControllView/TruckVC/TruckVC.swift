@@ -37,7 +37,7 @@ class TruckVC: BaseViewController {
     iconSearch.contentMode = .scaleAspectFit
     iconSearch.image = .icSearch
     
-    [iconSearch, searchTextField, iconRemoveText, loadingView].forEach({view.addSubview($0)})
+    [iconSearch, searchTextField, iconRemoveText, mainLoadingView].forEach({view.addSubview($0)})
     
     iconSearch.snp.makeConstraints { make in
       make.width.height.equalTo(24)
@@ -51,19 +51,18 @@ class TruckVC: BaseViewController {
     }
     
     iconRemoveText.snp.makeConstraints { make in
-      make.width.height.equalTo(22)
+      make.width.height.equalTo(20)
       make.centerY.equalTo(searchTextField.snp.centerY)
       make.left.equalTo(searchTextField.snp.right).offset(12)
       make.right.equalToSuperview().inset(18)
     }
     
-    loadingView.snp.makeConstraints { make in
-      make.width.height.equalTo(22)
+    mainLoadingView.snp.makeConstraints { make in
+      make.width.height.equalTo(30)
       make.centerY.equalTo(searchTextField.snp.centerY)
-      make.left.equalTo(searchTextField.snp.right).offset(12)
-      make.right.equalToSuperview().inset(18)
+      make.right.equalToSuperview().inset(14)
     }
-    
+  
     return view
   }()
   private lazy var caculatorRouteView: UIView = {
@@ -169,6 +168,18 @@ class TruckVC: BaseViewController {
     view.layer.shadowOpacity = 0.4
     view.layer.shadowRadius = 8
     view.layer.shadowOffset = CGSize(width: 0, height: 4)
+    return view
+  }()
+  
+  private lazy var mainLoadingView: UIView = {
+    let view = UIView()
+    view.translatesAutoresizingMaskIntoConstraints = false
+    view.backgroundColor = UIColor(rgb: 0xFCFCFC)
+    view.isHidden = true
+    view.addSubview(loadingView)
+    loadingView.snp.makeConstraints { make in
+      make.edges.equalToSuperview().inset(6)
+    }
     return view
   }()
   private lazy var loadingView: UIActivityIndicatorView = {
@@ -593,6 +604,9 @@ class TruckVC: BaseViewController {
     collectionView.register(cell: ItemServiceCell.self)
     
     searchTextField.setPlaceholder("Search location to add stop")
+    
+    mainLoadingView.layer.cornerRadius = 15
+    mainLoadingView.layer.masksToBounds = true
   }
   
   private func setupMap() {
@@ -694,7 +708,6 @@ class TruckVC: BaseViewController {
           showOverlay()
         }
       }.store(in: &subscriptions)
-    
     
     searchManager.$results
       .receive(on: DispatchQueue.main)
@@ -1935,11 +1948,13 @@ extension TruckVC {
   private func startLoading() {
 //    iconRemoveText.isHidden = true
     loadingView.isHidden = false
+    mainLoadingView.isHidden = false
     loadingView.startAnimating()
   }
   
   private func stopLoading() {
     loadingView.isHidden = true
+    mainLoadingView.isHidden = true
     loadingView.stopAnimating()
   }
 }

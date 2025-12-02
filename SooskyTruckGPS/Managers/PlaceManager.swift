@@ -17,6 +17,7 @@ class PlaceManager {
   @Published var currentPlace: Place?
   @Published private(set) var placeRouterID: String = UUID().uuidString
   @Published private(set) var isGoing: Bool = false
+  @Published private(set) var isHistory: Bool = false
 
   private init() {}
 }
@@ -108,6 +109,10 @@ extension PlaceManager {
   
   func setStateGoing(with state: Bool) {
     self.isGoing = state
+  }
+  
+  func setStateHistory(with state: Bool) {
+    self.isHistory = state
   }
 
   // MARK: - Private

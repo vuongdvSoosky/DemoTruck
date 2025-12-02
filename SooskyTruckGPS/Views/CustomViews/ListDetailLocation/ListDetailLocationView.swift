@@ -80,6 +80,7 @@ class ListDetailLocationView: BaseView {
   var handlerActionDeleted: Handler?
   private var itemRouter: RouteResponseRealm?
   var nameRoute: String = "My Route"
+  private var disableTrashButton: Bool = false
   
   override func addComponents() {
     addSubviews(containerView, closeView)
@@ -181,6 +182,7 @@ extension ListDetailLocationView: UICollectionViewDataSource {
       PlaceManager.shared.remove(item)
       handlerActionDeleted?()
     }
+    
     cell.onDeleteModeChanged = { [weak self] isDeleteMode in
       guard let self else { return }
       if isDeleteMode {
@@ -192,6 +194,12 @@ extension ListDetailLocationView: UICollectionViewDataSource {
       cell.hideLineView()
     } else {
       cell.showLineView()
+    }
+    
+    if disableTrashButton == true {
+      cell.disableTrashButton()
+    } else {
+      cell.enableTrashButton()
     }
     return cell
   }
@@ -257,3 +265,9 @@ extension ListDetailLocationView: UITextViewDelegate {
   }
 }
 
+extension ListDetailLocationView {
+  func setUpForHistoryVC() {
+    self.iconEditNameRoute.isHidden = true
+    disableTrashButton = true
+  }
+}

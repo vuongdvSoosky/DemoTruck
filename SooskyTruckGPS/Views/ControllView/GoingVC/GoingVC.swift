@@ -885,6 +885,7 @@ extension GoingVC {
       }
       
       goingDetailView.hideStopLabel()
+      goingDetailView.reloadCollectionView()
       
       UIView.animate(withDuration: 0.3,
                      delay: 0,
