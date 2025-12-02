@@ -28,7 +28,7 @@ class SaveRouteDetailVC: BaseViewController {
     iconSearch.contentMode = .scaleAspectFit
     iconSearch.image = .icSearch
     
-    [iconSearch, searchTextField, iconRemoveText].forEach({view.addSubview($0)})
+    [iconSearch, searchTextField, iconRemoveText, loadingView].forEach({view.addSubview($0)})
     
     iconSearch.snp.makeConstraints { make in
       make.width.height.equalTo(24)
@@ -42,6 +42,13 @@ class SaveRouteDetailVC: BaseViewController {
     }
     
     iconRemoveText.snp.makeConstraints { make in
+      make.width.height.equalTo(22)
+      make.centerY.equalTo(searchTextField.snp.centerY)
+      make.left.equalTo(searchTextField.snp.right).offset(12)
+      make.right.equalToSuperview().inset(18)
+    }
+    
+    loadingView.snp.makeConstraints { make in
       make.width.height.equalTo(22)
       make.centerY.equalTo(searchTextField.snp.centerY)
       make.left.equalTo(searchTextField.snp.right).offset(12)
@@ -69,6 +76,13 @@ class SaveRouteDetailVC: BaseViewController {
       make.center.equalToSuperview()
     }
     
+    return view
+  }()
+  
+  private lazy var loadingView: UIActivityIndicatorView = {
+    let view = UIActivityIndicatorView()
+    view.translatesAutoresizingMaskIntoConstraints = false
+    view.color = UIColor(rgb: 0xF26101)
     return view
   }()
   
@@ -464,7 +478,13 @@ class SaveRouteDetailVC: BaseViewController {
   }
   
   private func searchNearby(with nameService: String = "", type: String = "") {
-    MapManager.shared.searchServiceAroundVisibleRegion(nameService, type: type)
+    startLoading()
+    MapManager.shared.searchServiceAroundVisibleRegion(nameService, type: type) {[weak self] count in
+      guard let self else {
+        return
+      }
+      stopLoading()
+    }
   }
   
   private func setupTableView() {
@@ -1388,5 +1408,17 @@ extension SaveRouteDetailVC: CLLocationManagerDelegate {
       return annotation.title == "My Location"
     }
     mapView.removeAnnotations(annotationsToRemove)
+  }
+}
+
+extension SaveRouteDetailVC {
+  private func startLoading() {
+    loadingView.isHidden = false
+    loadingView.startAnimating()
+  }
+  
+  private func stopLoading() {
+    loadingView.isHidden = true
+    loadingView.stopAnimating()
   }
 }

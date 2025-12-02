@@ -33,6 +33,7 @@ public enum NativeAdType {
   case medium
   case media
   case fullScreen
+  case custom
   
   var content: NativeAdProtocol {
     switch self {
@@ -44,6 +45,8 @@ public enum NativeAdType {
       return MediaGGNativeAdView()
     case .fullScreen:
       return FullScreenGGNativeAdView()
+    case .custom:
+      return CustomNativeAdsView()
     }
   }
 }
@@ -133,6 +136,8 @@ extension AdMobManager {
             make.height.equalTo(MediaGGNativeAdView.height)
           case .fullScreen:
             return
+          case .custom:
+            make.height.equalTo(CustomNativeAdsView.height)
           }
         }
       }

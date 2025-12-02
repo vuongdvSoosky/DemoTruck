@@ -9,6 +9,7 @@ import UIKit
 
 class GoingRouter: Router {
   typealias RouteType = Route
+  var countAdsToShow = 0
   
   enum Route: String {
     case arrievedView
@@ -27,25 +28,53 @@ extension GoingRouter {
     case .arrievedView:
       showArrivedView(parameters: parameters)
     case .finish:
-      // Tìm TabbarVC cũ trong navigation stack
-      if let existingTabbarVC = context.getController(ofClass: TabbarVC.self) {
-        // Nếu tìm thấy TabbarVC cũ, pop về đó
-        existingTabbarVC.setSelectIndex(navigate: .diary)
-        existingTabbarVC.reloadFleetManagementVC()
-        context.popToViewController(existingTabbarVC, animated: true)
-        context.removeViewController(GoingVC.self)
-      } else {
-        // Nếu không tìm thấy, tạo mới như cũ
-        let tabbarVC = TabbarVC()
-        tabbarVC.setSelectIndex(navigate: .diary)
-        tabbarVC.reloadFleetManagementVC()
-        context.push(to: tabbarVC, animated: true)
-        context.removeViewController(GoingVC.self)
-      }
+      showInterAds(didDismiss: {[weak self] in
+        guard let self else {
+          return
+        }
+        pushToTabbar(context)
+      }, didFaild: {[weak self] in
+        guard let self else {
+          return
+        }
+        pushToTabbar(context)
+      })
+      
+      UserDefaultsManager.shared.set(true, key: .showAdsReward)
     case .edit:
       gotoSaveRoute(context, parameters: parameters)
     case .tutorial:
       showTutorialView(parameters)
+    }
+  }
+  
+  private func showInterAds(didDismiss: @escaping() -> Void, didFaild: @escaping() -> Void) {
+    AdMobManager.shared.countAdsToShowIntertitial(startAds: 1,
+                                                  loopAds: 1, countFullAds: &countAdsToShow,
+                                                  unitId: AdUnitID(rawValue: SampleAdUnitID.adFormatInterstitialID1),
+                                                  isSplash: false,
+                                                  blockWillDismiss: nil,
+                                                  blockDidDismiss: didDismiss)
+    AdMobManager.shared.blockFullScreenAdFaild = { error in
+      didFaild()
+    }
+  }
+  
+  private func pushToTabbar(_ context: UINavigationController) {
+    // Tìm TabbarVC cũ trong navigation stack
+    if let existingTabbarVC = context.getController(ofClass: TabbarVC.self) {
+      // Nếu tìm thấy TabbarVC cũ, pop về đó
+      existingTabbarVC.setSelectIndex(navigate: .diary)
+      existingTabbarVC.reloadFleetManagementVC()
+      context.popToViewController(existingTabbarVC, animated: true)
+      context.removeViewController(GoingVC.self)
+    } else {
+      // Nếu không tìm thấy, tạo mới như cũ
+      let tabbarVC = TabbarVC()
+      tabbarVC.setSelectIndex(navigate: .diary)
+      tabbarVC.reloadFleetManagementVC()
+      context.push(to: tabbarVC, animated: true)
+      context.removeViewController(GoingVC.self)
     }
   }
 }

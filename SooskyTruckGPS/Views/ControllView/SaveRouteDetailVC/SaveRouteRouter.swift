@@ -9,6 +9,7 @@ import UIKit
 
 class SaveRouteRouter: Router {
   typealias RouteType = Route
+  var countAdsToShow = 0
   
   enum Route: String {
     case viewlist
@@ -31,8 +32,18 @@ extension SaveRouteRouter {
       let loadingVC = LoadingVC()
       context.push(to: loadingVC, animated: true)
     case .go:
-      let goingVC = GoingVC()
-      context.push(to: goingVC, animated: true)
+      showInterAds(didDismiss: {[weak self] in
+        guard let self else {
+          return
+        }
+        pushGoVC(context)
+      }, didFaild: {[weak self] in
+        guard let self else {
+          return
+        }
+        pushGoVC(context)
+      })
+    
     case .back:
       context.pop(animated: true)
     case .lockFeature:
@@ -47,6 +58,23 @@ extension SaveRouteRouter {
        break
       }
     }
+  }
+  
+  private func showInterAds(didDismiss: @escaping() -> Void, didFaild: @escaping() -> Void) {
+    AdMobManager.shared.countAdsToShowIntertitial(startAds: 1,
+                                                  loopAds: 1, countFullAds: &countAdsToShow,
+                                                  unitId: AdUnitID(rawValue: SampleAdUnitID.adFormatInterstitialID1),
+                                                  isSplash: false,
+                                                  blockWillDismiss: nil,
+                                                  blockDidDismiss: didDismiss)
+    AdMobManager.shared.blockFullScreenAdFaild = { error in
+      didFaild()
+    }
+  }
+  
+  private func pushGoVC(_ context: UINavigationController) {
+    let goingVC = GoingVC()
+    context.push(to: goingVC, animated: true)
   }
 }
 

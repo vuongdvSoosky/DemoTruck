@@ -101,10 +101,18 @@ class FleetManagementVC: BaseViewController {
   private lazy var saveView: UIView = {
     let view = UIView()
     view.translatesAutoresizingMaskIntoConstraints = false
-    view.addSubviews(saveEmptyView, collectionView)
+    view.addSubviews(stackSaveNativeView, saveEmptyView, collectionView)
+    
+    stackSaveNativeView.snp.makeConstraints { make in
+      make.top.equalToSuperview()
+      make.left.right.equalToSuperview()
+      make.height.equalTo(110)
+    }
     
     collectionView.snp.makeConstraints { make in
-      make.edges.equalToSuperview()
+      make.top.equalTo(stackSaveNativeView.snp.bottom).inset(-10)
+      make.left.right.equalToSuperview()
+      make.bottom.equalToSuperview()
     }
     
     saveEmptyView.snp.makeConstraints { make in
@@ -115,13 +123,52 @@ class FleetManagementVC: BaseViewController {
     return view
   }()
   
+  private lazy var saveNativeView: UIView = {
+    let view = UIView()
+    view.translatesAutoresizingMaskIntoConstraints = false
+    view.cornerRadius = 12
+    view.borderWidth = 1
+    view.borderColor = UIColor(rgb: 0x808080)
+    
+    return view
+  }()
+  
+  private lazy var stackSaveNativeView: UIStackView = {
+    let stackView = UIStackView(arrangedSubviews: [saveNativeView])
+    stackView.translatesAutoresizingMaskIntoConstraints = false
+    return stackView
+  }()
+  
+  private lazy var historyNativeView: UIView = {
+    let view = UIView()
+    view.translatesAutoresizingMaskIntoConstraints = false
+    view.cornerRadius = 12
+    view.borderWidth = 1
+    view.borderColor = UIColor(rgb: 0x808080)
+    return view
+  }()
+  
+  private lazy var historyStackNativeView: UIStackView = {
+    let stackView = UIStackView(arrangedSubviews: [historyNativeView])
+    stackView.translatesAutoresizingMaskIntoConstraints = false
+    return stackView
+  }()
+  
   private lazy var historyView: UIView = {
     let view = UIView()
     view.translatesAutoresizingMaskIntoConstraints = false
-    view.addSubviews(historyEmptyView, historyCollectionView)
+    view.addSubviews(historyStackNativeView, historyEmptyView, historyCollectionView)
+    
+    historyStackNativeView.snp.makeConstraints { make in
+      make.top.equalToSuperview()
+      make.left.right.equalToSuperview()
+      make.height.equalTo(110)
+    }
     
     historyCollectionView.snp.makeConstraints { make in
-      make.edges.equalToSuperview()
+      make.top.equalTo(historyStackNativeView.snp.bottom).inset(-10)
+      make.left.right.equalToSuperview()
+      make.bottom.equalToSuperview()
     }
     
     historyEmptyView.snp.makeConstraints { make in
@@ -238,6 +285,11 @@ class FleetManagementVC: BaseViewController {
       }.store(in: &subscriptions)
   }
   
+  override func viewDidLoad() {
+    super.viewDidLoad()
+    setupSaveNativeView()
+  }
+  
   var handlerActionDeleted: Handler?
   
   override func addComponents() {
@@ -302,12 +354,14 @@ class FleetManagementVC: BaseViewController {
     
     calenderView.addShadow()
     tabView.addShadow()
+    stackSaveNativeView.addShadow()
+    historyStackNativeView.addShadow()
   }
   
   override func setProperties() {
     saveRouteView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapSaveRouteView)))
     historyTabView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapHistory)))
-  
+    
     collectionView.delegate = self
     collectionView.dataSource = self
     collectionView.register(cell: ItemFleetCell.self)
@@ -316,6 +370,7 @@ class FleetManagementVC: BaseViewController {
     historyCollectionView.delegate = self
     historyCollectionView.dataSource = self
     historyCollectionView.register(cell: HistoryCell.self)
+    historyCollectionView.register(cell: NativeHorseCell.self)
     historyCollectionView.backgroundColor = .clear
   }
   
@@ -343,7 +398,7 @@ class FleetManagementVC: BaseViewController {
         }
         collectionView.reloadData()
       }.store(in: &subscriptions)
-  
+    
     viewModel.itemHistory
       .receive(on: DispatchQueue.main)
       .sink { [weak self] itemHistory in
@@ -397,6 +452,7 @@ extension FleetManagementVC {
     } else {
       historyTabView.addArrayColorGradient(arrayColor: colors, startPoint: CGPoint(x: 0, y: 0.5), endPoint: CGPoint(x: 1, y: 0.5))
       setTab(view: historyTabView, labelFont: AppFont.font(.boldText, size: 15), textColor: .white)
+      setupHistoryNativeView()
     }
   }
   
@@ -425,7 +481,6 @@ extension FleetManagementVC: UICollectionViewDataSource {
   }
   
   func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-    
     if collectionView === self.collectionView {
       let cell = collectionView.dequeueReusableCell(ItemFleetCell.self, for: indexPath)
       if let item = viewModel.saveRouteItems.value?[indexPath.row] {
@@ -452,33 +507,31 @@ extension FleetManagementVC: UICollectionViewDataSource {
           viewModel.action.send(.getSaveRouteItem(index: indexPath.row))
         }
       }
-            
       return cell
     } else {
+      let item = viewModel.itemHistory.value?[indexPath.row]
       let cell = collectionView.dequeueReusableCell(HistoryCell.self, for: indexPath)
-      if let item = viewModel.itemHistory.value?[indexPath.row] {
-        cell.configData(item: item)
-        cell.onDeleteTapped = { [weak self]  in
-          guard let self else {
-            return
-          }
-          viewModel.action.send(.removeItemHistory(item: item))
-          handlerActionDeleted?()
+      cell.configData(item: item)
+      cell.onDeleteTapped = { [weak self]  in
+        guard let self else {
+          return
         }
-        
-        cell.onDeleteModeChanged = { [weak self] isDeleteMode in
-          guard let self else { return }
-          if isDeleteMode {
-            self.hideDeleteModeForOtherHistoryCells(except: indexPath)
-          }
+        viewModel.action.send(.removeItemHistory(item: item))
+        handlerActionDeleted?()
+      }
+      
+      cell.onDeleteModeChanged = { [weak self] isDeleteMode in
+        guard let self else { return }
+        if isDeleteMode {
+          self.hideDeleteModeForOtherHistoryCells(except: indexPath)
         }
-        
-        cell.onChooseItemPlace = {[weak self] item in
-          guard let self else {
-            return
-          }
-          viewModel.action.send(.getHistoryItem(index: indexPath.row))
+      }
+      
+      cell.onChooseItemPlace = {[weak self] item in
+        guard let self else {
+          return
         }
+        viewModel.action.send(.getHistoryItem(index: indexPath.row))
       }
       return cell
     }
@@ -536,5 +589,35 @@ extension FleetManagementVC {
     let targetOffset = CGPoint(x: CGFloat(index) * pageWidth, y: 0)
     mainScrollView.setContentOffset(targetOffset, animated: animated)
     mainScrollView.isScrollEnabled = false
+  }
+}
+
+extension FleetManagementVC {
+  func setupSaveNativeView() {
+    guard let topVC = UIApplication.topViewController() else {
+      return
+    }
+    
+    AdMobManager.shared.addAdNative(
+      unitId: AdUnitID(rawValue: SampleAdUnitID.adFormatNativeAdvanced1),
+      rootVC: topVC,
+      views: [saveNativeView],
+      type: .custom,
+      ratio: .portrait
+    )
+  }
+  
+  func setupHistoryNativeView() {
+    guard let topVC = UIApplication.topViewController() else {
+      return
+    }
+    
+    AdMobManager.shared.addAdNative(
+      unitId: AdUnitID(rawValue: SampleAdUnitID.adFormatNativeAdvanced2),
+      rootVC: topVC,
+      views: [historyNativeView],
+      type: .custom,
+      ratio: .portrait
+    )
   }
 }

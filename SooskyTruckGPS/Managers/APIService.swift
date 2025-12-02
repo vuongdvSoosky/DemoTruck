@@ -11,7 +11,7 @@ final class APIService {
   static var shared = APIService()
 
   func fetchData(with point: [[Double]]) async throws -> RouteResponse {
-    guard let url = URL(string: "https://truck-gps.loca.lt/calculate-route") else {
+    guard let url = URL(string: "https://api.truck-gps.soosky.co/calculate-route") else {
       throw APIError.invalidURL
     }
 

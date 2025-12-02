@@ -133,8 +133,10 @@ extension MapManager {
 
 extension MapManager {
   func searchServiceAroundVisibleRegion(_ query: String,
-                                        type: String) {
+                                        type: String,
+                                        completion: ((Int) -> Void)? = nil) {
     guard let isConnected = NetworkMonitor.shared.isConnected else {
+      completion?(0)
       return
     }
     guard isConnected else {
@@ -148,9 +150,11 @@ extension MapManager {
                 alert.addAction(UIAlertAction(title: "OK", style: .cancel))
                 topVC.present(alert, animated: true)
             }
+      completion?(0)
             return
         }
     guard let mapView = mapView else {
+      completion?(0)
       return
     }
     
@@ -162,6 +166,7 @@ extension MapManager {
     let search = MKLocalSearch(request: request)
     search.start { [weak self] response, error in
       guard let self = self, let response = response else {
+        completion?(0)
         return
       }
       
@@ -196,6 +201,7 @@ extension MapManager {
           annotation.subtitle = fullAddress
           mapView.addAnnotation(annotation)
         }
+        completion?(response.mapItems.count)
       }
     }
   }

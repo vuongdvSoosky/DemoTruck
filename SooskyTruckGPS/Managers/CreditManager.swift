@@ -35,7 +35,7 @@ extension CreditManager {
   func isCreditExceeded(for type: CreditType) -> Bool {
     switch type {
     case .finish:
-      return goTurn > 100
+      return goTurn > 3
     }
   }
 }

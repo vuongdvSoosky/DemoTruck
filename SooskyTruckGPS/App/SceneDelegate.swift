@@ -23,11 +23,34 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
   func sceneDidDisconnect(_ scene: UIScene) {}
 
-  func sceneDidBecomeActive(_ scene: UIScene) {}
+  func sceneDidBecomeActive(_ scene: UIScene) {
+    showOpenAds()
+  }
 
   func sceneWillResignActive(_ scene: UIScene) {}
 
   func sceneWillEnterForeground(_ scene: UIScene) {}
 
   func sceneDidEnterBackground(_ scene: UIScene) {}
+  
+  private func showOpenAds() {
+    guard AppManager.shared.shouldShowOpenAds else {
+      return
+    }
+    LogManager.show(AppManager.shared.shouldShowOpenAds)
+    AdResumeManager.shared.resumeAdId = AdUnitID(rawValue: SampleAdUnitID.adFormatOpenAds[AdResumeManager.shared.countTierOpenAds])
+    
+    AdResumeManager.shared.loadAd { success in
+      if success {
+        if let vc = UIApplication.topViewController() {
+          AdResumeManager.shared.showAdIfAvailable(viewController: vc)
+        }
+      }
+    }
+    
+    AdResumeManager.shared.blockadDidDismissFullScreenContent = { [weak self] in
+      guard let self else { return }
+      LogManager.show("Open Ad ==> BlockadDidDismissFullScreenContent")
+    }
+  }
 }

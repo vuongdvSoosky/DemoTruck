@@ -124,7 +124,7 @@ class AdsTrackingView: BaseView {
   
   override func setProperties() {
     self.backgroundColor = UIColor(rgb: 0x000000, alpha: 0.4)
-    DispatchQueue.main.async {[weak self] in
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {[weak self] in
       guard let self else {
         return
       }

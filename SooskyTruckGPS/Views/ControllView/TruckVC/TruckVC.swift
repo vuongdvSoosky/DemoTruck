@@ -37,7 +37,7 @@ class TruckVC: BaseViewController {
     iconSearch.contentMode = .scaleAspectFit
     iconSearch.image = .icSearch
     
-    [iconSearch, searchTextField, iconRemoveText].forEach({view.addSubview($0)})
+    [iconSearch, searchTextField, iconRemoveText, loadingView].forEach({view.addSubview($0)})
     
     iconSearch.snp.makeConstraints { make in
       make.width.height.equalTo(24)
@@ -51,6 +51,13 @@ class TruckVC: BaseViewController {
     }
     
     iconRemoveText.snp.makeConstraints { make in
+      make.width.height.equalTo(22)
+      make.centerY.equalTo(searchTextField.snp.centerY)
+      make.left.equalTo(searchTextField.snp.right).offset(12)
+      make.right.equalToSuperview().inset(18)
+    }
+    
+    loadingView.snp.makeConstraints { make in
       make.width.height.equalTo(22)
       make.centerY.equalTo(searchTextField.snp.centerY)
       make.left.equalTo(searchTextField.snp.right).offset(12)
@@ -155,13 +162,19 @@ class TruckVC: BaseViewController {
     }
     return view
   }()
-  private let tableContainer: UIView = {
+  private lazy var tableContainer: UIView = {
     let view = UIView()
     view.backgroundColor = .clear
     view.layer.shadowColor = UIColor(rgb: 0x000000).cgColor
     view.layer.shadowOpacity = 0.4
     view.layer.shadowRadius = 8
     view.layer.shadowOffset = CGSize(width: 0, height: 4)
+    return view
+  }()
+  private lazy var loadingView: UIActivityIndicatorView = {
+    let view = UIActivityIndicatorView()
+    view.translatesAutoresizingMaskIntoConstraints = false
+    view.color = UIColor(rgb: 0xF26101)
     return view
   }()
   
@@ -321,13 +334,12 @@ class TruckVC: BaseViewController {
     showTutorial()
     UserDefaultsManager.shared.set(true, key: .showOnboard)
     
-//    if UserDefaultsManager.shared.get(of: Bool.self, key: .showATT) == false {
-//      viewModel.action.send(.showAdsTracking)
-//      AppManager.shared.setStateShouldShowOpenAds(false)
-//    } else {
-//      AppManager.shared.setStateShouldShowOpenAds(true)
-//    }
-    viewModel.action.send(.showAdsTracking)
+    if UserDefaultsManager.shared.get(of: Bool.self, key: .showATT) == false {
+      viewModel.action.send(.showAdsTracking)
+      AppManager.shared.setStateShouldShowOpenAds(false)
+    } else {
+      AppManager.shared.setStateShouldShowOpenAds(true)
+    }
   }
   
   override func viewWillAppear(_ animated: Bool) {
@@ -914,11 +926,18 @@ class TruckVC: BaseViewController {
   }
   
   private func searchNearby(with nameService: String = "", type: String = "") {
+    startLoading()
     // Chỉ search nếu có cả nameService và type
     guard !nameService.isEmpty && !type.isEmpty else {
       return
     }
-    MapManager.shared.searchServiceAroundVisibleRegion(nameService, type: type)
+    
+    MapManager.shared.searchServiceAroundVisibleRegion(nameService, type: type) {[weak self] count in
+      guard let self else {
+        return
+      }
+      stopLoading()
+    }
   }
   
   private func setupTableView() {
@@ -1339,13 +1358,18 @@ extension TruckVC {
   }
   
   @objc private func onTapCaculatorRoute() {
+    
     if AppManager.shared.hasSub {
       viewModel.action.send(.caculatorRoute)
     } else {
       if CreditManager.shared.isCreditExceeded(for: .finish) {
         viewModel.action.send(.lockFeature)
       } else {
-        viewModel.action.send(.caculatorRoute)
+        if UserDefaultsManager.shared.get(of: Bool.self, key: .showAdsReward) {
+          viewModel.action.send(.showReward)
+        } else {
+          viewModel.action.send(.caculatorRoute)
+        }
       }
     }
   }
@@ -1904,5 +1928,18 @@ extension TruckVC {
       AppManager.shared.setStateShouldShowOpenAds(true)
       completion?()
     }
+  }
+}
+
+extension TruckVC {
+  private func startLoading() {
+//    iconRemoveText.isHidden = true
+    loadingView.isHidden = false
+    loadingView.startAnimating()
+  }
+  
+  private func stopLoading() {
+    loadingView.isHidden = true
+    loadingView.stopAnimating()
   }
 }

@@ -302,7 +302,10 @@ extension HistoryCell {
 }
 
 extension HistoryCell {
-  func configData(item: RouteResponseRealm) {
+  func configData(item: RouteResponseRealm?) {
+    guard let item = item else {
+      return
+    }
     self.itemPlace = item
     self.distanceLabel.text = "\(String(format: "%.2f", item.trackingRecords.first?.distanceRace ?? 0.0)) mi"
     self.routeName.text = item.nameRouter ?? "My Route"

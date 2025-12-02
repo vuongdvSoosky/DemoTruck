@@ -17,6 +17,7 @@ class TruckRouter: Router {
     case iap
     case lockFeature
     case showAdsTracking
+    case showReward
   }
 }
 
@@ -58,6 +59,8 @@ extension TruckRouter {
         }
         showAdsTracking(parameters)
       }
+    case .showReward:
+      showPoupReward(context, parameters: parameters)
     }
   }
 }
@@ -105,5 +108,62 @@ extension TruckRouter {
     let view = AdsTrackingView()
     view.handlerAction = handler
     view.showView(view: topVC.view)
+  }
+  
+  private func showPoupReward(_ context: UINavigationController, parameters: [String: Any]? = nil) {
+    guard let topVC = UIApplication.topViewController() else {
+      return
+    }
+    
+    guard let parameters = parameters,
+          let didEarnReward = parameters["didEarnReward"] as? Handler else {
+      return
+    }
+    
+    
+    let popup = RewardView()
+    popup.handlerActionGetPremium = {[weak self] in
+      guard let self else {
+        return
+      }
+      switch AppManager.shared.displaySub {
+      case 0:
+        context.push(to: SubAVC(), animated: true)
+        popup.removeFromSuperview()
+      case 1:
+        context.push(to: SubB1VC(), animated: true)
+        popup.removeFromSuperview()
+      case 2:
+        context.push(to: SubB2VC(), animated: true)
+        popup.removeFromSuperview()
+        popup.removeFromSuperview()
+      default:
+        break
+      }
+    }
+    
+    popup.handlerActionWatchAds = {[weak self] in
+      guard let self else {
+        return
+      }
+      showReward(with: SampleAdUnitID.adFormatRewardedID1,
+                 didReward: {[weak self] bool in
+        guard let self else {
+          return
+        }
+        if bool {
+          popup.removeFromSuperview()
+          didEarnReward()
+        } else {
+          popup.removeFromSuperview()
+          didEarnReward()
+        }
+      })
+    }
+    popup.showView(view: topVC.view)
+  }
+  
+  private func showReward(with idAds: String , didReward: @escaping (Bool) -> Void) {
+    AdMobManager.shared.showRewarded(unitId: AdUnitID(rawValue: idAds), completion: didReward)
   }
 }

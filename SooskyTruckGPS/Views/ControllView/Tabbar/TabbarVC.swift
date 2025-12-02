@@ -94,36 +94,33 @@ extension TabbarVC: CustomTabbarViewDelagate {
   }
   
   func didSelectedTrack(index: Int) {
-    self.selectedIndex = index
-    //    showInterAds(didDismiss: {[weak self] in
-    //      guard let self else {
-    //        return
-    //      }
-    //      if UserDefaultsManager.shared.get(of: Bool.self, key: .showTutorialTrack) == false {
-    //        showPopupTutorialView(0)
-    //        UserDefaultsManager.shared.set(true, key: .showTutorialTrack)
-    //      }
-    //
-    //      self.selectedIndex = index
-    //    }, didFaild: {[weak self] in
-    //      guard let self else {
-    //        return
-    //      }
-    //      if UserDefaultsManager.shared.get(of: Bool.self, key: .showTutorialTrack) == false {
-    //        showPopupTutorialView(0)
-    //        UserDefaultsManager.shared.set(true, key: .showTutorialTrack)
-    //      }
-    //      self.selectedIndex = index
-    //    }
-    //    )
+    showInterAds(index)
   }
   
   func didSelectedTraining(index: Int) {
-    self.selectedIndex = index
+    showInterAds(index)
   }
   
   func didSelectedSetting(index: Int) {
-    self.selectedIndex = index
+    showInterAds(index)
+  }
+  
+  private func showInterAds(_ index: Int) {
+    if AppManager.shared.hasSub {
+      self.selectedIndex = index
+    } else {
+      showInterAds {[weak self] in
+        guard let self else {
+          return
+        }
+        self.selectedIndex = index
+      } didFaild: {[weak self] in
+          guard let self else {
+            return
+          }
+          self.selectedIndex = index
+      }
+    }
   }
   
   private func hideCustomTabbarView() {
@@ -163,8 +160,8 @@ extension TabbarVC {
 // MARK: Action ads
 extension TabbarVC {
   private func showInterAds(didDismiss: @escaping() -> Void, didFaild: @escaping() -> Void) {
-    AdMobManager.shared.countAdsToShowIntertitial(startAds: 1,
-                                                  loopAds: 1, countFullAds: &countAdsToShow,
+    AdMobManager.shared.countAdsToShowIntertitial(startAds: 3,
+                                                  loopAds: 2, countFullAds: &countAdsToShow,
                                                   unitId: AdUnitID(rawValue: SampleAdUnitID.adFormatInterstitialID1),
                                                   isSplash: false,
                                                   blockWillDismiss: nil,

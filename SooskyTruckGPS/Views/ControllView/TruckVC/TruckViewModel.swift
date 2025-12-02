@@ -17,6 +17,7 @@ class TruckViewModel: BaseViewModel {
     case iap
     case lockFeature
     case showAdsTracking
+    case showReward
   }
   
   let action = PassthroughSubject<Action, Never>()
@@ -76,6 +77,19 @@ extension TruckViewModel {
         showATT.send(())
       }
       router.route(to: .showAdsTracking, parameters: ["Handler": handler])
+    case .showReward:
+      if !AppManager.shared.hasSub {
+        let didEarnReward: Handler = { [weak self] in
+          guard let self else {
+            return
+          }
+          router.route(to: .loadingVC)
+         
+        }
+        router.route(to: .showReward, parameters: ["didEarnReward": didEarnReward])
+      } else {
+        router.route(to: .loadingVC)
+      }
     }
   }
 }

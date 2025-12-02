@@ -14,7 +14,7 @@ class FleetManagementVM: BaseViewModel {
     case getIndexToScroll(index: Int)
     case getSaveRouteItem(index: Int)
     case getHistoryItem(index: Int)
-    case removeItemHistory(item: RouteResponseRealm)
+    case removeItemHistory(item: RouteResponseRealm?)
     case calendar
     case filterData(selectedDate: (Date, Date))
     case iap
@@ -69,6 +69,9 @@ extension FleetManagementVM {
     case .getHistoryItem(index: let index):
       router.route(to: .historyVC, parameters: ["HistoryResponseRealm": itemHistory.value?[index] as Any])
     case .removeItemHistory(item: let item):
+      guard let item = item else {
+        return
+      }
       guard let object = RealmService.shared.getById(ofType: RouteResponseRealm.self, id: item.id) else {
         return
       }
@@ -113,5 +116,17 @@ extension FleetManagementVM {
       .filter("history == true AND createDate >= %@ AND createDate <= %@", startOfDay, endOfDay)
       .sorted(byKeyPath: "createDate", ascending: false)
       .map { $0 } ?? []
+  }
+  
+  func appendAdsIfNeeded() {
+    let adsItem = RouteResponseRealm()
+    adsItem.nameRouter = "ads"
+    adsItem.history = false
+    adsItem.createDate = Date()
+    
+    // Thêm vào saveRouteItems nếu không rỗng
+    if let saveItems = itemHistory.value, !saveItems.isEmpty {
+      itemHistory.value?.append(adsItem)
+    }
   }
 }

@@ -23,6 +23,7 @@ final class UserDefaultsManager {
     case lockFeature
     case tutorialListView
     case tutorialGoing
+    case showAdsReward
   }
   
   func set<T>(_ value: T?, key: KeyUserDefaults) {
