@@ -8,6 +8,7 @@
 import CoreLocation
 import UIKit
 import MapKit
+import Combine
 
 class LocationService: NSObject, CLLocationManagerDelegate {
   static let shared = LocationService()
@@ -16,6 +17,7 @@ class LocationService: NSObject, CLLocationManagerDelegate {
   private(set) var onLocationUpdate: ((CLLocation) -> Void)?
   private(set) var stateAuthen: Bool = false
   private var didCallCompletion = false
+  let handlerPermissionDeneid = PassthroughSubject<Void, Never>()
   
   
   private override init() {
@@ -39,12 +41,12 @@ class LocationService: NSObject, CLLocationManagerDelegate {
   }
   
   func startTrackingUser() {
-    locationManager.requestWhenInUseAuthorization()
-    locationManager.startUpdatingLocation()
+//    locationManager.requestWhenInUseAuthorization()
+//    locationManager.startUpdatingLocation()
   }
   
   func stopTrackingUser() {
-    locationManager.stopUpdatingLocation()
+//    locationManager.stopUpdatingLocation()
   }
   
   /// Delegate khi trạng thái quyền thay đổi
@@ -63,11 +65,8 @@ class LocationService: NSObject, CLLocationManagerDelegate {
   
   func requestCurrentLocation(from viewController: UIViewController? = nil,
                               onUpdate: @escaping (CLLocation) -> Void) {
-    guard let isConnected = NetworkMonitor.shared.isConnected else {
-      return
-    }
     
-    guard isConnected else {
+    guard NetworkMonitor.shared.isConnected else {
       LogManager.show("[Network Error] No internet connection")
       if let topVC = UIApplication.topViewController() {
         let alert = UIAlertController(
@@ -86,11 +85,11 @@ class LocationService: NSObject, CLLocationManagerDelegate {
     
     switch status {
     case .notDetermined:
-      locationManager.requestWhenInUseAuthorization()
-      
+      DispatchQueue.main.async {
+        self.locationManager.requestWhenInUseAuthorization()
+      }
     case .authorizedWhenInUse, .authorizedAlways:
       locationManager.startUpdatingLocation()
-      
     case .restricted, .denied:
       if let vc = viewController {
         showSettingsAlert(from: vc)
@@ -110,12 +109,25 @@ class LocationService: NSObject, CLLocationManagerDelegate {
     LogManager.show("Lỗi location: \(error.localizedDescription)")
   }
   
+  func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+      let status = manager.authorizationStatus
+      switch status {
+      case .authorizedWhenInUse, .authorizedAlways:
+        locationManager.startUpdatingLocation()
+      case .denied, .restricted:
+        LogManager.show("Từ chối cấp quyền")
+        handlerPermissionDeneid.send(())
+      default:
+          break
+      }
+  }
+  
   // MARK: - Alert
   
   func showSettingsAlert(from viewController: UIViewController) {
     let alert = UIAlertController(
       title: "Location Access Required",
-      message: "To record your rides tracks and show your current position, the app needs access to your location. You can grant access in your Settings",
+      message: "To use this feature, please enable location access in your device settings.This helps us provide accurate routes for you and show your current position, the app needs access to your location.",
       preferredStyle: .alert
     )
     

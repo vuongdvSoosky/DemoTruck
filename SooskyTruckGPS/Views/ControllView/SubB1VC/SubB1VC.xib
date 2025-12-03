@@ -9,7 +9,7 @@
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
-        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="SubB1VC" customModule="SooskyTruckGPS" customModuleProvider="target">
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="SubB1VC" customModule="Truck_GPS" customModuleProvider="target">
             <connections>
                 <outlet property="caculatorLabel" destination="KdJ-6T-CWp" id="CYJ-4z-k84"/>
                 <outlet property="desLabel" destination="d2y-UC-7VE" id="a0i-st-KJG"/>
@@ -251,7 +251,7 @@
                                                     <subviews>
                                                         <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="d2y-UC-7VE">
                                                             <rect key="frame" x="0.0" y="0.0" width="400" height="250.66666666666666"/>
-                                                            <string key="text">• The price of month subscription is $19.99  • One you confirm the purchase, your payment will be charged to your iTunes Account.  • Your subscription automatically renews unless auto-renew is turned off at least 24-hours before the end of the current period.  • Your account will be charged for renewal within 24-hours prior to the end of the current period.  • Subscription maybe managed by the user and auto-renewal maybe turned off by going to the user’s account setting after purchasing.</string>
+                                                            <mutableString key="text">• The price of monthly subscription is $19.99.  • One you confirm the purchase, your payment will be charged to your iTunes Account.  • Your subscription automatically renews unless auto-renew is turned off at least 24-hours before the end of the current period.  • Your account will be charged for renewal within 24-hours prior to the end of the current period.  • Subscription maybe managed by the user and auto-renewal maybe turned off by going to the user’s account setting after purchasing.</mutableString>
                                                             <fontDescription key="fontDescription" type="system" pointSize="14"/>
                                                             <nil key="textColor"/>
                                                             <nil key="highlightedColor"/>

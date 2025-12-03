@@ -67,6 +67,11 @@ class RatingVC: BaseViewController {
   
   private let viewModel = OnboardVM()
   
+  override func viewWillAppear(_ animated: Bool) {
+    super.viewWillAppear(animated)
+    AppManager.shared.setStateShouldShowOpenAds(false)
+  }
+  
   
   override func addComponents() {
     self.view.addSubviews(containerView)

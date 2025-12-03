@@ -47,7 +47,7 @@ class SubB2VC: StoreManager {
   
   private func setProperties() {
     unlimitedLable.font = AppFont.font(.boldText, size: 32)
-    premiumLabel.font = AppFont.font(.heavy, size: 20)
+    premiumLabel.font = AppFont.font(.heavy, size: 15)
     contentLabel.forEach({$0.font = AppFont.font(.mediumText, size: 20)})
     desLabel.font = AppFont.font(.regularText, size: 14)
     termsLabel.font = AppFont.font(.lightText, size: 14)

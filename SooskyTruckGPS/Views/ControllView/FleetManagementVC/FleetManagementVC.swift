@@ -572,7 +572,12 @@ extension FleetManagementVC {
   func reloadDataHistoryTab() {
     viewModel.fetchData()
     setSelectedTab(1)
-    scrollToPage(index: 1)
+    DispatchQueue.main.async {[weak self] in
+      guard let self else {
+        return
+      }
+      scrollToPage(index: 1)
+    }
   }
   
   func reloadDataForSavedTab() {

@@ -14,6 +14,12 @@ class SplashVC: BaseViewController {
     let view = UIView()
     return view
   }()
+  private lazy var imageBackGround: UIImageView = {
+    let imageView = UIImageView()
+    imageView.image = .imgBackgroundSplash
+    imageView.contentMode = .scaleAspectFill
+    return imageView
+  }()
   
   private lazy var iconImageView: UIImageView = {
     let imageView = UIImageView()
@@ -35,6 +41,7 @@ class SplashVC: BaseViewController {
   }
   
   override func addComponents() {
+    self.view.addSubview(imageBackGround)
     self.view.addSubview(contanierView)
     self.view.addSubview(iconImageView)
   }
@@ -44,15 +51,14 @@ class SplashVC: BaseViewController {
       make.edges.equalToSuperview()
     }
     
+    imageBackGround.snp.makeConstraints { make in
+      make.edges.equalToSuperview()
+    }
+    
     iconImageView.snp.makeConstraints { make in
       make.center.equalToSuperview()
       make.width.height.equalTo(160)
     }
-  }
-  
-  override func setColor() {
-    let color: [UIColor] = [UIColor(rgb: 0xF28E01), UIColor(rgb: 0xF26101)]
-    self.contanierView.addArrayColorGradient(arrayColor: color, startPoint: CGPoint(x: 0.5, y: 0), endPoint: CGPoint(x: 0.5, y: 1))
   }
   
   private func setRoot(_ vc: UIViewController) {

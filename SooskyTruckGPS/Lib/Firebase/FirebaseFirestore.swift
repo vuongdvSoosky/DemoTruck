@@ -41,6 +41,7 @@ class FireBaseFirestore {
       do{
         let configFBDB = try documents.data(as: ConfigFS.self)
         AppManager.shared.getStateAds(showAds: configFBDB.showAds)
+        LogManager.show(configFBDB.showAds)
         AppManager.shared.displaySub = configFBDB.displaySub
         complete(configFBDB.showAds)
       }catch{

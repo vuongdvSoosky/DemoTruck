@@ -38,7 +38,7 @@ class SubB1VC: StoreManager {
   
   private func setProperties() {
     unlimitedLable.font = AppFont.font(.boldText, size: 32)
-    premiumLabel.font = AppFont.font(.heavy, size: 17)
+    premiumLabel.font = AppFont.font(.heavy, size: 15)
     desLabel.font = AppFont.font(.regularText, size: 14)
     termsLabel.font = AppFont.font(.lightText, size: 14)
     privacyLabel.font = AppFont.font(.regularText, size: 14)

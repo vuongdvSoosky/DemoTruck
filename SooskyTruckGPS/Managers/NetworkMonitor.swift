@@ -19,7 +19,7 @@ final public class NetworkMonitor {
     case unknown
   }
   
-  @Published public private(set) var isConnected: Bool? = nil
+  @Published public private(set) var isConnected: Bool = true
   @Published public private(set) var connectionType: ConnectionType = .unknown
   private let queue = DispatchQueue.global()
   private let monitor: NWPathMonitor

@@ -19,7 +19,7 @@
         </array>
     </customFonts>
     <objects>
-        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="SubAVC" customModule="SooskyTruckGPS" customModuleProvider="target">
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="SubAVC" customModule="Truck_GPS" customModuleProvider="target">
             <connections>
                 <outlet property="contentLabel" destination="ru9-aR-AWe" id="PgC-gJ-6Fu"/>
                 <outlet property="mainScrollView" destination="UM1-zh-eoA" id="TAh-gU-uwx"/>
@@ -55,23 +55,48 @@
                                 <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="DTg-k7-tUN">
                                     <rect key="frame" x="0.0" y="0.0" width="390" height="1143"/>
                                     <subviews>
+                                        <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="uwP-Zz-Df9">
+                                            <rect key="frame" x="20" y="869" width="350" height="261"/>
+                                            <subviews>
+                                                <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" translatesAutoresizingMaskIntoConstraints="NO" id="1Pk-T6-SEF">
+                                                    <rect key="frame" x="0.0" y="0.0" width="350" height="261"/>
+                                                    <subviews>
+                                                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="ru9-aR-AWe">
+                                                            <rect key="frame" x="0.0" y="0.0" width="350" height="261"/>
+                                                            <mutableString key="text">• The price of monthly subscription is $19.99 and yearly subscription is $49.99.  • One you confirm the purchase, your payment will be charged to your iTunes Account.  • Your subscription automatically renews unless auto-renew is turned off at least 24-hours before the end of the current period.  • Your account will be charged for renewal within 24-hours prior to the end of the current period.  • Subscription maybe managed by the user and auto-renewal maybe turned off by going to the user’s account setting after purchasing.</mutableString>
+                                                            <fontDescription key="fontDescription" name="HelveticaNeue" family="Helvetica Neue" pointSize="14"/>
+                                                            <color key="textColor" red="0.16078431372549018" green="0.16078431372549018" blue="0.16078431372549018" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
+                                                            <nil key="highlightedColor"/>
+                                                            <string key="userLabel">The price of weekly subscription is $5.99 and yearly subscription is $39.99.   • One you confirm the purchase, your payment will be charged to your iTunes Account.  • Your subscription automatically renews unless auto-renew is turned off at least 24-hours before the end of the current period.  • Your account will be charged for renewal within 24-hours prior to the end of the current period.  • Subscription maybe managed by the user and auto-renewal maybe turned off by going to the user’s account setting after purchasing.</string>
+                                                        </label>
+                                                    </subviews>
+                                                </stackView>
+                                            </subviews>
+                                            <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                            <constraints>
+                                                <constraint firstItem="1Pk-T6-SEF" firstAttribute="top" secondItem="uwP-Zz-Df9" secondAttribute="top" id="JMH-5y-AeA"/>
+                                                <constraint firstAttribute="bottom" secondItem="1Pk-T6-SEF" secondAttribute="bottom" id="LlS-KH-XFl"/>
+                                                <constraint firstAttribute="trailing" secondItem="1Pk-T6-SEF" secondAttribute="trailing" id="PUJ-LA-q0V"/>
+                                                <constraint firstItem="1Pk-T6-SEF" firstAttribute="leading" secondItem="uwP-Zz-Df9" secondAttribute="leading" id="oMB-MR-iVs"/>
+                                            </constraints>
+                                        </view>
                                         <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="rdH-yh-cpD" userLabel="TopView">
                                             <rect key="frame" x="0.0" y="0.0" width="390" height="844"/>
                                             <subviews>
                                                 <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" distribution="fillEqually" alignment="center" spacing="12" translatesAutoresizingMaskIntoConstraints="NO" id="Mjv-cC-8V4">
-                                                    <rect key="frame" x="58" y="123" width="274" height="66"/>
+                                                    <rect key="frame" x="49" y="123" width="292" height="64"/>
                                                     <subviews>
                                                         <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Unlock All Features" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Uzw-fa-HVT">
-                                                            <rect key="frame" x="0.66666666666665719" y="0.0" width="273" height="27"/>
+                                                            <rect key="frame" x="9.6666666666666572" y="0.0" width="273" height="26"/>
                                                             <fontDescription key="fontDescription" name="SFProText-Bold" family="SF Pro Text" pointSize="28"/>
                                                             <color key="textColor" red="0.20000000000000001" green="0.14901960784313725" blue="0.26666666666666666" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
                                                             <nil key="highlightedColor"/>
                                                         </label>
                                                         <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="ZNK-mg-flP">
-                                                            <rect key="frame" x="84.666666666666657" y="39" width="105" height="27"/>
+                                                            <rect key="frame" x="108" y="38" width="76" height="26"/>
                                                             <subviews>
                                                                 <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="PRO" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Djs-wM-lFs">
-                                                                    <rect key="frame" x="33.666666666666686" y="3.3333333333333428" width="37.666666666666657" height="20.333333333333332"/>
+                                                                    <rect key="frame" x="19.333333333333339" y="3" width="37.666666666666657" height="20.333333333333332"/>
                                                                     <fontDescription key="fontDescription" name="SFProText-Heavy" family="SF Pro Text" pointSize="17"/>
                                                                     <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                                                     <nil key="highlightedColor"/>
@@ -81,8 +106,8 @@
                                                             <constraints>
                                                                 <constraint firstItem="Djs-wM-lFs" firstAttribute="centerX" secondItem="ZNK-mg-flP" secondAttribute="centerX" id="I79-Au-PV4"/>
                                                                 <constraint firstItem="Djs-wM-lFs" firstAttribute="centerY" secondItem="ZNK-mg-flP" secondAttribute="centerY" id="QRo-ED-zvD"/>
-                                                                <constraint firstAttribute="width" constant="105" id="nEi-QC-5hD"/>
-                                                                <constraint firstAttribute="height" constant="27" id="vMS-i1-YwS"/>
+                                                                <constraint firstAttribute="width" constant="76" id="nEi-QC-5hD"/>
+                                                                <constraint firstAttribute="height" constant="26" id="vMS-i1-YwS"/>
                                                             </constraints>
                                                             <userDefinedRuntimeAttributes>
                                                                 <userDefinedRuntimeAttribute type="number" keyPath="cornerRadius">
@@ -92,11 +117,11 @@
                                                         </view>
                                                     </subviews>
                                                     <constraints>
-                                                        <constraint firstAttribute="width" secondItem="Mjv-cC-8V4" secondAttribute="height" multiplier="137:33" id="eks-qO-2rU"/>
+                                                        <constraint firstAttribute="width" secondItem="Mjv-cC-8V4" secondAttribute="height" multiplier="274:60" id="eks-qO-2rU"/>
                                                     </constraints>
                                                 </stackView>
                                                 <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" spacing="16" translatesAutoresizingMaskIntoConstraints="NO" id="lRu-8G-2L2">
-                                                    <rect key="frame" x="44.666666666666657" y="220" width="301" height="104"/>
+                                                    <rect key="frame" x="44.666666666666657" y="218" width="301" height="104"/>
                                                     <subviews>
                                                         <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="sjV-df-h7w">
                                                             <rect key="frame" x="0.0" y="0.0" width="301" height="24"/>
@@ -221,8 +246,8 @@
                                                                     <color key="textColor" red="0.10196078431372549" green="0.10196078431372549" blue="0.10196078431372549" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
                                                                     <nil key="highlightedColor"/>
                                                                 </label>
-                                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="$6.99" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="DoB-16-EEE">
-                                                                    <rect key="frame" x="293" y="20" width="45" height="20.333333333333329"/>
+                                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="$19.99" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="DoB-16-EEE">
+                                                                    <rect key="frame" x="285.66666666666669" y="20" width="52.333333333333314" height="20.333333333333329"/>
                                                                     <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                                                     <color key="textColor" red="0.10196078431372549" green="0.10196078431372549" blue="0.10196078431372549" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
                                                                     <nil key="highlightedColor"/>
@@ -362,31 +387,6 @@
                                                 <constraint firstItem="Eqw-Hk-VVL" firstAttribute="leading" secondItem="rdH-yh-cpD" secondAttribute="leadingMargin" constant="12" id="jMB-4v-Xuh"/>
                                                 <constraint firstItem="Mjv-cC-8V4" firstAttribute="centerX" secondItem="rdH-yh-cpD" secondAttribute="centerX" id="ljh-bj-c95"/>
                                                 <constraint firstAttribute="trailing" secondItem="NSd-x8-0Ve" secondAttribute="trailing" constant="20" id="mKF-QI-P0U"/>
-                                            </constraints>
-                                        </view>
-                                        <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="uwP-Zz-Df9">
-                                            <rect key="frame" x="20" y="869" width="350" height="261"/>
-                                            <subviews>
-                                                <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" translatesAutoresizingMaskIntoConstraints="NO" id="1Pk-T6-SEF">
-                                                    <rect key="frame" x="0.0" y="0.0" width="350" height="261"/>
-                                                    <subviews>
-                                                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" textAlignment="natural" lineBreakMode="tailTruncation" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="ru9-aR-AWe">
-                                                            <rect key="frame" x="0.0" y="0.0" width="350" height="261"/>
-                                                            <mutableString key="text">• The price of yearly subscription is $49.99, monthly subscription is $6.99.  • One you confirm the purchase, your payment will be charged to your iTunes Account.  • Your subscription automatically renews unless auto-renew is turned off at least 24-hours before the end of the current period.  • Your account will be charged for renewal within 24-hours prior to the end of the current period.  • Subscription maybe managed by the user and auto-renewal maybe turned off by going to the user’s account setting after purchasing.</mutableString>
-                                                            <fontDescription key="fontDescription" name="HelveticaNeue" family="Helvetica Neue" pointSize="14"/>
-                                                            <color key="textColor" red="0.16078431372549018" green="0.16078431372549018" blue="0.16078431372549018" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
-                                                            <nil key="highlightedColor"/>
-                                                            <string key="userLabel">The price of weekly subscription is $5.99 and yearly subscription is $39.99.   • One you confirm the purchase, your payment will be charged to your iTunes Account.  • Your subscription automatically renews unless auto-renew is turned off at least 24-hours before the end of the current period.  • Your account will be charged for renewal within 24-hours prior to the end of the current period.  • Subscription maybe managed by the user and auto-renewal maybe turned off by going to the user’s account setting after purchasing.</string>
-                                                        </label>
-                                                    </subviews>
-                                                </stackView>
-                                            </subviews>
-                                            <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                            <constraints>
-                                                <constraint firstItem="1Pk-T6-SEF" firstAttribute="top" secondItem="uwP-Zz-Df9" secondAttribute="top" id="JMH-5y-AeA"/>
-                                                <constraint firstAttribute="bottom" secondItem="1Pk-T6-SEF" secondAttribute="bottom" id="LlS-KH-XFl"/>
-                                                <constraint firstAttribute="trailing" secondItem="1Pk-T6-SEF" secondAttribute="trailing" id="PUJ-LA-q0V"/>
-                                                <constraint firstItem="1Pk-T6-SEF" firstAttribute="leading" secondItem="uwP-Zz-Df9" secondAttribute="leading" id="oMB-MR-iVs"/>
                                             </constraints>
                                         </view>
                                     </subviews>

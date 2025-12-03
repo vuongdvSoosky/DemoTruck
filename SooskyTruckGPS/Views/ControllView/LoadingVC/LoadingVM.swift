@@ -62,10 +62,10 @@ extension LoadingVM {
 
 extension LoadingVM {
   private func requestAPIPlaces() {
-    guard let isConnected = NetworkMonitor.shared.isConnected else {
-      return
-    }
-    guard isConnected else {
+//    guard let isConnected = NetworkMonitor.shared.isConnected else {
+//      return
+//    }
+    guard NetworkMonitor.shared.isConnected else {
           LogManager.show("[Network Error] No internet connection")
           router.route(to: .nointernet)
           return

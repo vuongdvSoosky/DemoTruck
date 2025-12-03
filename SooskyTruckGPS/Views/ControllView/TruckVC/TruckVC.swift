@@ -70,6 +70,7 @@ class TruckVC: BaseViewController {
     view.translatesAutoresizingMaskIntoConstraints = false
     view.isHidden = false
     view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapCaculatorRoute)))
+    view.clipsToBounds = true
     
     let icon = UIImageView()
     icon.contentMode = .scaleAspectFit
@@ -344,12 +345,16 @@ class TruckVC: BaseViewController {
     setupTableView()
     showTutorial()
     UserDefaultsManager.shared.set(true, key: .showOnboard)
-    
+  }
+  
+  override func viewDidAppear(_ animated: Bool) {
+    super.viewDidAppear(animated)
     if UserDefaultsManager.shared.get(of: Bool.self, key: .showATT) == false {
       viewModel.action.send(.showAdsTracking)
       AppManager.shared.setStateShouldShowOpenAds(false)
     } else {
       AppManager.shared.setStateShouldShowOpenAds(true)
+      requestCurrentLocation()
     }
   }
   
@@ -380,42 +385,6 @@ class TruckVC: BaseViewController {
           return
         }
         self.searchNearby(with: self.currentQuery, type: self.currentType)
-      }
-    }
-    
-    LocationService.shared.requestCurrentLocation { [weak self] location in
-      guard let self = self else { return }
-      
-      DispatchQueue.main.async {
-        // Xóa annotation cũ nếu có
-        self.removeUserLocationAnnotation()
-        
-        // Tạo CustomAnnotation cho user location
-        let userAnnotation = CustomAnnotation(
-          coordinate: location.coordinate,
-          title: "My Location",
-          subtitle: nil,
-          type: "UserLocation",
-          id: "user_location", state: nil
-        )
-        self.userLocationAnnotation = userAnnotation
-        self.mapView.addAnnotation(userAnnotation)
-        
-        // Chỉ zoom map lần đầu tiên
-        if !self.isInitialLocationSet {
-          let region = MKCoordinateRegion(
-            center: location.coordinate,
-            latitudinalMeters: 500,
-            longitudinalMeters: 500
-          )
-          DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            self.mapView.setRegion(region, animated: true)
-            self.isInitialLocationSet = true
-          }
-        }
-        
-        // Bắt đầu theo dõi location updates liên tục
-        self.startTrackingUserLocation()
       }
     }
   }
@@ -721,8 +690,34 @@ class TruckVC: BaseViewController {
         tableView.isHidden = results.isEmpty
       }
       .store(in: &subscriptions)
+  
     
-    // Lấy location lần đầu và zoom map
+    viewModel.showATT
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self] in
+        guard let self else {
+          return
+        }
+        showAdsTracking {[weak self] in
+          guard let self else {
+            return
+          }
+          // Lấy location lần đầu và zoom map
+          requestCurrentLocation()
+        }
+      }.store(in: &subscriptions)
+    
+    LocationService.shared.handlerPermissionDeneid
+      .receive(on: DispatchQueue.main)
+      .sink { [weak self]  in
+        guard let self else {
+          return
+        }
+        moveToNewYork()
+      }.store(in: &subscriptions)
+  }
+  
+  private func requestCurrentLocation() {
     LocationService.shared.requestCurrentLocation { [weak self] location in
       guard let self = self else { return }
       
@@ -758,15 +753,20 @@ class TruckVC: BaseViewController {
         self.startTrackingUserLocation()
       }
     }
-    
-    viewModel.showATT
-      .receive(on: DispatchQueue.main)
-      .sink { [weak self] in
-        guard let self else {
-          return
-        }
-        showAdsTracking()
-      }.store(in: &subscriptions)
+  }
+  
+  func moveToNewYork() {
+      // Tọa độ trung tâm New York City
+      let newYorkCoordinate = CLLocationCoordinate2D(latitude: 40.7128, longitude: -74.0060)
+      
+      // Khoảng cách hiển thị (10000 mét = 10 km)
+      let region = MKCoordinateRegion(
+          center: newYorkCoordinate,
+          latitudinalMeters: 10000,
+          longitudinalMeters: 10000
+      )
+      
+    mapView.setRegion(region, animated: true)
   }
   
   func updateTableHeight() {
@@ -942,6 +942,7 @@ class TruckVC: BaseViewController {
     startLoading()
     // Chỉ search nếu có cả nameService và type
     guard !nameService.isEmpty && !type.isEmpty else {
+      stopLoading()
       return
     }
     
@@ -1946,7 +1947,6 @@ extension TruckVC {
 
 extension TruckVC {
   private func startLoading() {
-//    iconRemoveText.isHidden = true
     loadingView.isHidden = false
     mainLoadingView.isHidden = false
     loadingView.startAnimating()

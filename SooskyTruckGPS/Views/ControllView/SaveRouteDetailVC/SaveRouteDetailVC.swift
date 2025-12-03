@@ -42,7 +42,7 @@ class SaveRouteDetailVC: BaseViewController {
     }
     
     iconRemoveText.snp.makeConstraints { make in
-      make.width.height.equalTo(22)
+      make.width.height.equalTo(20)
       make.centerY.equalTo(searchTextField.snp.centerY)
       make.left.equalTo(searchTextField.snp.right).offset(12)
       make.right.equalToSuperview().inset(18)
@@ -1429,11 +1429,13 @@ extension SaveRouteDetailVC: CLLocationManagerDelegate {
 extension SaveRouteDetailVC {
   private func startLoading() {
     loadingView.isHidden = false
+    mainLoadingView.isHidden = false
     loadingView.startAnimating()
   }
   
   private func stopLoading() {
     loadingView.isHidden = true
+    mainLoadingView.isHidden = true
     loadingView.stopAnimating()
   }
 }

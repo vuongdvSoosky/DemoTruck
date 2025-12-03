@@ -56,11 +56,11 @@ extension MapManager {
   func searchNearbyService(_ query: String,
                            radius: CLLocationDistance = 5000,
                            completion: @escaping ([MKMapItem]) -> Void) {
-    guard let isConnected = NetworkMonitor.shared.isConnected else {
-      return
-    }
+//    guard let isConnected = NetworkMonitor.shared.isConnected else {
+//      return
+//    }
     
-    guard isConnected else {
+    guard NetworkMonitor.shared.isConnected else {
             LogManager.show("[Network Error] No internet connection")
             if let topVC = UIApplication.topViewController() {
                 let alert = UIAlertController(
@@ -135,11 +135,11 @@ extension MapManager {
   func searchServiceAroundVisibleRegion(_ query: String,
                                         type: String,
                                         completion: ((Int) -> Void)? = nil) {
-    guard let isConnected = NetworkMonitor.shared.isConnected else {
-      completion?(0)
-      return
-    }
-    guard isConnected else {
+//    guard let isConnected = NetworkMonitor.shared.isConnected else {
+//      completion?(0)
+//      return
+//    }
+    guard NetworkMonitor.shared.isConnected else {
             LogManager.show("[Network Error] No internet connection")
             if let topVC = UIApplication.topViewController() {
                 let alert = UIAlertController(
@@ -220,10 +220,10 @@ extension MapManager {
                            to end: CLLocationCoordinate2D,
                            completion: @escaping (Bool) -> Void) {
     
-    guard let isConnected = NetworkMonitor.shared.isConnected else {
-      return
-    }
-    guard isConnected else {
+//    guard let isConnected = NetworkMonitor.shared.isConnected else {
+//      return
+//    }
+    guard NetworkMonitor.shared.isConnected else {
             LogManager.show("[Network Error] No internet connection")
             if let topVC = UIApplication.topViewController() {
                 let alert = UIAlertController(

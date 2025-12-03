@@ -42,7 +42,7 @@ class EditGoingVC: BaseViewController {
     }
     
     iconRemoveText.snp.makeConstraints { make in
-      make.width.height.equalTo(22)
+      make.width.height.equalTo(20)
       make.centerY.equalTo(searchTextField.snp.centerY)
       make.left.equalTo(searchTextField.snp.right).offset(12)
       make.right.equalToSuperview().inset(18)

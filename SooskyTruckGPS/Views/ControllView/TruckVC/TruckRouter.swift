@@ -43,6 +43,8 @@ extension TruckRouter {
       }
     case .lockFeature:
       switch AppManager.shared.displaySub {
+      case 0:
+        context.push(to: SubAVC(), animated: true)
       case 1:
         let vc = SubB1VC()
         context.push(to: vc, animated: true)

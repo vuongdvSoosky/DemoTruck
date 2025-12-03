@@ -88,8 +88,9 @@ class RewardView: BaseView {
   private lazy var watchNowView: UIView = {
     let view = UIView()
     view.cornerRadius = 12
-    view.layer.borderColor = UIColor(rgb: 0x5C3218).cgColor
+    view.layer.borderColor = UIColor(rgb: 0xF26101).cgColor
     view.layer.borderWidth = 2
+    view.backgroundColor = UIColor(rgb: 0xFFEFD3)
     
     let label = UILabel()
     label.text = "Watch now"
@@ -125,8 +126,8 @@ class RewardView: BaseView {
     view.backgroundColor = UIColor(rgb: 0xF26101)
     
     let label = UILabel()
-    label.text = "Get premium"
-    label.font = AppFont.font(.boldText, size: 16)
+    label.text = "Get Premium"
+    label.font = AppFont.font(.bold, size: 16)
     label.textColor = UIColor(rgb: 0xFAF7F3)
     
     view.addSubviews(label)
@@ -140,7 +141,7 @@ class RewardView: BaseView {
   
   private lazy var icClosse: UIImageView = {
     let imageView = UIImageView()
-    imageView.image = .icCloseSubB0
+    imageView.image = .icCloseReward
     imageView.contentMode = .scaleAspectFit
     imageView.isUserInteractionEnabled = true
     return imageView

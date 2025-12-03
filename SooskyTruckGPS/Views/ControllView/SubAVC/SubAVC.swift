@@ -48,7 +48,7 @@ class SubAVC: StoreManager {
     yearPrice.font = AppFont.font(.boldText, size: 17)
     monthlyLabel.font = AppFont.font(.boldText, size: 17)
     monthPrice.font = AppFont.font(.boldText, size: 17)
-    premiumLabel.font = AppFont.font(.heavy, size: 16)
+    premiumLabel.font = AppFont.font(.heavy, size: 15)
     
     mainScrollView.contentInsetAdjustmentBehavior = .never
   }
