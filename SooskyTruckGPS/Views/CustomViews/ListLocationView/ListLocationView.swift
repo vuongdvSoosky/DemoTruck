@@ -258,6 +258,6 @@ extension ListLocationView: UITextViewDelegate {
   
   func textViewDidChange(_ textView: UITextView) {
     nameRoute = textView.text ?? ""
-    PlaceManager.shared.renamePlaceGroup(nameRoute.trimmingSpacesOnly())
+    PlaceManager.shared.renamePlaceGroup(nameRoute)
   }
 }

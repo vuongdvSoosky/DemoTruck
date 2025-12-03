@@ -84,12 +84,34 @@ extension TabbarVC {
 
 extension TabbarVC: CustomTabbarViewDelagate {
   func didSelectedHorse(index: Int) {
-    self.selectedIndex = index
-    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
-      guard let self else {
-        return
+    if AppManager.shared.hasSub {
+      self.selectedIndex = index
+    } else {
+      showInterAds {[weak self] in
+        guard let self else {
+          return
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+          guard let self else {
+            return
+          }
+          reloadFleetManagementTabSaveVC()
+          reloadMapView()
+        }
+        self.selectedIndex = index
+      } didFaild: {[weak self] in
+          guard let self else {
+            return
+          }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+          guard let self else {
+            return
+          }
+          reloadFleetManagementTabSaveVC()
+          reloadMapView()
+        }
+          self.selectedIndex = index
       }
-      reloadFleetManagementTabSaveVC()
     }
   }
   
@@ -148,6 +170,14 @@ extension TabbarVC: CustomTabbarViewDelagate {
       nav.reloadDataForSavedTab()
     }
   }
+  
+  private func reloadMapView() {
+    if let nav = listVC[0] as? TruckVC {
+      DispatchQueue.main.asyncAfter(deadline: .now()) {
+        nav.setupMaManager()
+      }
+    }
+  }
 }
 
 extension TabbarVC {
@@ -161,7 +191,7 @@ extension TabbarVC {
 extension TabbarVC {
   private func showInterAds(didDismiss: @escaping() -> Void, didFaild: @escaping() -> Void) {
     AdMobManager.shared.countAdsToShowIntertitial(startAds: 3,
-                                                  loopAds: 2, countFullAds: &countAdsToShow,
+                                                  loopAds: 3, countFullAds: &countAdsToShow,
                                                   unitId: AdUnitID(rawValue: SampleAdUnitID.adFormatInterstitialID1),
                                                   isSplash: false,
                                                   blockWillDismiss: nil,

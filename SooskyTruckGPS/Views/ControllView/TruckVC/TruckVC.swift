@@ -273,6 +273,7 @@ class TruckVC: BaseViewController {
     stackView.addArrangedSubview(caculatorRouteView)
     stackView.cornerRadius = 20
     stackView.layer.masksToBounds = true
+    stackView.clipsToBounds = true
     return stackView
   }()
   
@@ -354,7 +355,9 @@ class TruckVC: BaseViewController {
       AppManager.shared.setStateShouldShowOpenAds(false)
     } else {
       AppManager.shared.setStateShouldShowOpenAds(true)
-      requestCurrentLocation()
+      DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+        self.requestCurrentLocation()
+      }
     }
   }
   
@@ -362,7 +365,7 @@ class TruckVC: BaseViewController {
     super.viewWillAppear(animated)
     
     // Đảm bảo MapManager được attach lại với mapView
-    MapManager.shared.attachMap(to: mapView)
+  //  MapManager.shared.attachMap(to: mapView)
     
     // Resume tracking nếu đã có location ban đầu
     if isInitialLocationSet {
@@ -406,6 +409,7 @@ class TruckVC: BaseViewController {
     super.viewDidDisappear(animated)
     stopTrackingUserLocation()
     
+    searchTextField.text = ""
     //    // Xóa service annotations để giải phóng RAM
     let serviceAnnotations = mapView.annotations.filter { $0 is CustomServiceAnimation }
     mapView.removeAnnotations(serviceAnnotations)
@@ -443,9 +447,9 @@ class TruckVC: BaseViewController {
   }
   
   override func addComponents() {
-    self.view.addSubviews(mapView, searchView, viewList, collectionView, icPremium, icDirection,
+    self.view.addSubviews(mapView, searchView, viewList, collectionView, icPremium, icDirection, caculatorRouteStackView,
                           tutorialView, iconTruck, iconTutorialTruck, iconTutorialSearch,
-                          currentCalloutView, iconTutorialList, caculatorRouteStackView,
+                          currentCalloutView, iconTutorialList,
                           iconTutorialAddStop, iconTutorialCaculate, tableContainer)
   }
   
@@ -613,7 +617,6 @@ class TruckVC: BaseViewController {
           caculatorRouteView.isHidden = true
         } else {
           caculatorRouteView.isHidden = false
-          
           DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {[weak self] in
             guard let self else {
               return
@@ -717,8 +720,8 @@ class TruckVC: BaseViewController {
       }.store(in: &subscriptions)
   }
   
-  private func requestCurrentLocation() {
-    LocationService.shared.requestCurrentLocation { [weak self] location in
+  private func requestCurrentLocation(_ viewController: UIViewController? = nil) {
+    LocationService.shared.requestCurrentLocation(from: viewController) { [weak self] location in
       guard let self = self else { return }
       
       DispatchQueue.main.async {
@@ -825,7 +828,9 @@ class TruckVC: BaseViewController {
   }
   private func updateAnnotations(for places: [Place]) {
     let placeIds = Set(places.map { $0.id })
-    
+    if UserDefaultsManager.shared.get(of: Bool.self, key: .showATT) == true {
+      requestCurrentLocation()
+    }
     // Lọc các annotation hiện tại
     let annotationsToRemove = mapView.annotations.compactMap { ann -> MKAnnotation? in
       guard let customAnn = ann as? CustomAnnotation else { return nil }
@@ -1407,7 +1412,8 @@ extension TruckVC {
   }
   
   @objc private func onTapDirection() {
-    self.showCurrentLocation(mapView)
+    isInitialLocationSet = false
+    requestCurrentLocation(self)
   }
   
   @objc private func onTapPremium() {
@@ -1956,5 +1962,11 @@ extension TruckVC {
     loadingView.isHidden = true
     mainLoadingView.isHidden = true
     loadingView.stopAnimating()
+  }
+}
+
+extension TruckVC {
+  func setupMaManager() {
+    MapManager.shared.attachMap(to: mapView)
   }
 }

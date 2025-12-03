@@ -235,7 +235,7 @@
                                                                     </subviews>
                                                                 </stackView>
                                                             </subviews>
-                                                            <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                                            <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
                                                             <gestureRecognizers/>
                                                             <constraints>
                                                                 <constraint firstItem="cej-ZQ-af8" firstAttribute="centerY" secondItem="UcE-S7-7fr" secondAttribute="centerY" id="6qm-4h-d8w"/>
@@ -295,7 +295,7 @@
                                                                     </subviews>
                                                                 </stackView>
                                                             </subviews>
-                                                            <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                                            <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
                                                             <gestureRecognizers/>
                                                             <constraints>
                                                                 <constraint firstItem="qZL-1k-DTb" firstAttribute="leading" secondItem="NWB-06-qcO" secondAttribute="trailing" constant="8" id="4if-SZ-Ijc"/>

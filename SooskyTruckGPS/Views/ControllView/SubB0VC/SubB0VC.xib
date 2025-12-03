@@ -203,7 +203,7 @@
                                                                     </constraints>
                                                                 </imageView>
                                                             </subviews>
-                                                            <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                                            <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
                                                             <gestureRecognizers/>
                                                             <constraints>
                                                                 <constraint firstItem="Lo8-sm-W4g" firstAttribute="centerY" secondItem="UcE-S7-7fr" secondAttribute="centerY" id="2wR-3m-I7G"/>
@@ -252,7 +252,7 @@
                                                                     </constraints>
                                                                 </imageView>
                                                             </subviews>
-                                                            <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                                            <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
                                                             <gestureRecognizers/>
                                                             <constraints>
                                                                 <constraint firstItem="R6N-S9-ZTu" firstAttribute="centerY" secondItem="MDw-vh-WxR" secondAttribute="centerY" id="3GU-aN-F3D"/>

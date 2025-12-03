@@ -92,6 +92,7 @@ class SubB0VC: StoreManager {
   @IBAction func onTapYearView(_ sender: Any) {
     setupYearlyView(with: 3.5, boderColor: UIColor(rgb: 0xF26101))
     setupMonthlyView(with: 2, boderColor: UIColor(rgb: 0xFFC096))
+    viewModel.action.send(.chosePacket(registeredPurchase: .yearly))
     
     imageChooseYear.image = .icChooseSub
     imageChooseMonth.image = .icUnChooseSub
@@ -99,12 +100,11 @@ class SubB0VC: StoreManager {
   
   @IBAction func onTapMonthly(_ sender: Any) {
     setupMonthlyView(with: 3.5, boderColor: UIColor(rgb: 0xF26101))
-    
     setupYearlyView(with: 2, boderColor: UIColor(rgb: 0xFFC096))
     
-    self.purchaseProduct(type: .monthly)
     imageChooseMonth.image = .icChooseSub
     imageChooseYear.image = .icUnChooseSub
+    viewModel.action.send(.chosePacket(registeredPurchase: .monthly))
   }
   
   @IBAction func onTapBack(_ sender: Any) {

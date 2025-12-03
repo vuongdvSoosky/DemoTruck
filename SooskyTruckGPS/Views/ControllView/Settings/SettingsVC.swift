@@ -124,17 +124,7 @@ class SettingsVC: BaseViewController {
 
 extension SettingsVC: UICollectionViewDelegateFlowLayout {
   func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-    switch viewModel.listItem.value[indexPath.row] {
-      
-    case .rate, .feedback, .termOfUse, .privacy:
-      return CGSize(width: self.collectionView.frame.width, height: 28)
-    case .moreApp:
-      if AppManager.shared.displaySub == 0 {
-        return CGSize(width: self.collectionView.frame.width, height: 0)
-      } else {
-        return CGSize(width: self.collectionView.frame.width, height: 28)
-      }
-    }
+    return CGSize(width: self.collectionView.frame.width, height: 28)
   }
   
   func collectionView(_ collectionView: UICollectionView,
@@ -156,8 +146,6 @@ extension SettingsVC: UICollectionViewDelegate {
       openURL(AppText.policy)
     case .termOfUse:
       openURL(AppText.term)
-    case .moreApp:
-      openURL(AppText.moreapp)
     }
   }
 }

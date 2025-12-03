@@ -483,7 +483,7 @@ class EditGoingVC: BaseViewController {
   
   private func updateAnnotations(for places: [Place]) {
     let placeIds = Set(places.map { $0.id })
-    
+    requestCurrentLocation()
     // Lọc các annotation hiện tại
     let annotationsToRemove = mapView.annotations.compactMap { ann -> MKAnnotation? in
       guard let customAnn = ann as? CustomAnnotation else { return nil }
@@ -901,7 +901,8 @@ extension EditGoingVC: MKMapViewDelegate {
   }
   
   @objc private func onTapDirection() {
-    self.showCurrentLocation(mapView)
+    isInitialLocationSet = false
+    requestCurrentLocation()
   }
 }
 
@@ -1486,5 +1487,41 @@ extension EditGoingVC {
     loadingView.isHidden = true
     mainLoadingView.isHidden = true
     loadingView.stopAnimating()
+  }
+}
+
+extension EditGoingVC {
+  private func requestCurrentLocation() {
+    LocationService.shared.requestCurrentLocation { [weak self] location in
+      guard let self = self else { return }
+      
+      DispatchQueue.main.async {
+
+        // Tạo CustomAnnotation cho user location
+        let userAnnotation = CustomAnnotation(
+          coordinate: location.coordinate,
+          title: "My Location",
+          subtitle: nil,
+          type: "UserLocation",
+          id: "user_location", state: nil
+        )
+        self.userLocationAnnotation = userAnnotation
+        self.mapView.addAnnotation(userAnnotation)
+        
+        // Chỉ zoom map lần đầu tiên
+        if !self.isInitialLocationSet {
+          let region = MKCoordinateRegion(
+            center: location.coordinate,
+            latitudinalMeters: 500,
+            longitudinalMeters: 500
+          )
+          DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            self.mapView.setRegion(region, animated: true)
+            self.isInitialLocationSet = true
+          }
+        }
+        self.startTrackingUserLocation()
+      }
+    }
   }
 }

@@ -180,7 +180,7 @@ class SurveyVC: BaseViewController {
     
     saveView.snp.makeConstraints { make in
       make.left.right.equalToSuperview().inset(20)
-      make.bottom.equalToSuperview().inset(63)
+      make.bottom.equalToSuperview().inset(68)
       make.height.equalTo(60)
     }
     

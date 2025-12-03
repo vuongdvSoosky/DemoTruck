@@ -41,12 +41,12 @@ class LocationService: NSObject, CLLocationManagerDelegate {
   }
   
   func startTrackingUser() {
-//    locationManager.requestWhenInUseAuthorization()
-//    locationManager.startUpdatingLocation()
+    locationManager.requestWhenInUseAuthorization()
+    locationManager.startUpdatingLocation()
   }
   
   func stopTrackingUser() {
-//    locationManager.stopUpdatingLocation()
+    locationManager.stopUpdatingLocation()
   }
   
   /// Delegate khi trạng thái quyền thay đổi
@@ -82,7 +82,7 @@ class LocationService: NSObject, CLLocationManagerDelegate {
     }
     self.onLocationUpdate = onUpdate
     let status = locationManager.authorizationStatus
-    
+    LogManager.show(status)
     switch status {
     case .notDetermined:
       DispatchQueue.main.async {

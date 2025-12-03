@@ -82,6 +82,7 @@ class SubB1VC: StoreManager {
   }
     
   @IBAction func onTapSubcribe(_ sender: Any) {
+    self.viewModel.action.send(.chosePacket(registeredPurchase: .monthly))
     self.purchaseProduct(type: viewModel.registeredPurchase)
   }
   

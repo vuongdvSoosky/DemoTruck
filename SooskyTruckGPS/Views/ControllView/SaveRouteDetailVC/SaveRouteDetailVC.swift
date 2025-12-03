@@ -245,6 +245,11 @@ class SaveRouteDetailVC: BaseViewController {
     setupTableView()
   }
   
+  override func viewWillAppear(_ animated: Bool) {
+    super.viewWillAppear(animated)
+    requestCurrentLocation()
+  }
+  
   override func setProperties() {
     searchManager = LocationSearchManager()
     
@@ -331,41 +336,6 @@ class SaveRouteDetailVC: BaseViewController {
         tableView.isHidden = results.isEmpty
       }
       .store(in: &subscriptions)
-    
-    // Lấy location lần đầu và zoom map
-    LocationService.shared.requestCurrentLocation { [weak self] location in
-      guard let self = self else { return }
-      
-      DispatchQueue.main.async {
-        // Xóa annotation cũ nếu có
-        self.removeUserLocationAnnotation()
-        
-        // Tạo CustomAnnotation cho user location
-        let userAnnotation = CustomAnnotation(
-          coordinate: location.coordinate,
-          title: "My Location",
-          subtitle: nil,
-          type: "UserLocation",
-          id: "user_location", state: nil
-        )
-        self.userLocationAnnotation = userAnnotation
-        self.mapView.addAnnotation(userAnnotation)
-        
-        // Chỉ zoom map lần đầu tiên
-        if !self.isInitialLocationSet {
-          let region = MKCoordinateRegion(
-            center: location.coordinate,
-            latitudinalMeters: 500,
-            longitudinalMeters: 500
-          )
-          self.mapView.setRegion(region, animated: true)
-          self.isInitialLocationSet = true
-        }
-        
-        // Bắt đầu theo dõi location updates liên tục
-        self.startTrackingUserLocation()
-      }
-    }
   }
   
   func updateTableHeight() {
@@ -425,7 +395,7 @@ class SaveRouteDetailVC: BaseViewController {
   
   private func updateAnnotations(for places: [Place]) {
     let placeIds = Set(places.map { $0.id })
-    
+    requestCurrentLocation()
     // Lọc các annotation hiện tại
     let annotationsToRemove = mapView.annotations.compactMap { ann -> MKAnnotation? in
       guard let customAnn = ann as? CustomAnnotation else { return nil }
@@ -670,6 +640,23 @@ extension SaveRouteDetailVC: MKMapViewDelegate {
     
     // MARK: - CustomAnnotation
     if let customAnno = annotation as? CustomAnnotation {
+      
+      if customAnno.type == "UserLocation" {
+        let identifier = "UserLocationMarker"
+        var view = mapView.dequeueReusableAnnotationView(withIdentifier: identifier)
+        
+        if view == nil {
+          view = MKAnnotationView(annotation: customAnno, reuseIdentifier: identifier)
+          view?.canShowCallout = false
+        } else {
+          view?.annotation = customAnno
+        }
+        
+        view?.image = .icCurrentLocation
+        view?.centerOffset = CGPoint(x: 0, y: 0)
+        return view
+      }
+      
       self.currentAnnotation = customAnno
       let identifier = customAnno.identifier
       var view = mapView.dequeueReusableAnnotationView(withIdentifier: identifier) as? CustomAnnotationView
@@ -933,13 +920,28 @@ extension SaveRouteDetailVC {
   }
   
   @objc private func onTapCaculatorRoute() {
-    if AppManager.shared.hasSub {
-      validateButtonGO()
-    } else {
-      if CreditManager.shared.isCreditExceeded(for: .finish) {
-        viewModel.action.send(.lockFeature)
-      } else {
-        validateButtonGO()
+    
+    LocationService.shared.checkAndRequestAuthorization { [weak self] location in
+      guard let self else {
+        return
+      }
+      switch location {
+      case .notDetermined, .restricted:
+        break
+      case .denied:
+        LocationService.shared.showSettingsAlert(from: self)
+      case .authorizedAlways, .authorizedWhenInUse, .authorized:
+        if AppManager.shared.hasSub {
+          validateButtonGO()
+        } else {
+          if CreditManager.shared.isCreditExceeded(for: .finish) {
+            viewModel.action.send(.lockFeature)
+          } else {
+            validateButtonGO()
+          }
+        }
+      default:
+        break
       }
     }
   }
@@ -966,7 +968,9 @@ extension SaveRouteDetailVC {
   }
   
   @objc private func onTapDirection() {
-    self.showCurrentLocation(mapView)
+//    self.showCurrentLocation(mapView)
+    isInitialLocationSet = false
+    requestCurrentLocation(self)
   }
 }
 
@@ -1015,7 +1019,7 @@ extension SaveRouteDetailVC: UITableViewDelegate, UITableViewDataSource {
       
       // MARK: - USER LOCATION
     case .userLocation(title: _, subtitle: _, coordinate: _):
-      LocationService.shared.requestCurrentLocation { [weak self] location in
+      LocationService.shared.requestCurrentLocation(from: self) { [weak self] location in
         guard let self else { return }
         
         let geocoder = CLGeocoder()
@@ -1040,7 +1044,6 @@ extension SaveRouteDetailVC: UITableViewDelegate, UITableViewDataSource {
           }
         }
       }
-      
       break
     }
   }
@@ -1437,5 +1440,45 @@ extension SaveRouteDetailVC {
     loadingView.isHidden = true
     mainLoadingView.isHidden = true
     loadingView.stopAnimating()
+  }
+}
+
+extension SaveRouteDetailVC {
+  private func requestCurrentLocation(_ viewController: UIViewController? = nil) {
+    LocationService.shared.requestCurrentLocation(from: viewController) { [weak self] location in
+      guard let self = self else { return }
+      
+      DispatchQueue.main.async {
+        // Xóa annotation cũ nếu có
+        self.removeUserLocationAnnotation()
+        
+        // Tạo CustomAnnotation cho user location
+        let userAnnotation = CustomAnnotation(
+          coordinate: location.coordinate,
+          title: "My Location",
+          subtitle: nil,
+          type: "UserLocation",
+          id: "user_location", state: nil
+        )
+        self.userLocationAnnotation = userAnnotation
+        self.mapView.addAnnotation(userAnnotation)
+        
+        // Chỉ zoom map lần đầu tiên
+        if !self.isInitialLocationSet {
+          let region = MKCoordinateRegion(
+            center: location.coordinate,
+            latitudinalMeters: 500,
+            longitudinalMeters: 500
+          )
+          DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            self.mapView.setRegion(region, animated: true)
+            self.isInitialLocationSet = true
+          }
+        }
+        
+        // Bắt đầu theo dõi location updates liên tục
+        self.startTrackingUserLocation()
+      }
+    }
   }
 }

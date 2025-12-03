@@ -193,6 +193,7 @@ class GoingVC: BaseViewController {
   // MARK: - MapView
   private lazy var mapView: MKMapView = {
     let map = MKMapView()
+    map.showsUserLocation = true
     map.translatesAutoresizingMaskIntoConstraints = false
     return map
   }()
@@ -237,6 +238,11 @@ class GoingVC: BaseViewController {
         onTapGoView()
       }
     }
+  }
+  
+  override func viewWillAppear(_ animated: Bool) {
+    super.viewWillAppear(animated)
+    requestCurrentLocation()
   }
   
   override func setProperties() {
@@ -397,41 +403,6 @@ class GoingVC: BaseViewController {
         }
       }.store(in: &subscriptions)
     
-    // Lấy location lần đầu và zoom map
-    LocationService.shared.requestCurrentLocation { [weak self] location in
-      guard let self = self else { return }
-      
-      DispatchQueue.main.async {
-        // Xóa annotation cũ nếu có
-        self.removeUserLocationAnnotation()
-        
-        // Tạo CustomAnnotation cho user location
-        let userAnnotation = CustomAnnotation(
-          coordinate: location.coordinate,
-          title: "My Location",
-          subtitle: nil,
-          type: "UserLocation",
-          id: "user_location", state: nil
-        )
-        self.userLocationAnnotation = userAnnotation
-        self.mapView.addAnnotation(userAnnotation)
-        
-        // Chỉ zoom map lần đầu tiên
-        if !self.isInitialLocationSet {
-          let region = MKCoordinateRegion(
-            center: location.coordinate,
-            latitudinalMeters: 500,
-            longitudinalMeters: 500
-          )
-          self.mapView.setRegion(region, animated: true)
-          self.isInitialLocationSet = true
-        }
-        
-        // Bắt đầu theo dõi location updates liên tục
-        self.startTrackingUserLocation()
-      }
-    }
-    
     viewModel.actionTutorial
       .receive(on: DispatchQueue.main)
       .sink { [weak self] in
@@ -454,6 +425,7 @@ class GoingVC: BaseViewController {
   }
   
   private func updateAnnotations(for places: [Place]) {
+    requestCurrentLocation()
     guard !isUpdatingAnnotations else { return }
     isUpdatingAnnotations = true
     defer { isUpdatingAnnotations = false }
@@ -856,7 +828,8 @@ extension GoingVC {
   }
   
   @objc private func onTapDirection() {
-    self.showCurrentLocation(mapView)
+    isInitialLocationSet = false
+    requestCurrentLocation()
   }
 }
 
@@ -1364,6 +1337,44 @@ extension GoingVC: CLLocationManagerDelegate {
       self.mapView.addAnnotation(annotation)
       
       self.lastUpdateLocation = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+    }
+  }
+}
+
+extension GoingVC {
+  private func requestCurrentLocation() {
+    LocationService.shared.requestCurrentLocation { [weak self] location in
+      guard let self = self else { return }
+      
+      DispatchQueue.main.async {
+
+        // Tạo CustomAnnotation cho user location
+        let userAnnotation = CustomAnnotation(
+          coordinate: location.coordinate,
+          title: "My Location",
+          subtitle: nil,
+          type: "UserLocation",
+          id: "user_location", state: nil
+        )
+        self.userLocationAnnotation = userAnnotation
+        self.mapView.addAnnotation(userAnnotation)
+        
+        // Chỉ zoom map lần đầu tiên
+        if !self.isInitialLocationSet {
+          let region = MKCoordinateRegion(
+            center: location.coordinate,
+            latitudinalMeters: 500,
+            longitudinalMeters: 500
+          )
+          DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            self.mapView.setRegion(region, animated: true)
+            self.isInitialLocationSet = true
+          }
+        }
+        
+        // Bắt đầu theo dõi location updates liên tục
+        self.startTrackingUserLocation()
+      }
     }
   }
 }

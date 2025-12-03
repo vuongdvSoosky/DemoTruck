@@ -12,7 +12,8 @@ enum Setting: CaseIterable {
   case feedback
   case privacy
   case termOfUse
-  case moreApp
+
+  
   var title: String {
     switch self {
     case .rate:
@@ -23,8 +24,6 @@ enum Setting: CaseIterable {
       return "Privacy Policy"
     case .termOfUse:
       return "Terms Of Use"
-    case .moreApp:
-      return "More Apps"
     }
   }
   
@@ -38,8 +37,6 @@ enum Setting: CaseIterable {
       return .icPrivacyPolicy
     case .termOfUse:
       return .icTerms
-    case .moreApp:
-      return .icMoreApps
     }
   }
 }

@@ -300,7 +300,7 @@ extension ItemFleetCell {
   func configData(with item: RouteResponseRealm) {
     self.itemPlace = item
     departurePointValue.text = item.places.first?.address
-    titleRouteName.text = item.nameRouter ?? "My Route"
+    titleRouteName.text = item.nameRouter?.trimmingSpacesOnly() ?? "My Route"
     destinationValue.text = item.places.last?.address
     dateLabel.text = item.createDate.asString(format: "MMM d, yyyy")
     

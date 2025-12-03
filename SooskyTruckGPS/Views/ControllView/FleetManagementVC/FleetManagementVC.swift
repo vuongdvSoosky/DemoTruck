@@ -349,8 +349,13 @@ class FleetManagementVC: BaseViewController {
   
   override func setColor() {
     self.view.backgroundColor = UIColor(rgb: 0xFCFCFC)
-    let colors = [UIColor(rgb: 0xF28E01), UIColor(rgb: 0xF26101)]
-    saveRouteView.addArrayColorGradient(arrayColor: colors, startPoint: CGPoint(x: 0, y: 0.5), endPoint: CGPoint(x: 1, y: 0.5))
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {[weak self] in
+      guard let self else {
+        return
+      }
+      let colors = [UIColor(rgb: 0xF28E01), UIColor(rgb: 0xF26101)]
+      saveRouteView.addArrayColorGradient(arrayColor: colors, startPoint: CGPoint(x: 0, y: 0.5), endPoint: CGPoint(x: 1, y: 0.5))
+    }
     
     calenderView.addShadow()
     tabView.addShadow()
@@ -370,7 +375,6 @@ class FleetManagementVC: BaseViewController {
     historyCollectionView.delegate = self
     historyCollectionView.dataSource = self
     historyCollectionView.register(cell: HistoryCell.self)
-    historyCollectionView.register(cell: NativeHorseCell.self)
     historyCollectionView.backgroundColor = .clear
   }
   
@@ -441,18 +445,23 @@ extension FleetManagementVC {
     removeGradient(from: saveRouteView)
     removeGradient(from: historyTabView)
     
-    setTab(view: saveRouteView, labelFont: AppFont.font(.regularText, size: 14), textColor: UIColor(rgb: 0x727272))
-    setTab(view: historyTabView,   labelFont: AppFont.font(.regularText, size: 14), textColor: UIColor(rgb: 0x727272))
-    
-    let colors = [UIColor(rgb: 0xF28E01), UIColor(rgb: 0xF26101)]
-    
-    if index == 0 {
-      saveRouteView.addArrayColorGradient(arrayColor: colors, startPoint: CGPoint(x: 0, y: 0.5), endPoint: CGPoint(x: 1, y: 0.5))
-      setTab(view: saveRouteView, labelFont: AppFont.font(.boldText, size: 15), textColor: .white)
-    } else {
-      historyTabView.addArrayColorGradient(arrayColor: colors, startPoint: CGPoint(x: 0, y: 0.5), endPoint: CGPoint(x: 1, y: 0.5))
-      setTab(view: historyTabView, labelFont: AppFont.font(.boldText, size: 15), textColor: .white)
-      setupHistoryNativeView()
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [weak self] in
+      guard let self else {
+        return
+      }
+      setTab(view: saveRouteView, labelFont: AppFont.font(.regularText, size: 14), textColor: UIColor(rgb: 0x727272))
+      setTab(view: historyTabView, labelFont: AppFont.font(.regularText, size: 14), textColor: UIColor(rgb: 0x727272))
+      
+      let colors = [UIColor(rgb: 0xF28E01), UIColor(rgb: 0xF26101)]
+      
+      if index == 0 {
+        saveRouteView.addArrayColorGradient(arrayColor: colors, startPoint: CGPoint(x: 0, y: 0.5), endPoint: CGPoint(x: 1, y: 0.5))
+        setTab(view: saveRouteView, labelFont: AppFont.font(.boldText, size: 15), textColor: .white)
+      } else {
+        historyTabView.addArrayColorGradient(arrayColor: colors, startPoint: CGPoint(x: 0, y: 0.5), endPoint: CGPoint(x: 1, y: 0.5))
+        setTab(view: historyTabView, labelFont: AppFont.font(.boldText, size: 15), textColor: .white)
+        setupHistoryNativeView()
+      }
     }
   }
   
@@ -563,7 +572,7 @@ extension FleetManagementVC: UICollectionViewDelegateFlowLayout {
     if collectionView === self.collectionView {
       return CGSize(width: self.collectionView.frame.width, height: 196.0)
     } else {
-      return CGSize(width: self.collectionView.frame.width, height: 110.0)
+      return CGSize(width: self.historyCollectionView.frame.width, height: 110.0)
     }
   }
 }
@@ -571,19 +580,25 @@ extension FleetManagementVC: UICollectionViewDelegateFlowLayout {
 extension FleetManagementVC {
   func reloadDataHistoryTab() {
     viewModel.fetchData()
-    setSelectedTab(1)
-    DispatchQueue.main.async {[weak self] in
+    
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {[weak self] in
       guard let self else {
         return
       }
+      setSelectedTab(1)
       scrollToPage(index: 1)
     }
   }
   
   func reloadDataForSavedTab() {
     viewModel.fetchData()
-    setSelectedTab(0)
-    scrollToPage(index: 0)
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {[weak self] in
+      guard let self else {
+        return
+      }
+      setSelectedTab(0)
+      scrollToPage(index: 0)
+    }
   }
 }
 

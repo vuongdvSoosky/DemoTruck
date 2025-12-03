@@ -115,12 +115,29 @@ class HistoryDetailVC: BaseViewController {
   private var lastPlaceIds: Set<String?> = []
   private var currentTooltipView: CustomAnnotationView?
   private var currentTooltipID: String?
+  private var userLocationAnnotation: CustomAnnotation?
+  private var isInitialLocationSet = false
+  var currentUserCoordinate: CLLocationCoordinate2D?
+  private var lastUpdateLocation: CLLocation?
+  private var locationUpdateTimer: Timer?
+  
+  private lazy var locationManager: CLLocationManager = {
+    let manager = CLLocationManager()
+    manager.delegate = self
+    manager.desiredAccuracy = kCLLocationAccuracyBest
+    return manager
+  }()
   
   private var viewModel: HistoryDetailVM!
   
   override func viewDidLoad() {
     super.viewDidLoad()
     setupMapView()
+  }
+  
+  override func viewWillAppear(_ animated: Bool) {
+    super.viewWillAppear(animated)
+    requestCurrentLocation()
   }
   
   override func setProperties() {
@@ -340,7 +357,8 @@ extension HistoryDetailVC {
   }
   
   @objc private func onTapDirection() {
-    self.showCurrentLocation(mapView)
+    isInitialLocationSet = false
+    requestCurrentLocation(self)
   }
   
   @objc private func onTapPremium() {
@@ -383,6 +401,22 @@ extension HistoryDetailVC: MKMapViewDelegate {
     
     // MARK: - CustomAnnotation
     if let customAnno = annotation as? CustomAnnotation {
+      if customAnno.type == "UserLocation" {
+        let identifier = "UserLocationMarker"
+        var view = mapView.dequeueReusableAnnotationView(withIdentifier: identifier)
+        
+        if view == nil {
+          view = MKAnnotationView(annotation: customAnno, reuseIdentifier: identifier)
+          view?.canShowCallout = false
+        } else {
+          view?.annotation = customAnno
+        }
+        
+        view?.image = .icCurrentLocation
+        view?.centerOffset = CGPoint(x: 0, y: 0)
+        return view
+      }
+      
       let identifier = customAnno.identifier
       var view = mapView.dequeueReusableAnnotationView(withIdentifier: identifier) as? CustomAnnotationView
       
@@ -545,5 +579,193 @@ extension HistoryDetailVC {
 extension HistoryDetailVC {
   func setViewModel(_ viewModel: HistoryDetailVM) {
     self.viewModel = viewModel
+  }
+}
+
+extension HistoryDetailVC {
+  private func requestCurrentLocation(_ viewController: UIViewController? = nil) {
+    LocationService.shared.requestCurrentLocation(from: viewController) { [weak self] location in
+      guard let self = self else { return }
+      
+      DispatchQueue.main.async {
+
+        // Tạo CustomAnnotation cho user location
+        let userAnnotation = CustomAnnotation(
+          coordinate: location.coordinate,
+          title: "My Location",
+          subtitle: nil,
+          type: "UserLocation",
+          id: "user_location", state: nil
+        )
+        self.userLocationAnnotation = userAnnotation
+        self.mapView.addAnnotation(userAnnotation)
+        
+        // Chỉ zoom map lần đầu tiên
+        if !self.isInitialLocationSet {
+          let region = MKCoordinateRegion(
+            center: location.coordinate,
+            latitudinalMeters: 500,
+            longitudinalMeters: 500
+          )
+          DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            self.mapView.setRegion(region, animated: true)
+            self.isInitialLocationSet = true
+          }
+        }
+        
+        // Bắt đầu theo dõi location updates liên tục
+        self.startTrackingUserLocation()
+      }
+    }
+  }
+}
+
+extension HistoryDetailVC: CLLocationManagerDelegate {
+  func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+    guard let location = locations.last else { return }
+    
+    DispatchQueue.main.async { [weak self] in
+      guard let self = self else { return }
+      
+      // Cập nhật annotation mà không di chuyển map
+      self.updateUserLocationAnnotation(coordinate: location.coordinate)
+      self.currentUserCoordinate = location.coordinate
+    }
+  }
+  
+  func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+    LogManager.show("Location update error: \(error.localizedDescription)")
+  }
+  
+  func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
+    switch status {
+    case .authorizedWhenInUse, .authorizedAlways:
+      if !isInitialLocationSet {
+        // Nếu chưa có location ban đầu, lấy location
+        LocationService.shared.requestCurrentLocation { [weak self] location in
+          guard let self = self else { return }
+          DispatchQueue.main.async {
+            // Xóa annotation cũ nếu có
+            self.removeUserLocationAnnotation()
+            
+            let userAnnotation = CustomAnnotation(
+              coordinate: location.coordinate,
+              title: "My Location",
+              subtitle: nil,
+              type: "UserLocation",
+              id: "user_location", state: true
+            )
+            self.userLocationAnnotation = userAnnotation
+            self.mapView.addAnnotation(userAnnotation)
+            
+            if !self.isInitialLocationSet {
+              let region = MKCoordinateRegion(
+                center: location.coordinate,
+                latitudinalMeters: 500,
+                longitudinalMeters: 500
+              )
+              self.mapView.setRegion(region, animated: true)
+              self.isInitialLocationSet = true
+            }
+            
+            self.startTrackingUserLocation()
+          }
+        }
+      } else {
+        // Nếu đã có location, tiếp tục theo dõi
+        startTrackingUserLocation()
+      }
+    default:
+      break
+    }
+  }
+  
+  private func updateUserLocationAnnotation(coordinate: CLLocationCoordinate2D) {
+    guard let annotation = userLocationAnnotation else {
+      // Nếu không có annotation, tạo mới
+      let userAnnotation = CustomAnnotation(
+        coordinate: coordinate,
+        title: "My Location",
+        subtitle: nil,
+        type: "UserLocation",
+        id: "user_location", state: true
+      )
+      userLocationAnnotation = userAnnotation
+      mapView.addAnnotation(userAnnotation)
+      return
+    }
+    
+    // Debounce: Hủy timer cũ nếu có
+    locationUpdateTimer?.invalidate()
+    
+    // Tạo timer mới để update sau 0.5 giây
+    locationUpdateTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { [weak self] _ in
+      guard let self = self, let annotation = self.userLocationAnnotation else { return }
+      
+      // Kiểm tra xem location có thay đổi đáng kể không (ít nhất 3m)
+      if let lastLocation = self.lastUpdateLocation {
+        let distance = CLLocation(latitude: lastLocation.coordinate.latitude, longitude: lastLocation.coordinate.longitude)
+          .distance(from: CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude))
+        
+        // Chỉ update nếu di chuyển ít nhất 3 mét
+        if distance < 3 {
+          return
+        }
+      }
+      
+      // Đảm bảo chỉ có một annotation: xóa tất cả annotations có id "user_location" trước
+      let annotationsToRemove = self.mapView.annotations.filter { ann in
+        if let customAnn = ann as? CustomAnnotation {
+          return customAnn.id == "user_location" && ann !== annotation
+        }
+        return false
+      }
+      if !annotationsToRemove.isEmpty {
+        self.mapView.removeAnnotations(annotationsToRemove)
+      }
+      
+      // Cập nhật coordinate và remove/add lại annotation để MapKit cập nhật vị trí
+      annotation.coordinate = coordinate
+      self.mapView.removeAnnotation(annotation)
+      self.mapView.addAnnotation(annotation)
+      
+      self.lastUpdateLocation = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+    }
+  }
+  
+  private func startTrackingUserLocation() {
+    let authStatus = locationManager.authorizationStatus
+    switch authStatus {
+    case .notDetermined:
+      locationManager.requestWhenInUseAuthorization()
+    case .authorizedWhenInUse, .authorizedAlways:
+      locationManager.startUpdatingLocation()
+    default:
+      break
+    }
+  }
+  
+  private func stopTrackingUserLocation() {
+    locationManager.stopUpdatingLocation()
+    locationUpdateTimer?.invalidate()
+    locationUpdateTimer = nil
+  }
+  
+  // MARK: - User Location Tracking
+  private func removeUserLocationAnnotation() {
+    // Xóa annotation cũ nếu có
+    if let existingAnnotation = userLocationAnnotation {
+      mapView.removeAnnotation(existingAnnotation)
+      userLocationAnnotation = nil
+    }
+    
+    // Xóa tất cả annotations có id "user_location" hoặc title "My Location"
+    let annotationsToRemove = mapView.annotations.filter { annotation in
+      if let customAnn = annotation as? CustomAnnotation {
+        return customAnn.id == "user_location" || customAnn.type == "UserLocation"
+      }
+      return annotation.title == "My Location"
+    }
+    mapView.removeAnnotations(annotationsToRemove)
   }
 }
