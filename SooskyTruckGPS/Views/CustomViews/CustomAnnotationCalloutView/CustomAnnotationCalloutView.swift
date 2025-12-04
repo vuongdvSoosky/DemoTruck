@@ -126,8 +126,8 @@ final class CustomAnnotationCalloutView: BaseView {
   // MARK: - Config
   
   func configure(title: String, des: String) {
-    titleLabel.text = title
-    desLabel.text = des
+    titleLabel.text = title.beforeFirstComma
+    desLabel.text = des.afterFirstComma
   }
   
   func configureButton(title: String, icon: UIImage) {

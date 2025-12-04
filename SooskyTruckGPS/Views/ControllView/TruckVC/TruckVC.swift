@@ -447,10 +447,8 @@ class TruckVC: BaseViewController {
   }
   
   override func addComponents() {
-    self.view.addSubviews(mapView, searchView, viewList, collectionView, icPremium, icDirection, caculatorRouteStackView,
-                          tutorialView, iconTruck, iconTutorialTruck, iconTutorialSearch,
-                          currentCalloutView, iconTutorialList,
-                          iconTutorialAddStop, iconTutorialCaculate, tableContainer)
+    self.view.addSubviews(mapView, searchView, viewList, collectionView, icPremium, icDirection, caculatorRouteStackView,tutorialView, iconTruck, iconTutorialTruck, iconTutorialSearch,
+      currentCalloutView, iconTutorialList, iconTutorialAddStop, iconTutorialCaculate, tableContainer)
   }
   
   override func setConstraints() {
@@ -1758,6 +1756,7 @@ extension TruckVC {
     currentCalloutView.alpha = 0
     currentCalloutView.transform = CGAffineTransform(translationX: 0, y: 20)
     currentCalloutView.isHidden = false
+    self.iconTutorialAddStop.isHidden = false
     
     if UserDefaultsManager.shared.get(of: Bool.self, key: .tutorial) {
       tutorialView.isHidden = true
