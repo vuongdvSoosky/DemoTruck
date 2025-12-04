@@ -7,5 +7,5 @@
 
 enum TruckType: String {
   case big = "truck"
-  case small = "small-truck"
+  case small = "small_truck"
 }

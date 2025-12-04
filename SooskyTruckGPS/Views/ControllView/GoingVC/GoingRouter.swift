@@ -78,7 +78,7 @@ extension GoingRouter {
       context.removeViewController(GoingVC.self)
     }
     
-    if UserDefaultsManager.shared.get(of: Bool.self, key: .showRating) == false {
+    if UserDefaultsManager.shared.get(of: Bool.self, key: .showRatingFinish) == false {
       if let scene = UIApplication.shared.connectedScenes
         .first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene {
         SKStoreReviewController.requestReview(in: scene)

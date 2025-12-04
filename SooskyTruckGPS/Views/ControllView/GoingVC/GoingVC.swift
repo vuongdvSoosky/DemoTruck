@@ -288,7 +288,7 @@ class GoingVC: BaseViewController {
     goingDetailView.snp.makeConstraints { make in
       make.bottom.equalTo(statusStackView.snp.top).inset(-12)
       make.left.right.equalToSuperview().inset(20)
-      make.height.equalTo(188)
+      make.height.equalTo(175)
     }
     
     icDirection.snp.makeConstraints { make in
@@ -303,7 +303,7 @@ class GoingVC: BaseViewController {
     mapView.addSubview(compassButton)
     
     compassButton.snp.makeConstraints { make in
-      make.bottom.equalTo(icDirection.snp.top).inset(-30)
+      make.bottom.equalTo(icDirection.snp.top).inset(-15)
       make.right.equalToSuperview().inset(20)
       make.width.height.equalTo(44)
     }

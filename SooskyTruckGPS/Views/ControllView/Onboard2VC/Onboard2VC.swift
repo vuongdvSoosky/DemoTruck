@@ -27,11 +27,11 @@ class Onboard2VC: BaseViewController {
   private lazy var titleVC: UILabel = {
     let label = UILabel()
     label.translatesAutoresizingMaskIntoConstraints = false
-    label.text = "We’ve optimized your routing profile"
+    label.text = "We’ve optimized your \n routing profile"
     label.numberOfLines = 0
     label.textAlignment = .center
     label.textColor = UIColor(rgb: 0x332644)
-    label.font = AppFont.font(.heavy, size: 22)
+    label.font = AppFont.font(.heavy, size: 28)
     return label
   }()
   
@@ -62,7 +62,6 @@ class Onboard2VC: BaseViewController {
       make.center.equalToSuperview()
     }
     return view
-    
   }()
   
   private let viewModel = OnboardVM()
@@ -87,7 +86,6 @@ class Onboard2VC: BaseViewController {
     
     titleVC.snp.makeConstraints { make in
       make.top.equalTo(self.view.snp.topMargin).inset(28)
-      make.width.equalTo(250)
       make.centerX.equalToSuperview()
     }
     

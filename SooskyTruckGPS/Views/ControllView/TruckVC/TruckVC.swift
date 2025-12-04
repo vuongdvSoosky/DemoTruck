@@ -1757,6 +1757,7 @@ extension TruckVC {
     currentCalloutView.transform = CGAffineTransform(translationX: 0, y: 20)
     currentCalloutView.isHidden = false
     self.iconTutorialAddStop.isHidden = false
+    self.view.insertSubview(searchView, belowSubview: tutorialView)
     
     if UserDefaultsManager.shared.get(of: Bool.self, key: .tutorial) {
       tutorialView.isHidden = true
