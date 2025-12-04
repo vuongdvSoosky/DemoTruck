@@ -21,7 +21,7 @@ import UIKit
 
 extension UILabel {
   func setRequiredTitle(_ title: String,
-                        font: UIFont = AppFont.font(.regularText, size: 17),
+                        font: UIFont = AppFont.font(.regularText, size: 14),
                         titleColor: UIColor = UIColor(rgb: 0x9E9A9A),
                         asteriskColor: UIColor = UIColor(rgb: 0xE20D0D)) {
     

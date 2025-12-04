@@ -44,7 +44,6 @@ final class ImageManager {
       guard let settingsURL = URL(string: UIApplication.openSettingsURLString),
             UIApplication.shared.canOpenURL(settingsURL) else { return }
       UIApplication.shared.open(settingsURL)
-      UserDefaultsManager.shared.set(nameVC, key: .currentVC)
     })
     
     // Present alert (if self is a UIViewController)

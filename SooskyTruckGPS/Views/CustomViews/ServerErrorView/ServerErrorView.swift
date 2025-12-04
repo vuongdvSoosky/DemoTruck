@@ -27,23 +27,7 @@ class ServerErrorView: BaseView {
       make.width.height.equalTo(100)
     }
     
-    let titleLabel = UILabel()
-    titleLabel.text = "Server is under maintenance"
-    titleLabel.font = AppFont.font(.boldText, size: 21)
-    titleLabel.textColor = UIColor(rgb: 0xF26101)
-    titleLabel.textAlignment = .center
-    titleLabel.setLineSpacing()
-    titleLabel.numberOfLines = 0
-    
-    let descLabel = UILabel()
-    descLabel.text = "We’re making a few updates to keep things running smoothly. Your route will be ready again shortly. Thanks for your patience"
-    descLabel.font = AppFont.font(.regularText, size: 17)
-    descLabel.textColor = UIColor(rgb: 0x332644)
-    descLabel.textAlignment = .center
-    descLabel.setLineSpacing()
-    descLabel.numberOfLines = 0
-    
-    let stack = UIStackView(arrangedSubviews: [icon, titleLabel, descLabel, confirmView])
+    let stack = UIStackView(arrangedSubviews: [icon, titleError, desError, confirmView])
     stack.axis = .vertical
     stack.spacing = 16
     stack.alignment = .fill
@@ -62,6 +46,29 @@ class ServerErrorView: BaseView {
     
     return view
   }()
+  
+  private lazy var titleError: UILabel = {
+    let titleLabel = UILabel()
+    titleLabel.text = "Server is under maintenance"
+    titleLabel.font = AppFont.font(.boldText, size: 21)
+    titleLabel.textColor = UIColor(rgb: 0xF26101)
+    titleLabel.textAlignment = .center
+    titleLabel.setLineSpacing()
+    titleLabel.numberOfLines = 0
+    return titleLabel
+  }()
+  
+  private lazy var desError: UILabel = {
+    let descLabel = UILabel()
+    descLabel.text = "We’re making a few updates to keep things running smoothly. Your route will be ready again shortly. Thanks for your patience"
+    descLabel.font = AppFont.font(.regularText, size: 17)
+    descLabel.textColor = UIColor(rgb: 0x332644)
+    descLabel.textAlignment = .center
+    descLabel.setLineSpacing()
+    descLabel.numberOfLines = 0
+    return descLabel
+  }()
+  
   private lazy var confirmView: UIView = {
     let view = UIView()
     view.backgroundColor = UIColor(rgb: 0xF26101)
@@ -116,5 +123,13 @@ class ServerErrorView: BaseView {
   
   @objc private func onTapConfirmView() {
     self.handlerActionOkay?()
+  }
+}
+
+extension ServerErrorView {
+  func setupUI(_ title: String?, _ message: String?) {
+    guard let title = title, let message = message else { return }
+    titleError.text = title
+    desError.text = message
   }
 }

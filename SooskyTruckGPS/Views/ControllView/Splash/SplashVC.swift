@@ -8,16 +8,18 @@
 import UIKit
 import SnapKit
 
-class SplashVC: BaseViewController {
+class SplashVC: StoreManager {
   
   private lazy var contanierView: UIView = {
     let view = UIView()
+    view.backgroundColor = UIColor(rgb: 0xFFF8EC)
     return view
   }()
   private lazy var imageBackGround: UIImageView = {
     let imageView = UIImageView()
-    imageView.image = .imgBackgroundSplash
+    imageView.image = .imgBackgroundsplash
     imageView.contentMode = .scaleAspectFill
+    imageView.isHidden = true
     return imageView
   }()
   
@@ -28,25 +30,26 @@ class SplashVC: BaseViewController {
     return imageView
   }()
   
+  private let viewModel = SplashViewModel()
+  
   override func viewDidLoad() {
     super.viewDidLoad()
     AppManager.shared.setStateShouldShowOpenAds(false)
     DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-      if UserDefaultsManager.shared.get(of: Bool.self, key: .showOnboard) {
-        self.setRoot(TabbarVC())
-      } else {
-        self.setRoot(Onboard1VC())
-      }
+      self.viewModel.action.send(.end)
     }
+    
+    addComponents()
+    setConstraints()
   }
   
-  override func addComponents() {
+  func addComponents() {
     self.view.addSubview(imageBackGround)
     self.view.addSubview(contanierView)
     self.view.addSubview(iconImageView)
   }
   
-  override func setConstraints() {
+  func setConstraints() {
     contanierView.snp.makeConstraints { make in
       make.edges.equalToSuperview()
     }
@@ -60,12 +63,5 @@ class SplashVC: BaseViewController {
       make.width.height.equalTo(160)
     }
   }
-  
-  private func setRoot(_ vc: UIViewController) {
-    guard let window = UIApplication.shared.windows.first else { return }
-    let nav = UINavigationController(rootViewController: vc)
-    nav.isNavigationBarHidden = true
-    window.rootViewController = nav
-    window.makeKeyAndVisible()
-  }
+
 }

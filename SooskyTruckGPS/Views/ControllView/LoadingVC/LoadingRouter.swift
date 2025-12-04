@@ -16,6 +16,7 @@ class LoadingRouter: Router {
     case beforGoing
     case showError
     case nointernet
+    case showErrorClinet
   }
 }
 
@@ -59,6 +60,8 @@ extension LoadingRouter {
         )
         alert.addAction(UIAlertAction(title: "OK", style: .cancel))
         topVC.present(alert, animated: true)
+    case .showErrorClinet:
+      showErrorView(context, msg: "We couldn't find a safe route for your vehicle between these locations. Please adjust your stops or try a different vehicle size.", title: "Route Not Available")
     }
   }
 }
@@ -70,12 +73,13 @@ extension LoadingRouter {
     context.removeViewController(LoadingVC.self)
   }
   
-  private func showErrorView(_ context: UINavigationController) {
+  private func showErrorView(_ context: UINavigationController, msg: String? = nil, title: String? = nil) {
     guard let topVC = UIApplication.topViewController() else {
       return
     }
     
     let view = ServerErrorView()
+    view.setupUI(title, msg)
     view.handlerActionOkay = {[weak self] in
       guard let self else {
         return

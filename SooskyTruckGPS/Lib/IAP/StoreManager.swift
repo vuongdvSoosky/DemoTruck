@@ -356,6 +356,7 @@ class StoreManager: UIViewController {
     
     // Danh sách productID đầy đủ
     let validProductIDs = self.products.map { appBundleId + "." + $0.id }
+    LogManager.show(validProductIDs)
     
     for await verificationResult in Transaction.currentEntitlements {
       switch verificationResult {

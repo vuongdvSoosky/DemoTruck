@@ -47,7 +47,7 @@ class TruckProfileView: BaseView {
     icTruck.contentMode = .scaleAspectFit
     
     let label = UILabel()
-    label.text = "Big Truck"
+    label.text = "Large Truck"
     label.textAlignment = .center
     label.font = AppFont.font(.boldText, size: 19)
     label.textColor = UIColor(rgb: 0xF26101)
@@ -62,15 +62,15 @@ class TruckProfileView: BaseView {
     icTruck.snp.makeConstraints { make in
       make.top.equalToSuperview().inset(27)
       make.width.equalTo(184)
-      make.height.equalTo(88)
       make.centerX.equalToSuperview()
     }
     
     label.snp.makeConstraints { make in
       make.top.equalTo(icTruck.snp.bottom).inset(-12)
+      make.height.equalTo(23)
       make.left.right.equalToSuperview().inset(12)
+      make.bottom.equalToSuperview().inset(12)
     }
-    
     return view
   }()
   
@@ -114,13 +114,14 @@ class TruckProfileView: BaseView {
     icTruck.snp.makeConstraints { make in
       make.top.equalToSuperview().inset(27)
       make.width.equalTo(184)
-      make.height.equalTo(88)
       make.centerX.equalToSuperview()
     }
     
     label.snp.makeConstraints { make in
       make.top.equalTo(icTruck.snp.bottom).inset(-12)
+      make.height.equalTo(23)
       make.left.right.equalToSuperview().inset(12)
+      make.bottom.equalToSuperview().inset(12)
     }
     return view
   }()
@@ -232,7 +233,7 @@ class TruckProfileView: BaseView {
     
     // Tỉ lệ width : height = 350 : 178
     let width: CGFloat = 350
-    let height: CGFloat = 178
+    let height: CGFloat = 178 * 0.8
     let ratio = height / width
     
     bigTruckView.snp.makeConstraints { make in

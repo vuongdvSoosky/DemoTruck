@@ -13,8 +13,6 @@ final class UserDefaultsManager {
   enum KeyUserDefaults: String {
     case showATT
     case showRating
-    case currentVC
-    case didShowOnboard
     case showIAPForReportView
     case requestLocation
     case tutorial
@@ -24,6 +22,7 @@ final class UserDefaultsManager {
     case tutorialListView
     case tutorialGoing
     case showAdsReward
+    case showRatingFinish
   }
   
   func set<T>(_ value: T?, key: KeyUserDefaults) {

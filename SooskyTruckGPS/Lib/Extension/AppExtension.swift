@@ -116,7 +116,7 @@ extension UIButton {
     DispatchQueue.main.async {
       self.setTitle(title, for: .normal)
       self.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
-      self.backgroundColor = UIColor(hexString: "5C3218")
+      self.backgroundColor = UIColor(hexString: "F26101")
       self.setTitleColor(.white, for: .normal)
       self.layer.cornerRadius = radius
     }

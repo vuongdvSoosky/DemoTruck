@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import StoreKit
 
 class GoingRouter: Router {
   typealias RouteType = Route
@@ -75,6 +76,14 @@ extension GoingRouter {
       tabbarVC.reloadFleetManagementVC()
       context.push(to: tabbarVC, animated: true)
       context.removeViewController(GoingVC.self)
+    }
+    
+    if UserDefaultsManager.shared.get(of: Bool.self, key: .showRating) == false {
+      if let scene = UIApplication.shared.connectedScenes
+        .first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene {
+        SKStoreReviewController.requestReview(in: scene)
+        UserDefaultsManager.shared.set(true, key: .showRatingFinish)
+      }
     }
   }
 }

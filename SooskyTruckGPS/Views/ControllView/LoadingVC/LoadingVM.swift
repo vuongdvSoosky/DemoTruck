@@ -18,7 +18,7 @@ class LoadingVM: BaseViewModel {
     case cancelRequest
     case beforGoing
   }
-
+  
   private let router = LoadingRouter()
   private var requestTask: Task<Void, Never>?
   let showConfirmView = PassthroughSubject<Void, Never>()
@@ -62,14 +62,14 @@ extension LoadingVM {
 
 extension LoadingVM {
   private func requestAPIPlaces() {
-//    guard let isConnected = NetworkMonitor.shared.isConnected else {
-//      return
-//    }
+    //    guard let isConnected = NetworkMonitor.shared.isConnected else {
+    //      return
+    //    }
     guard NetworkMonitor.shared.isConnected else {
-          LogManager.show("[Network Error] No internet connection")
-          router.route(to: .nointernet)
-          return
-        }
+      LogManager.show("[Network Error] No internet connection")
+      router.route(to: .nointernet)
+      return
+    }
     
     // Sử dụng filtered places nếu có, nếu không thì dùng places từ PlaceManager
     let placesToUse = filteredPlacesForAPI ?? PlaceManager.shared.placeGroup.places
@@ -92,17 +92,36 @@ extension LoadingVM {
             return
           }
           data.id = PlaceManager.shared.placeRouterID
-          LogManager.show("data.id", data.id)
           PlaceManager.shared.updateRoute(data)
           showConfirmView.send(())
         }
       } catch let error {
         LogManager.show(error)
-        DispatchQueue.main.async { [weak self] in
-          guard let self else {
-            return
+        
+        if let apiError = error as? APIError {
+          switch apiError {
+          case .serverError(let code, let message):
+            
+            // Nếu bạn muốn xử lý riêng theo code:
+            if code == 400 {
+              DispatchQueue.main.async { [weak self] in
+                guard let self else {
+                  return
+                }
+                router.route(to: .showErrorClinet)
+              }
+            }
+            if code == 500 {
+              DispatchQueue.main.async { [weak self] in
+                guard let self else {
+                  return
+                }
+                router.route(to: .showError)
+              }
+            }
+          default:
+            break
           }
-          router.route(to: .showError)
         }
       }
     }

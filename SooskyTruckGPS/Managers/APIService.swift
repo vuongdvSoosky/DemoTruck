@@ -20,7 +20,7 @@ final class APIService {
     request.addValue("application/json", forHTTPHeaderField: "Content-Type")
 
     let body: [String: Any] = [
-      "profile": TruckTypeManager.shared.truckTypes?.rawValue ?? "truck",
+      "profile": TruckTypeManager.shared.truckTypes?.rawValue ?? "small-truck",
       "points": point,
       "points_encoded" : false,
       "snap_preventions": ["bridge"],

@@ -106,7 +106,6 @@ class FleetManagementVC: BaseViewController {
     stackSaveNativeView.snp.makeConstraints { make in
       make.top.equalToSuperview()
       make.left.right.equalToSuperview()
-      make.height.equalTo(110)
     }
     
     collectionView.snp.makeConstraints { make in
@@ -162,7 +161,6 @@ class FleetManagementVC: BaseViewController {
     historyStackNativeView.snp.makeConstraints { make in
       make.top.equalToSuperview()
       make.left.right.equalToSuperview()
-      make.height.equalTo(110)
     }
     
     historyCollectionView.snp.makeConstraints { make in
@@ -345,6 +343,15 @@ class FleetManagementVC: BaseViewController {
       make.left.equalTo(saveView.snp.right)
       make.width.equalTo(mainScrollView.snp.width)
     }
+    
+    saveNativeView.snp.makeConstraints { make in
+      make.height.equalTo(110)
+    }
+    
+    historyNativeView.snp.makeConstraints { make in
+      make.height.equalTo(110)
+    }
+    
   }
   
   override func setColor() {
@@ -359,8 +366,8 @@ class FleetManagementVC: BaseViewController {
     
     calenderView.addShadow()
     tabView.addShadow()
-    stackSaveNativeView.addShadow()
-    historyStackNativeView.addShadow()
+    saveNativeView.addShadow()
+    historyNativeView.addShadow()
   }
   
   override func setProperties() {

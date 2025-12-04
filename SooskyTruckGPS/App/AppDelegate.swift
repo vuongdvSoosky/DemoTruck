@@ -49,7 +49,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 extension AppDelegate {
   private func verifi() {
     Task {
-      _ = await StoreManager.share.verify()
+      _ = try await StoreManager.share.fetchProducts()
+      await StoreManager.share.updatePurchasedProducts()
     }
   }
 }
