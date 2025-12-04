@@ -632,10 +632,6 @@ class TruckVC: BaseViewController {
         }
         
         self.updateAnnotations(for: places.places)
-        
-        // Cập nhật lại icon của tất cả service annotations khi placeGroup thay đổi
-        // Đảm bảo các service đã được thêm vào placeGroup hiển thị đúng icon
-        self.updateServiceAnnotationsIcons()
       }.store(in: &subscriptions)
     
     viewModel.index
@@ -795,19 +791,20 @@ class TruckVC: BaseViewController {
   
   // MARK: - Helper: Cập nhật icon của service annotations dựa trên placeGroup
   private func updateServiceAnnotationsIcons() {
+    // Cập nhật icon trực tiếp cho các view hiện có
     for annotation in mapView.annotations {
       guard let serviceAnnotation = annotation as? CustomServiceAnimation,
             let annotationView = mapView.view(for: serviceAnnotation) as? CustomAnnotationView else {
         continue
       }
       
-      // Kiểm tra xem service đã có trong placeGroup chưa (so sánh bằng coordinate và type)
-      let place = Place(id: serviceAnnotation.id, address: serviceAnnotation.title ?? "", fullAddres: serviceAnnotation.subtitle ?? "", coordinate: serviceAnnotation.coordinate, state: nil, type: serviceAnnotation.type)
+      // Kiểm tra xem service đã có trong placeGroup chưa
+      let address = serviceAnnotation.title ?? serviceAnnotation.titlePlace
+      let place = Place(id: serviceAnnotation.id, address: address, fullAddres: serviceAnnotation.subtitle ?? "", coordinate: serviceAnnotation.coordinate, state: nil, type: serviceAnnotation.type)
       let isInPlaceGroup = PlaceManager.shared.exists(place)
       
       // Cập nhật icon
       if isInPlaceGroup {
-        // Đã thêm vào placeGroup → hiển thị icon theo type
         switch serviceAnnotation.type {
         case "Gas Station":
           annotationView.image = .icPinGas
@@ -823,11 +820,11 @@ class TruckVC: BaseViewController {
           annotationView.image = .icPinBlank
         }
       } else {
-        // Chưa thêm vào placeGroup → hiển thị icLocationEmpty
         annotationView.image = .icLocationEmpty
       }
     }
   }
+
   private func updateAnnotations(for places: [Place]) {
     let placeIds = Set(places.map { $0.id })
     if UserDefaultsManager.shared.get(of: Bool.self, key: .showATT) == true {
@@ -1107,6 +1104,11 @@ extension TruckVC: MKMapViewDelegate {
   func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
     // Chỉ search nếu có service được chọn (có cả query và type)
     guard !currentQuery.isEmpty && !currentType.isEmpty else {
+      // Cập nhật lại icon của tất cả service annotations khi region thay đổi (ngay cả khi không search)
+      // Đảm bảo icon được hiển thị đúng trạng thái sau khi map được cập nhật
+      DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+        self.updateServiceAnnotationsIcons()
+      }
       return
     }
     
@@ -1117,6 +1119,10 @@ extension TruckVC: MKMapViewDelegate {
       // Kiểm tra lại trước khi search (có thể đã bị thay đổi)
       if !self.currentQuery.isEmpty && !self.currentType.isEmpty {
         self.searchNearby(with: self.currentQuery, type: self.currentType)
+      }
+      // Cập nhật lại icon sau khi search
+      DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+        self.updateServiceAnnotationsIcons()
       }
     }
   }
@@ -1239,9 +1245,14 @@ extension TruckVC: MKMapViewDelegate {
         // Configure tooltip đúng dữ liệu của annotation hiện tại
         view?.configure(title: customService.title ?? "", des: customService.subtitle ?? "")
         
-        // Kiểm tra xem service đã được thêm vào placeGroup chưa
-        let place = Place(id: customService.id, address: customService.title ?? "", fullAddres: customService.subtitle ?? "", coordinate: customService.coordinate, state: nil, type: customService.type)
-        let isInPlaceGroup = PlaceManager.shared.exists(place)
+      // LUÔN kiểm tra lại trạng thái hiện tại khi view được tạo/reuse
+      // Đảm bảo icon được cập nhật đúng dù map có được cập nhật lại
+      // Tạo Place với id từ customService để kiểm tra chính xác
+      let place = Place(id: customService.title ?? "", address: customService.title ?? "", fullAddres: customService.subtitle ?? "", coordinate: customService.coordinate, state: nil, type: customService.type)
+      
+      // Kiểm tra xem service đã có trong placeGroup chưa
+      // Sử dụng exists với id để đảm bảo chính xác
+      let isInPlaceGroup = PlaceManager.shared.exists(place)
         
         // Chọn icon: nếu chưa thêm vào placeGroup → icLocationEmpty, nếu đã thêm → icon theo type
         if isInPlaceGroup {
@@ -1781,7 +1792,7 @@ extension TruckVC: CustomAnnotationViewDelagate {
       annotationView.configureButton(title: "Add Stop", icon: .icPlus)
     }
     
-    // Chỉ cập nhật icon cho service annotation đang được thao tác (thêm/xóa)
+    // Cập nhật icon cho service annotation đang được thao tác (thêm/xóa)
     if let serviceAnnotation = annotationView.annotation as? CustomServiceAnimation {
       // Chỉ update icon nếu trạng thái thay đổi (từ có → không có hoặc ngược lại)
       if wasInPlaceGroup != isInPlaceGroup {
@@ -1813,6 +1824,12 @@ extension TruckVC: CustomAnnotationViewDelagate {
       annotationView.configureButton(title: isInPlaceGroup ? "Remove Stop" : "Add Stop",
                                      icon: isInPlaceGroup ? .icTrash : .icPlus)
     }
+//    
+//    // Force reload tất cả service annotations để đảm bảo icon được cập nhật đúng
+//    // Điều này đảm bảo các service annotations khác cũng được cập nhật nếu có thay đổi
+//    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+//      self.updateServiceAnnotationsIcons()
+//    }
   }
 }
 

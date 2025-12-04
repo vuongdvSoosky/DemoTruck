@@ -52,6 +52,8 @@ extension PlaceManager {
 
   // MARK: - Check exist
   func exists(_ place: Place) -> Bool {
+    LogManager.show("place.id", place.id)
+    LogManager.show("placeGroup.places", placeGroup.places.map({$0.id}))
     return placeGroup.places.contains { $0.id == place.id }
   }
 

@@ -7,32 +7,32 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "1F3922C8-0450-4B05-BD5A-47922DDD2CB4"
+            uuid = "113C2161-1604-48A9-8366-63CA4A6D23C3"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "SooskyTruckGPS/Views/ControllView/TruckVC/TruckVC.swift"
+            filePath = "SooskyTruckGPS/Views/ControllView/EditGoingVC/EditGoingVC.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1026"
-            endingLineNumber = "1026"
-            landmarkName = "showTooltipForAnnotation(_:)"
+            startingLineNumber = "1361"
+            endingLineNumber = "1361"
+            landmarkName = "addPlaceToPlaceGourp(_:place:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "5AE8483D-AFD7-43E1-8DE5-AD9F5DEB3693"
+            uuid = "F66E2574-9DB7-4219-90A9-26EBD2178246"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "SooskyTruckGPS/Views/ControllView/TruckVC/TruckVC.swift"
+            filePath = "SooskyTruckGPS/Views/ControllView/EditGoingVC/EditGoingVC.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "1024"
-            endingLineNumber = "1024"
-            landmarkName = "showTooltipForAnnotation(_:)"
+            startingLineNumber = "1363"
+            endingLineNumber = "1363"
+            landmarkName = "addPlaceToPlaceGourp(_:place:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
