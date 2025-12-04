@@ -305,6 +305,12 @@ class EditGoingVC: BaseViewController {
         }
         self.arrayPlaces = places
         self.updateAnnotations(for: places)
+        
+        // Cập nhật lại icon của tất cả service annotations khi placeGroup thay đổi
+        // Đảm bảo các service đã được thêm vào placeGroup hiển thị đúng icon
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+          self.updateServiceAnnotationsIcons()
+        }
       }.store(in: &subscriptions)
     
     viewModel.index
@@ -492,10 +498,19 @@ class EditGoingVC: BaseViewController {
     }
     mapView.removeAnnotations(annotationsToRemove)
     for place in places {
-      if let existingAnnotation = mapView.annotations.first(where: {
-        guard let ann = $0 as? CustomAnnotation else { return false }
-        return ann.id == place.id
-      }) as? CustomAnnotation {
+      // Tìm tất cả annotation có cùng id (có thể có duplicate do bug trước đó)
+      let existingAnnotations = mapView.annotations.compactMap { ann -> CustomAnnotation? in
+        guard let customAnn = ann as? CustomAnnotation else { return nil }
+        return customAnn.id == place.id ? customAnn : nil
+      }
+      
+      if let existingAnnotation = existingAnnotations.first {
+        // Xóa tất cả duplicate annotations (nếu có)
+        if existingAnnotations.count > 1 {
+          let duplicates = Array(existingAnnotations.dropFirst())
+          mapView.removeAnnotations(duplicates)
+        }
+        
         // Update dữ liệu annotation
         existingAnnotation.coordinate = place.coordinate
         existingAnnotation.title = place.address
@@ -571,6 +586,12 @@ class EditGoingVC: BaseViewController {
         return
       }
       stopLoading()
+      
+      // Cập nhật lại icon của tất cả service annotations sau khi search
+      // Đảm bảo các service đã được thêm vào placeGroup hiển thị đúng icon
+      DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+        self.updateServiceAnnotationsIcons()
+      }
     }
   }
   
@@ -777,6 +798,10 @@ extension EditGoingVC: MKMapViewDelegate {
       // Configure tooltip đúng dữ liệu của annotation hiện tại
       view?.configure(title: customAnno.title ?? "", des: customAnno.subtitle ?? "")
       
+      // Kiểm tra xem annotation đã có trong placeGroup chưa
+      let place = Place(id: customAnno.id, address: customAnno.title ?? "", fullAddres: customAnno.subtitle ?? "", coordinate: customAnno.coordinate, state: nil, type: customAnno.type)
+      let isInPlaceGroup = PlaceManager.shared.goingExists(place)
+      
       // Tìm Place tương ứng từ arrayPlaces để lấy state
       let correspondingPlace = arrayPlaces.first { place in
         if let placeId = place.id, let annoId = customAnno.id {
@@ -789,7 +814,7 @@ extension EditGoingVC: MKMapViewDelegate {
         }
       }
       
-      // Chọn icon dựa vào state nếu có, nếu không thì dựa vào type
+      // Chọn icon dựa vào state nếu có, nếu không thì dựa vào type và trạng thái trong placeGroup
       if let place = correspondingPlace, let state = place.state {
         // Hiển thị icon dựa trên state (true/false)
         if state {
@@ -799,8 +824,28 @@ extension EditGoingVC: MKMapViewDelegate {
           // state == false → hiển thị icFailedRoute
           view?.image = .icLocationFailed
         }
+      } else if isInPlaceGroup {
+        // Đã có trong placeGroup nhưng không có state → hiển thị icon theo type
+        // Lấy type từ placeGroup nếu có, nếu không thì dùng type từ annotation
+        let placeType = correspondingPlace?.type ?? customAnno.type
+        switch placeType {
+        case "Location":
+          view?.image = .icLocationStop
+        case "Gas Station":
+          view?.image = .icPinGas
+        case "Bank":
+          view?.image = .icPinBank
+        case "Car Wash":
+          view?.image = .icPinCarWash
+        case "Pharmacy":
+          view?.image = .icPinPharmacy
+        case "Fast Food":
+          view?.image = .icPinFastFood
+        default:
+          view?.image = .icLocationStop
+        }
       } else {
-        // Nếu state là nil, hiển thị icon dựa vào type
+        // Chưa có trong placeGroup → hiển thị icon dựa vào type của annotation
         switch customAnno.type {
         case "Location":
           view?.image = .icLocationStop
@@ -965,12 +1010,13 @@ extension EditGoingVC: UITextFieldDelegate {
         
         let annotation = CustomAnnotation(coordinate: coordinate, title: title, subtitle: subtitle, type: "Location", id: keyword, state: nil)
         
-        // Xoá annotation cũ nếu tồn tại
-        if let existingAnnotation = self.mapView.annotations.first(where: {
-          guard let ann = $0 as? CustomAnnotation else { return false }
-          return ann.id == keyword
-        }) as? CustomAnnotation {
-          self.mapView.removeAnnotation(existingAnnotation)
+        // Xoá tất cả annotation cũ có cùng id (tránh duplicate)
+        let existingAnnotations = self.mapView.annotations.compactMap { ann -> CustomAnnotation? in
+          guard let customAnn = ann as? CustomAnnotation else { return nil }
+          return customAnn.id == keyword ? customAnn : nil
+        }
+        if !existingAnnotations.isEmpty {
+          self.mapView.removeAnnotations(existingAnnotations)
         }
         
         // Tìm Place tương ứng từ arrayPlaces để lấy state
@@ -1176,6 +1222,15 @@ extension EditGoingVC: UITableViewDelegate, UITableViewDataSource {
                                     longitudinalMeters: 200)
     
     mapView.setRegion(region, animated: true)
+    
+    // Xóa tất cả annotation có cùng id trước khi add mới (tránh duplicate)
+    let existingAnnotations = mapView.annotations.compactMap { ann -> CustomAnnotation? in
+      guard let customAnn = ann as? CustomAnnotation else { return nil }
+      return customAnn.id == title ? customAnn : nil
+    }
+    if !existingAnnotations.isEmpty {
+      mapView.removeAnnotations(existingAnnotations)
+    }
     
     let annotation = CustomAnnotation(
       coordinate: coordinate,
@@ -1455,21 +1510,19 @@ extension EditGoingVC: CLLocationManagerDelegate {
         }
       }
       
-      // Đảm bảo chỉ có một annotation: xóa tất cả annotations có id "user_location" trước
-      let annotationsToRemove = self.mapView.annotations.filter { ann in
-        if let customAnn = ann as? CustomAnnotation {
-          return customAnn.id == "user_location" && ann !== annotation
-        }
-        return false
+      // Đảm bảo chỉ có một annotation: xóa tất cả duplicate annotations có id "user_location"
+      let duplicateAnnotations = self.mapView.annotations.compactMap { ann -> CustomAnnotation? in
+        guard let customAnn = ann as? CustomAnnotation,
+              customAnn.id == "user_location",
+              ann !== annotation else { return nil }
+        return customAnn
       }
-      if !annotationsToRemove.isEmpty {
-        self.mapView.removeAnnotations(annotationsToRemove)
+      if !duplicateAnnotations.isEmpty {
+        self.mapView.removeAnnotations(duplicateAnnotations)
       }
       
-      // Cập nhật coordinate và remove/add lại annotation để MapKit cập nhật vị trí
+      // Cập nhật coordinate của annotation hiện tại
       annotation.coordinate = coordinate
-      self.mapView.removeAnnotation(annotation)
-      self.mapView.addAnnotation(annotation)
       
       self.lastUpdateLocation = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
     }
