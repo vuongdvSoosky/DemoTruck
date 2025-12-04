@@ -1042,7 +1042,7 @@ extension EditGoingVC {
     
     guard let annotation = currentAnnotation else { return }
     
-    let place = Place(address: annotation.title ?? "", fullAddres: annotation.subtitle ?? "", coordinate: annotation.coordinate)
+    let place = Place(id: annotation.id, address: annotation.title ?? "", fullAddres: annotation.subtitle ?? "", coordinate: annotation.coordinate)
     if !PlaceManager.shared.goingExists(place) {
       if let annotation = currentAnnotation {
         mapView.removeAnnotation(annotation)
@@ -1185,7 +1185,7 @@ extension EditGoingVC: UITableViewDelegate, UITableViewDataSource {
       id: title, state: nil
     )
     
-    let place = Place(address: title, fullAddres: subtitle, coordinate: coordinate, state: nil)
+    let place = Place(id: title, address: title, fullAddres: subtitle, coordinate: coordinate, state: nil)
     annotation.type = PlaceManager.shared.exists(place) ? "Location" : ""
     
     mapView.addAnnotation(annotation)

@@ -906,7 +906,7 @@ extension SaveRouteDetailVC {
     
     guard let annotation = currentAnnotation else { return }
     
-    let place = Place(address: annotation.title ?? "", fullAddres: annotation.subtitle ?? "", coordinate: annotation.coordinate)
+    let place = Place(id: annotation.id, address: annotation.title ?? "", fullAddres: annotation.subtitle ?? "", coordinate: annotation.coordinate)
     if !PlaceManager.shared.exists(place) {
       if let annotation = currentAnnotation {
         mapView.removeAnnotation(annotation)

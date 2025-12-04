@@ -632,6 +632,10 @@ class TruckVC: BaseViewController {
         }
         
         self.updateAnnotations(for: places.places)
+        
+        // Cập nhật lại icon của tất cả service annotations khi placeGroup thay đổi
+        // Đảm bảo các service đã được thêm vào placeGroup hiển thị đúng icon
+        self.updateServiceAnnotationsIcons()
       }.store(in: &subscriptions)
     
     viewModel.index
@@ -954,6 +958,12 @@ class TruckVC: BaseViewController {
         return
       }
       stopLoading()
+      
+      // Cập nhật lại icon của tất cả service annotations sau khi search
+      // Đảm bảo các service đã được thêm vào placeGroup hiển thị đúng icon
+      DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+        self.updateServiceAnnotationsIcons()
+      }
     }
   }
   
@@ -1271,9 +1281,6 @@ extension TruckVC: MKMapViewDelegate {
         
         return view
       }
-      else {
-        LogManager.show("CustomServiceAnimation nil")
-      }
     }
     return nil
   }
@@ -1414,7 +1421,7 @@ extension TruckVC {
     
     guard let annotation = currentAnnotation else { return }
     
-    let place = Place(address: annotation.title ?? "", fullAddres: annotation.subtitle ?? "", coordinate: annotation.coordinate)
+    let place = Place(id: annotation.id,address: annotation.title ?? "", fullAddres: annotation.subtitle ?? "", coordinate: annotation.coordinate)
     if !PlaceManager.shared.exists(place) {
       if let annotation = currentAnnotation {
         mapView.removeAnnotation(annotation)
@@ -1618,7 +1625,6 @@ extension TruckVC: UITableViewDelegate, UITableViewDataSource {
     
     let place = Place(address: title.beforeFirstComma, fullAddres: subtitle.afterFirstComma, coordinate: coordinate, state: nil)
     annotation.type = PlaceManager.shared.exists(place) ? "Location" : ""
-    LogManager.show(title.beforeFirstComma)
     
     mapView.addAnnotation(annotation)
     
@@ -1678,7 +1684,6 @@ extension TruckVC: UICollectionViewDelegate {
     } else {
       MapManager.shared.removeAllServiceAnnotations()
       let item = ServiceType.allCases[indexPath.item]
-      LogManager.show(item.title)
       self.searchNearby(with: item.name, type: item.title)
       self.currentQuery = item.name
       self.currentType = item.title
@@ -1982,9 +1987,7 @@ extension TruckVC: CLLocationManagerDelegate {
     }
   }
   
-  func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-    LogManager.show("Location update error: \(error.localizedDescription)")
-  }
+  func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {}
   
   func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
     switch status {

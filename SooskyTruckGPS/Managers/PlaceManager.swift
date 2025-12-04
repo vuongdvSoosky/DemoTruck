@@ -27,9 +27,8 @@ extension PlaceManager {
   // MARK: - Add Place
   func addLocation(_ place: Place, toGoing: Bool = false) {
     var group = toGoing ? goingPlaceGroup : placeGroup
-    LogManager.show(place.id ?? "none")
-    if let index = group.places.firstIndex(where: { $0.id == place.id }) {
-      group.places.remove(at: index)
+    if group.places.contains(where: { $0.id == place.id }) {
+      group.places.removeAll { $0.id == place.id }
     } else {
       var newPlace = place
       normalizeType(&newPlace)
@@ -53,11 +52,11 @@ extension PlaceManager {
 
   // MARK: - Check exist
   func exists(_ place: Place) -> Bool {
-    return placeGroup.places.contains(place)
+    return placeGroup.places.contains { $0.id == place.id }
   }
 
   func goingExists(_ place: Place) -> Bool {
-    return goingPlaceGroup.places.contains(place)
+    return goingPlaceGroup.places.contains { $0.id == place.id }
   }
 
   // MARK: - Toggle State (nil, true, false)

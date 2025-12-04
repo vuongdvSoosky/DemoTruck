@@ -82,7 +82,6 @@ class LocationService: NSObject, CLLocationManagerDelegate {
     }
     self.onLocationUpdate = onUpdate
     let status = locationManager.authorizationStatus
-    LogManager.show(status)
     switch status {
     case .notDetermined:
       DispatchQueue.main.async {

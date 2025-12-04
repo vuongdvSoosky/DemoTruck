@@ -21,9 +21,18 @@ struct Place: Equatable {
   var state: Bool?
   var type: String?
   
+//  static func == (lhs: Place, rhs: Place) -> Bool {
+//    let epsilon = 1e-6
+//    return abs(lhs.coordinate.latitude - rhs.coordinate.latitude) < epsilon &&
+//    abs(lhs.coordinate.longitude - rhs.coordinate.longitude) < epsilon
+//  }
+  
   static func == (lhs: Place, rhs: Place) -> Bool {
-    let epsilon = 1e-6
-    return abs(lhs.coordinate.latitude - rhs.coordinate.latitude) < epsilon &&
-    abs(lhs.coordinate.longitude - rhs.coordinate.longitude) < epsilon
+      let epsilon = 1e-6
+      let sameCoordinate =
+          abs(lhs.coordinate.latitude - rhs.coordinate.latitude) < epsilon &&
+          abs(lhs.coordinate.longitude - rhs.coordinate.longitude) < epsilon
+
+      return lhs.id == rhs.id || sameCoordinate
   }
 }
