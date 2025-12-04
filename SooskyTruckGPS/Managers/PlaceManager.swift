@@ -27,8 +27,8 @@ extension PlaceManager {
   // MARK: - Add Place
   func addLocation(_ place: Place, toGoing: Bool = false) {
     var group = toGoing ? goingPlaceGroup : placeGroup
-
-    if let index = group.places.firstIndex(of: place) {
+    LogManager.show(place.id ?? "none")
+    if let index = group.places.firstIndex(where: { $0.id == place.id }) {
       group.places.remove(at: index)
     } else {
       var newPlace = place

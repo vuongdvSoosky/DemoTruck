@@ -43,6 +43,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
   
   private func setupAds() {
     AdMobManager.shared.createAdInterstitialIfNeed(unitId: AdUnitID(rawValue: SampleAdUnitID.adFormatInterstitialID1))
+    AdMobManager.shared.createAdRewardedIfNeed(unitId: AdUnitID(rawValue: SampleAdUnitID.adFormatRewardedID1))
   }
 }
 

@@ -994,10 +994,8 @@ class TruckVC: BaseViewController {
       return
     }
     
-    // Ẩn tooltip hiện tại nếu có
-    if let current = currentTooltipView, current.annotationID != annotationView.annotationID {
-      current.hideTooltip()
-    }
+    // Ẩn TẤT CẢ tooltip hiện tại để đảm bảo chỉ có một tooltip được hiển thị
+    hideAllTooltips(except: annotation.id)
     
     // Hiển thị tooltip cho annotation được chọn
     currentTooltipView = annotationView
@@ -1025,10 +1023,8 @@ class TruckVC: BaseViewController {
       return
     }
     
-    // Ẩn tooltip hiện tại nếu có
-    if let current = currentTooltipView, current.annotationID != annotationView.annotationID {
-      current.hideTooltip()
-    }
+    // Ẩn TẤT CẢ tooltip hiện tại để đảm bảo chỉ có một tooltip được hiển thị
+    hideAllTooltips(except: annotation.id)
     
     // Hiển thị tooltip cho service annotation được chọn
     currentTooltipView = annotationView
@@ -1042,6 +1038,56 @@ class TruckVC: BaseViewController {
       annotationView.configureButton(title: "Remove Stop", icon: .icTrash)
     } else {
       annotationView.configureButton(title: "Add Stop", icon: .icPlus)
+    }
+  }
+  
+  // MARK: - Helper: Ẩn tất cả tooltip trừ annotation được chỉ định
+  private func hideAllTooltips(except annotationID: String? = nil) {
+    // Ẩn TẤT CẢ tooltip của tất cả các annotation trên map
+    // Chỉ giữ lại tooltip của annotation được chỉ định (nếu có)
+    for annotation in mapView.annotations {
+      // Bỏ qua user location
+      if let customAnn = annotation as? CustomAnnotation, customAnn.type == "UserLocation" {
+        continue
+      }
+      
+      // Kiểm tra xem annotation này có phải là annotation được giữ lại không
+      var shouldKeep = false
+      if let exceptID = annotationID {
+        if let customAnn = annotation as? CustomAnnotation, customAnn.id == exceptID {
+          shouldKeep = true
+        } else if let customService = annotation as? CustomServiceAnimation, customService.id == exceptID {
+          shouldKeep = true
+        }
+      }
+      
+      // Nếu không phải annotation được giữ lại, ẩn tooltip
+      if !shouldKeep {
+        if let annotationView = mapView.view(for: annotation) as? CustomAnnotationView {
+          annotationView.hideTooltip()
+        }
+      }
+    }
+    
+    // Cập nhật currentTooltipView để đảm bảo nó khớp với annotation được giữ lại
+    if let exceptID = annotationID {
+      // Tìm annotation view tương ứng với ID này
+      for annotation in mapView.annotations {
+        var foundAnnotation: CustomAnnotationView? = nil
+        if let customAnn = annotation as? CustomAnnotation, customAnn.id == exceptID {
+          foundAnnotation = mapView.view(for: annotation) as? CustomAnnotationView
+        } else if let customService = annotation as? CustomServiceAnimation, customService.id == exceptID {
+          foundAnnotation = mapView.view(for: annotation) as? CustomAnnotationView
+        }
+        
+        if let found = foundAnnotation {
+          currentTooltipView = found
+          break
+        }
+      }
+    } else {
+      // Nếu không có annotation nào được giữ lại, clear currentTooltipView
+      currentTooltipView = nil
     }
   }
 }
@@ -1148,8 +1194,13 @@ extension TruckVC: MKMapViewDelegate {
         default:
           view?.image = .icLocationEmpty
         }
-        // Ẩn tooltip mặc định (chỉ hiển thị khi tap)
+        // LUÔN ẩn tooltip khi view được tạo lại
+        // Tooltip chỉ được hiển thị khi user tap vào annotation, không tự động hiển thị
         view?.hideTooltip()
+        
+        // Đảm bảo chỉ có một tooltip được hiển thị tại một thời điểm
+        // Ẩn tất cả tooltip khác trừ annotation này nếu nó đang được chọn
+        hideAllTooltips(except: (currentTooltipID == customAnno.id) ? customAnno.id : nil)
         
         // Tap gesture
         if view?.gestureRecognizers?.isEmpty ?? true {
@@ -1204,8 +1255,13 @@ extension TruckVC: MKMapViewDelegate {
           view?.image = .icLocationEmpty
         }
         
-        // Ẩn tooltip mặc định (chỉ hiển thị khi tap)
+        // LUÔN ẩn tooltip khi view được tạo lại
+        // Tooltip chỉ được hiển thị khi user tap vào annotation, không tự động hiển thị
         view?.hideTooltip()
+        
+        // Đảm bảo chỉ có một tooltip được hiển thị tại một thời điểm
+        // Ẩn tất cả tooltip khác trừ annotation này nếu nó đang được chọn
+        hideAllTooltips(except: (currentTooltipID == customService.id) ? customService.id : nil)
         
         // Tap gesture để hiển thị tooltip
         if view?.gestureRecognizers?.isEmpty ?? true {
@@ -1526,6 +1582,31 @@ extension TruckVC: UITableViewDelegate, UITableViewDataSource {
     
     mapView.setRegion(region, animated: true)
     
+    // Kiểm tra xem có phải là current location không
+    let isCurrentLocation = title == "My Location" || title.isEmpty
+    
+    // Nếu là current location, xóa userLocationAnnotation cũ để tránh duplicate pin
+    if isCurrentLocation {
+      // Xóa tất cả user location annotations
+      removeUserLocationAnnotation()
+      
+      // Xóa các annotation cũ có cùng id hoặc type "UserLocation"
+      let existingAnnotations = mapView.annotations.compactMap { $0 as? CustomAnnotation }
+      for existingAnn in existingAnnotations {
+        if existingAnn.id == title || existingAnn.type == "UserLocation" || existingAnn.id == "user_location" {
+          mapView.removeAnnotation(existingAnn)
+        }
+      }
+    } else {
+      // Nếu không phải current location, chỉ xóa annotation có cùng id
+      let existingAnnotations = mapView.annotations.compactMap { $0 as? CustomAnnotation }
+      for existingAnn in existingAnnotations {
+        if existingAnn.id == title {
+          mapView.removeAnnotation(existingAnn)
+        }
+      }
+    }
+    
     let annotation = CustomAnnotation(
       coordinate: coordinate,
       title: title,
@@ -1819,6 +1900,21 @@ extension TruckVC {
   }
   
   private func updateUserLocationAnnotation(coordinate: CLLocationCoordinate2D) {
+    // Kiểm tra xem có annotation nào đã được tạo từ current location không
+    // Nếu có, không tạo lại userLocationAnnotation để tránh duplicate pin
+    let existingAnnotations = mapView.annotations.compactMap { $0 as? CustomAnnotation }
+    let hasCurrentLocationAnnotation = existingAnnotations.contains { ann in
+      // Kiểm tra xem có annotation nào với title "My Location" hoặc coordinate gần với current location không
+      let distance = CLLocation(latitude: ann.coordinate.latitude, longitude: ann.coordinate.longitude)
+        .distance(from: CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude))
+      return (ann.title == "My Location" || ann.id == "user_location") && distance < 50 // 50 mét
+    }
+    
+    // Nếu đã có annotation từ current location, không tạo lại userLocationAnnotation
+    if hasCurrentLocationAnnotation {
+      return
+    }
+    
     guard let annotation = userLocationAnnotation else {
       let userAnnotation = CustomAnnotation(
         coordinate: coordinate,
@@ -1859,6 +1955,10 @@ extension TruckVC {
         annotationView.setNeedsDisplay()
       }
       
+      // Đảm bảo chỉ annotation đang được chọn mới hiển thị tooltip
+      // Ẩn tooltip của tất cả các annotation khác nếu không phải là annotation đang được chọn
+      self.hideAllTooltips(except: self.currentTooltipID)
+      
       self.lastUpdateLocation = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
     }
   }
@@ -1871,6 +1971,10 @@ extension TruckVC: CLLocationManagerDelegate {
     
     DispatchQueue.main.async { [weak self] in
       guard let self = self else { return }
+      
+      // Đảm bảo chỉ có một tooltip được hiển thị khi location update
+      // Ẩn tất cả tooltip trừ annotation đang được chọn
+      self.hideAllTooltips(except: self.currentTooltipID)
       
       // Cập nhật annotation mà không di chuyển map
       self.updateUserLocationAnnotation(coordinate: location.coordinate)
