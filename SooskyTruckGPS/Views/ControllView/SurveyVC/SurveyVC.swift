@@ -16,116 +16,149 @@ class SurveyVC: BaseViewController {
     return view
   }()
   
-  private lazy var bigTruckView: UIView = {
+  private lazy var overView: UIView = {
     let view = UIView()
-    view.backgroundColor = UIColor(rgb: 0xFFFFFF)
-    view.cornerRadius = 20
-    view.clipsToBounds = true
-    view.borderColor = UIColor(rgb: 0xF26101)
-//    view.borderWidth = 5
-    view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapBigTruckView)))
-    
-    let icTruck = UIImageView()
-    icTruck.image = .icBigTruck
-    
+    view.translatesAutoresizingMaskIntoConstraints = false
     let label = UILabel()
-    label.text = "Big Truck"
-    label.textAlignment = .center
-    label.font = AppFont.font(.boldText, size: 19)
-    label.textColor = UIColor(rgb: 0xF26101)
+    label.text = "Overview"
+    label.font = AppFont.font(.regularText, size: 17)
+    label.textColor = UIColor(rgb: 0x000000)
     
-    view.addSubviews(icChooseBigTruck, icTruck, label)
-    
-    icChooseBigTruck.snp.makeConstraints { make in
-      make.top.right.equalToSuperview().inset(15)
-      make.width.height.equalTo(19)
-    }
-    
-    icTruck.snp.makeConstraints { make in
-      make.top.equalToSuperview().inset(27)
-      make.width.equalTo(184)
-      make.height.equalTo(88)
-      make.centerX.equalToSuperview()
-    }
+    view.addSubviews(label, stackProgressView)
     
     label.snp.makeConstraints { make in
-      make.top.equalTo(icTruck.snp.bottom).inset(-12)
-      make.left.right.equalToSuperview().inset(12)
+      make.top.equalToSuperview()
+      make.left.equalToSuperview()
+    }
+    
+    stackProgressView.snp.makeConstraints { make in
+      make.top.equalTo(label.snp.bottom).inset(-10)
+      make.left.equalToSuperview()
     }
     
     return view
   }()
   
-  private lazy var icChooseBigTruck: UIImageView = {
-    let icon = UIImageView()
-    icon.image = .icUnChooseTruck
-    return icon
+  private lazy var stackProgressView: UIStackView = {
+    let stackView = UIStackView()
+    stackView.translatesAutoresizingMaskIntoConstraints = false
+    stackView.spacing = 4
+    [line1View, line2View].forEach({stackView.addArrangedSubview($0)})
+    
+    return stackView
   }()
   
-  private lazy var icChooseSmallTruck: UIImageView = {
-    let icon = UIImageView()
-    icon.image = .icUnChooseTruck
-    return icon
+  private lazy var line1View: UIView = {
+    let view = UIView()
+    view.translatesAutoresizingMaskIntoConstraints = false
+    view.backgroundColor = UIColor(rgb: 0xF26101)
+    view.cornerRadius = 4
+    view.snp.makeConstraints { make in
+      make.height.equalTo(8)
+      make.width.equalTo(100)
+    }
+    return view
+  }()
+  
+  private lazy var line2View: UIView = {
+    let view = UIView()
+    view.translatesAutoresizingMaskIntoConstraints = false
+    view.backgroundColor = UIColor(rgb: 0xEFBE9B)
+    view.cornerRadius = 4
+    view.snp.makeConstraints { make in
+      make.height.equalTo(8)
+      make.width.equalTo(100)
+    }
+    return view
   }()
   
   private lazy var smallTruckView: UIView = {
     let view = UIView()
-    view.backgroundColor = UIColor(rgb: 0xFFFFFF)
-    view.borderColor = UIColor(rgb: 0xF26101)
-    view.cornerRadius = 20
-    view.clipsToBounds = true
-    view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(onTapSmallTruckView)))
-    
-    let icTruck = UIImageView()
-    icTruck.image = .icSmallTruck
-    icTruck.contentMode = .scaleAspectFit
+    view.translatesAutoresizingMaskIntoConstraints = false
+    view.backgroundColor = .clear
     
     let label = UILabel()
-    label.text = "Small Truck"
+    label.text = "Please specify your vehicle type or model"
+    label.textColor = UIColor(rgb: 0x332644)
+    label.font = AppFont.font(.heavy, size: 28)
+    label.numberOfLines = 0
     label.textAlignment = .center
-    label.font = AppFont.font(.boldText, size: 19)
-    label.textColor = UIColor(rgb: 0xF26101)
     
-    view.addSubviews(icChooseSmallTruck, icTruck, label)
-    
-    icChooseSmallTruck.snp.makeConstraints { make in
-      make.top.right.equalToSuperview().inset(15)
-      make.width.height.equalTo(19)
-    }
-    
-    icTruck.snp.makeConstraints { make in
-      make.top.equalToSuperview().inset(27)
-      make.width.equalTo(184)
-      make.height.equalTo(88)
-      make.centerX.equalToSuperview()
-    }
+    view.addSubviews(label, smallTruckCollectionView)
     
     label.snp.makeConstraints { make in
-      make.top.equalTo(icTruck.snp.bottom).inset(-12)
-      make.left.right.equalToSuperview().inset(12)
+      make.top.equalToSuperview()
+      make.left.right.equalToSuperview().inset(20)
     }
+    
+    smallTruckCollectionView.snp.makeConstraints { make in
+      make.top.equalTo(label.snp.bottom).inset(-24)
+      make.left.right.bottom.equalToSuperview().inset(20)
+    }
+    
     return view
   }()
   
-  private lazy var stackView: UIStackView = {
-    let st = UIStackView(arrangedSubviews: [bigTruckView, smallTruckView, saveView])
-    st.axis = .vertical
-    st.spacing = 24
-    st.alignment = .fill
-    st.distribution = .fill
-    return st
-  }()
-  
-  private lazy var titleLabel: UILabel = {
+  private lazy var ownerTypeView: UIView = {
+    let view = UIView()
+    view.translatesAutoresizingMaskIntoConstraints = false
+    view.backgroundColor = .clear
+    
     let label = UILabel()
-    label.translatesAutoresizingMaskIntoConstraints = false
-    label.text = "What Kind Of Truck Are You Driving?"
-    label.textColor = UIColor(rgb: 0xF26101)
+    label.text = "Which best describes \n you?"
+    label.textColor = UIColor(rgb: 0x332644)
+    label.font = AppFont.font(.heavy, size: 25)
     label.numberOfLines = 0
-    label.font = AppFont.font(.heavy, size: 28)
     label.textAlignment = .center
     
-    return label
+    view.addSubviews(label, ownerCollectionView)
+    
+    label.snp.makeConstraints { make in
+      make.top.equalToSuperview()
+      make.left.right.equalToSuperview().inset(20)
+    }
+    
+    ownerCollectionView.snp.makeConstraints { make in
+      make.top.equalTo(label.snp.bottom).inset(-24)
+      make.left.right.bottom.equalToSuperview().inset(20)
+    }
+    
+    return view
+  }()
+  
+  private lazy var ownerCollectionView: UICollectionView = {
+    let layout = UICollectionViewFlowLayout()
+    layout.scrollDirection = .vertical
+    layout.minimumInteritemSpacing = 12
+    layout.minimumLineSpacing = 12
+    
+    let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
+    collectionView.showsVerticalScrollIndicator = false
+    collectionView.isScrollEnabled = true
+    return collectionView
+  }()
+  
+  private lazy var smallTruckCollectionView: UICollectionView = {
+    let layout = UICollectionViewFlowLayout()
+    layout.scrollDirection = .vertical
+    layout.minimumInteritemSpacing = 12
+    layout.minimumLineSpacing = 12
+    
+    let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
+    collectionView.showsVerticalScrollIndicator = false
+    collectionView.isScrollEnabled = true
+    return collectionView
+  }()
+  
+  private lazy var skipView: UIButton = {
+    let view = UIButton()
+    view.translatesAutoresizingMaskIntoConstraints = false
+    view.cornerRadius = 20
+    view.isUserInteractionEnabled = true
+    view.setTitle("Skip", for: .normal)
+    view.titleLabel?.font = AppFont.font(.lightText, size: 17)
+    view.setTitleColor(UIColor(rgb: 0x585858), for: .normal)
+    return view
   }()
   
   private lazy var saveView: UIView = {
@@ -155,11 +188,42 @@ class SurveyVC: BaseViewController {
     return view
   }()
   
+  
+  // MARK: - UIScrollView
+  private lazy var mainScrollView: UIScrollView = {
+    let scrollView = UIScrollView()
+    scrollView.translatesAutoresizingMaskIntoConstraints = false
+    scrollView.showsVerticalScrollIndicator = false
+    scrollView.showsHorizontalScrollIndicator = false
+    scrollView.isPagingEnabled = true
+    scrollView.isScrollEnabled = false
+    scrollView.contentInsetAdjustmentBehavior = .never
+    scrollView.backgroundColor = .clear
+    return scrollView
+  }()
+  
+  private lazy var contentView: UIView = {
+    let view = UIView()
+    view.translatesAutoresizingMaskIntoConstraints = false
+    return view
+  }()
+  
+  private var indexItemOnwer: Int?
+  private var indexItemVehicle: Int?
+  
   private let viewModel = OnboardVM()
+  
+  override func viewDidLoad() {
+    super.viewDidLoad()
+    AppManager.shared.setStateShouldShowOpenAds(false)
+  }
   
   override func addComponents() {
     self.view.addSubviews(containerView)
-    containerView.addSubviews(titleLabel, stackView, saveView)
+    containerView.addSubviews(overView, saveView, skipView, mainScrollView)
+    mainScrollView.addSubview(contentView)
+    contentView.addSubviews(ownerTypeView, smallTruckView)
+    
   }
   
   override func setConstraints() {
@@ -167,62 +231,97 @@ class SurveyVC: BaseViewController {
       make.edges.equalToSuperview()
     }
     
-    titleLabel.snp.makeConstraints { make in
-      make.top.equalTo(self.view.snp.topMargin).inset(34)
-      make.left.right.equalToSuperview().inset(10)
+    overView.snp.makeConstraints { make in
+      make.top.equalTo(self.view.snp.topMargin).inset(14)
+      make.left.right.equalToSuperview().inset(20)
+      make.height.equalTo(44)
     }
     
-    stackView.snp.makeConstraints { make in
-      make.top.equalTo(titleLabel.snp.bottom).inset(-71)
-      make.left.right.equalToSuperview().inset(20)
-      make.bottom.lessThanOrEqualTo(saveView.snp.top).inset(-10)
+    skipView.snp.makeConstraints { make in
+      make.centerY.equalTo(stackProgressView.snp.centerY)
+      make.right.equalToSuperview().inset(20)
+      make.width.equalTo(35)
+    }
+    
+    mainScrollView.snp.makeConstraints { make in
+      make.top.equalTo(self.overView.snp.bottom).inset(-20)
+      make.left.right.equalToSuperview()
     }
     
     saveView.snp.makeConstraints { make in
+      make.top.equalTo(mainScrollView.snp.bottom).inset(-10)
       make.left.right.equalToSuperview().inset(20)
       make.bottom.equalToSuperview().inset(68)
       make.height.equalTo(60)
     }
     
-    let width: CGFloat = 350
-    let height: CGFloat = 178
-    let ratio = height / width
+    contentView.snp.makeConstraints { make in
+      make.edges.equalTo(mainScrollView.contentLayoutGuide)
+      make.height.equalTo(mainScrollView.frameLayoutGuide)
+      make.width.equalTo(mainScrollView.frameLayoutGuide).multipliedBy(2)
+    }
     
-    bigTruckView.snp.makeConstraints { make in
-      make.width.equalTo(width)
-      make.height.equalTo(bigTruckView.snp.width).multipliedBy(ratio)
+    ownerTypeView.snp.makeConstraints { make in
+      make.top.bottom.left.equalToSuperview()
+      make.width.equalTo(containerView.snp.width)
     }
     
     smallTruckView.snp.makeConstraints { make in
-      make.width.equalTo(width)
-      make.height.equalTo(smallTruckView.snp.width).multipliedBy(ratio)
+      make.top.bottom.right.equalToSuperview()
+      make.left.equalTo(ownerTypeView.snp.right)
+      make.width.equalTo(containerView.snp.width)
+      make.height.equalToSuperview()
     }
   }
   
+  override func setProperties() {
+    skipView.addTarget(self, action: #selector(onTapSkip), for: .touchUpInside)
+  }
+  
   override func setColor() {
-    bigTruckView.addShadow()
-    smallTruckView.addShadow()
+    ownerCollectionView.backgroundColor = .clear
+    smallTruckCollectionView.backgroundColor = .clear
+    
+    ownerCollectionView.delegate = self
+    ownerCollectionView.dataSource = self
+    ownerCollectionView.register(cell: ItemSurveyCell.self)
+    
+    smallTruckCollectionView.delegate = self
+    smallTruckCollectionView.dataSource = self
+    smallTruckCollectionView.register(cell: ItemSurveyCell.self)
   }
 }
 
 extension SurveyVC {
   @objc private func onTapBigTruckView() {
-    changeStateBigTruckView()
     enableSaveView()
-    
     TruckTypeManager.shared.setType(.big)
   }
   
   @objc private func onTapSmallTruckView() {
-    changeStateSmallTruckView()
-    enableSaveView()
     
+    enableSaveView()
     TruckTypeManager.shared.setType(.small)
   }
   
   @objc private func onTapSave() {
-    viewModel.action.send(.iap)
+    
+    guard (indexItemVehicle != nil) else {
+      guard (indexItemOnwer != nil) else {
+        return
+      }
+      
+      scrollToPage(index: 1)
+      return
+    }
+    
+    viewModel.action.send(.onb2)
     UserDefaultsManager.shared.set(TruckTypeManager.shared.truckTypes?.rawValue, key: .truckType)
+  }
+  
+  @objc private func onTapSkip() {
+    TruckTypeManager.shared.setType(.small)
+    viewModel.action.send(.onb2)
   }
   
   private func enableSaveView() {
@@ -235,19 +334,79 @@ extension SurveyVC {
     }
   }
   
-  private func changeStateBigTruckView() {
-    bigTruckView.borderWidth = 5
-    icChooseBigTruck.image = .icChooseTruck
+  func scrollToPage(index: Int, animated: Bool = true) {
+    mainScrollView.isScrollEnabled = true
+    let pageWidth = mainScrollView.frame.size.width
+    let targetOffset = CGPoint(x: CGFloat(index) * pageWidth, y: 0)
+    mainScrollView.setContentOffset(targetOffset, animated: animated)
+    mainScrollView.isScrollEnabled = false
+    if index == 1 {
+      line2View.backgroundColor = UIColor(rgb: 0xF26101)
+      saveView.removeGradient()
+      saveView.isUserInteractionEnabled = false
+    }
+  }
+}
+
+extension SurveyVC: UICollectionViewDelegate {
+  func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+    if collectionView === self.ownerCollectionView {
+      self.indexItemOnwer = indexPath.row
+      enableSaveView()
+    } else {
+      self.indexItemVehicle = indexPath.row
+      switch VehicleType.allCases[indexPath.row] {
+
+      case .semiTruck, .heavyBox, .largeMotorhome:
+        TruckTypeManager.shared.setType(.big)
+        
+      case .cargoVan, .smallBox, .pickupTruck, .campervan:
+        TruckTypeManager.shared.setType(.small)
+      }
+      enableSaveView()
+    }
     
-    smallTruckView.borderWidth = 0
-    icChooseSmallTruck.image = .icUnChooseTruck
+    collectionView.reloadData()
+  }
+}
+
+extension SurveyVC: UICollectionViewDataSource {
+  func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+    if collectionView === self.ownerCollectionView {
+      return OwnerType.allCases.count
+    } else {
+      return VehicleType.allCases.count
+    }
   }
   
-  private func changeStateSmallTruckView() {
-    smallTruckView.borderWidth = 5
-    icChooseSmallTruck.image = .icChooseTruck
-    
-    bigTruckView.borderWidth = 0
-    icChooseBigTruck.image = .icUnChooseTruck
+  func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+    if collectionView === self.ownerCollectionView {
+      let cell = self.ownerCollectionView.dequeueReusableCell(ItemSurveyCell.self, for: indexPath)
+      let item = OwnerType.allCases[indexPath.row]
+      cell.binding(with: item)
+      if indexItemOnwer == indexPath.row {
+        cell.chooseItem(isSelected: true)
+      } else {
+        cell.chooseItem(isSelected: false)
+      }
+      return cell
+      
+    } else {
+      let cell = self.smallTruckCollectionView.dequeueReusableCell(ItemSurveyCell.self, for: indexPath)
+      let item = VehicleType.allCases[indexPath.row]
+      cell.bindingForWorkType(with: item)
+      if indexItemVehicle == indexPath.row {
+        cell.chooseItem(isSelected: true)
+      } else {
+        cell.chooseItem(isSelected: false)
+      }
+      return cell
+    }
+  }
+}
+
+extension SurveyVC: UICollectionViewDelegateFlowLayout {
+  func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+    return CGSize(width: collectionView.frame.width, height: 60)
   }
 }

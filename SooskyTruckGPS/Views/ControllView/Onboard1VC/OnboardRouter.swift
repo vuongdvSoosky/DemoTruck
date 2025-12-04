@@ -12,9 +12,9 @@ class OnboardRouter: Router {
   
   enum Route: String {
     case next
-    case rating
     case iap
     case survey
+    case onb2
   }
 }
 
@@ -27,9 +27,9 @@ extension OnboardRouter {
     case .next:
       let surveyVC = SurveyVC()
       context.push(to: surveyVC, animated: true)
-    case .rating:
-      let ratingVC = RatingVC()
-      context.push(to: ratingVC, animated: true)
+    case .onb2:
+      let onb2 = Onboard2VC()
+      context.push(to: onb2, animated: true)
     case .iap:
       if AppManager.shared.hasSub {
         context.push(to: TabbarVC(), animated: true)

@@ -10,9 +10,9 @@ import Combine
 class OnboardVM: BaseViewModel {
   enum Action {
     case next
-    case rating
     case iap
     case survey
+    case onb2
   }
   
   let action = PassthroughSubject<Action, Never>()
@@ -35,12 +35,12 @@ extension OnboardVM {
     switch action {
     case .next:
       router.route(to: .next)
-    case .rating:
-      router.route(to: .rating)
     case .iap:
       router.route(to: .iap)
     case .survey:
       router.route(to: .survey)
+    case .onb2:
+      router.route(to: .onb2)
     }
   }
 }

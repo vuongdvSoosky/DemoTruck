@@ -386,6 +386,8 @@ class FleetManagementVC: BaseViewController {
           return
         }
         icPremium.isHidden = hasSub
+        historyNativeView.isHidden = hasSub
+        saveNativeView.isHidden = hasSub
       }.store(in: &subscriptions)
     
     viewModel.saveRouteItems

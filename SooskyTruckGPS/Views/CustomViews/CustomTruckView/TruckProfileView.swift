@@ -44,6 +44,7 @@ class TruckProfileView: BaseView {
     
     let icTruck = UIImageView()
     icTruck.image = .icBigTruck
+    icTruck.contentMode = .scaleAspectFit
     
     let label = UILabel()
     label.text = "Big Truck"
@@ -95,6 +96,7 @@ class TruckProfileView: BaseView {
     
     let icTruck = UIImageView()
     icTruck.image = .icSmallTruck
+    icTruck.contentMode = .scaleAspectFit
     
     let label = UILabel()
     label.text = "Small Truck"
@@ -124,7 +126,7 @@ class TruckProfileView: BaseView {
   }()
   
   private lazy var stackView: UIStackView = {
-    let st = UIStackView(arrangedSubviews: [bigTruckView, smallTruckView, saveView])
+    let st = UIStackView(arrangedSubviews: [bigTruckView, smallTruckView, desLabel])
     st.axis = .vertical
     st.spacing = 24
     st.alignment = .fill
@@ -170,6 +172,14 @@ class TruckProfileView: BaseView {
     return view
   }()
   
+  private lazy var desLabel: UILabel = {
+    let label = UILabel()
+    label.translatesAutoresizingMaskIntoConstraints = false
+    label.numberOfLines = 0
+    label.setRequiredTitle("We’ve matched your vehicle to the right truck size so your routes stay safe, fast, and accurate")
+    return label
+  }()
+  
   var handler: Handler?
   
   override func binding() {
@@ -190,26 +200,9 @@ class TruckProfileView: BaseView {
   
   override func addComponents() {
     addSubviews(containerView,iconTutorialTruckProfile)
-    containerView.addSubviews(titleLabel, iconClose, stackView)
+    containerView.addSubviews(titleLabel, iconClose, stackView, saveView)
   }
-  
-  override func setProperties() {
-    if UserDefaultsManager.shared.get(of: Bool.self, key: .tutorial) {
-      iconTutorialTruckProfile.isHidden = true
-    }
-    
-    let truckType = UserDefaultsManager.shared.get(of: String.self, key: .truckType)
-    LogManager.show(truckType)
-    switch truckType {
-    case "truck":
-      changeStateBigTruckView()
-    case "small-truck":
-      changeStateSmallTruckView()
-    default:
-      break
-    }
-  }
-  
+
   override func setConstraints() {
     iconTutorialTruckProfile.snp.makeConstraints { make in
       make.centerX.equalToSuperview()
@@ -234,7 +227,7 @@ class TruckProfileView: BaseView {
     
     stackView.snp.makeConstraints { make in
       make.top.equalTo(titleLabel.snp.bottom).inset(-24)
-      make.left.right.bottom.equalToSuperview().inset(20)
+      make.left.right.equalToSuperview().inset(20)
     }
     
     // Tỉ lệ width : height = 350 : 178
@@ -250,6 +243,30 @@ class TruckProfileView: BaseView {
     smallTruckView.snp.makeConstraints { make in
       make.width.equalTo(width)
       make.height.equalTo(smallTruckView.snp.width).multipliedBy(ratio)
+    }
+    
+    saveView.snp.makeConstraints { make in
+      make.top.greaterThanOrEqualTo(stackView.snp.bottom).inset(-12)
+      make.left.right.equalToSuperview().inset(20)
+      make.height.equalTo(60)
+      make.bottom.equalToSuperview().inset(20)
+    }
+  }
+  
+  override func setProperties() {
+    if UserDefaultsManager.shared.get(of: Bool.self, key: .tutorial) {
+      iconTutorialTruckProfile.isHidden = true
+    }
+    
+    let truckType = UserDefaultsManager.shared.get(of: String.self, key: .truckType)
+    LogManager.show(truckType)
+    switch truckType {
+    case "truck":
+      changeStateBigTruckView()
+    case "small-truck":
+      changeStateSmallTruckView()
+    default:
+      break
     }
   }
   

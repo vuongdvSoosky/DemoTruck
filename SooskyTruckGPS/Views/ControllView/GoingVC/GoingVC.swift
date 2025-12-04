@@ -193,7 +193,6 @@ class GoingVC: BaseViewController {
   // MARK: - MapView
   private lazy var mapView: MKMapView = {
     let map = MKMapView()
-    map.showsUserLocation = true
     map.translatesAutoresizingMaskIntoConstraints = false
     return map
   }()

@@ -21,9 +21,9 @@ import UIKit
 
 extension UILabel {
   func setRequiredTitle(_ title: String,
-                        font: UIFont = AppFont.font(.semiBoldText, size: 20),
-                        titleColor: UIColor = UIColor(rgb: 0x111111),
-                        asteriskColor: UIColor = UIColor(rgb: 0xEC3352)) {
+                        font: UIFont = AppFont.font(.regularText, size: 17),
+                        titleColor: UIColor = UIColor(rgb: 0x9E9A9A),
+                        asteriskColor: UIColor = UIColor(rgb: 0xE20D0D)) {
     
     let attributedString = NSMutableAttributedString()
     
@@ -36,10 +36,8 @@ extension UILabel {
       .font: font,
       .foregroundColor: asteriskColor
     ]
-    
+    attributedString.append(NSAttributedString(string: "* ", attributes: asteriskAttributes))
     attributedString.append(NSAttributedString(string: title, attributes: textAttributes))
-    attributedString.append(NSAttributedString(string: " *", attributes: asteriskAttributes))
-    
     self.attributedText = attributedString
   }
   

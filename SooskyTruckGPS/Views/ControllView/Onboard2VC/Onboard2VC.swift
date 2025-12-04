@@ -13,7 +13,7 @@ class Onboard2VC: BaseViewController {
   private lazy var containerView: UIView = {
     let view = UIView()
     view.translatesAutoresizingMaskIntoConstraints = false
-    
+    view.backgroundColor = UIColor(rgb: 0xFFF8EC)
     return view
   }()
   
@@ -27,18 +27,18 @@ class Onboard2VC: BaseViewController {
   private lazy var titleVC: UILabel = {
     let label = UILabel()
     label.translatesAutoresizingMaskIntoConstraints = false
-    label.text = "Save Time & Cut Costs"
+    label.text = "We’ve optimized your routing profile"
     label.numberOfLines = 0
     label.textAlignment = .center
-    label.textColor = UIColor(rgb: 0xF26101)
-    label.font = AppFont.font(.heavy, size: 28)
+    label.textColor = UIColor(rgb: 0x332644)
+    label.font = AppFont.font(.heavy, size: 22)
     return label
   }()
   
   private lazy var titleDesVC: UILabel = {
     let label = UILabel()
     label.translatesAutoresizingMaskIntoConstraints = false
-    let text = "Every optimized route helps you deliver faster and reduce fuel waste"
+    let text = "Your vehicle has been placed in the correct size group (Small Truck or Large Truck). This ensures the app avoids unsafe roads, height limits and restricted areas"
     label.textColor = UIColor(rgb: 0x111111)
     label.font = AppFont.font(.regularText, size: 17)
     label.numberOfLines = 0
@@ -79,10 +79,10 @@ class Onboard2VC: BaseViewController {
     }
     
     icBackground.snp.makeConstraints { make in
-      make.left.right.equalToSuperview()
+      make.left.right.equalToSuperview().inset(12)
       make.centerX.equalToSuperview()
-      make.bottom.equalTo(continueView.snp.top).inset(-93)
-      make.height.equalTo(icBackground.snp.width).multipliedBy(323.0 / 389.0)
+      make.bottom.equalTo(continueView.snp.top).inset(-60)
+      make.height.equalTo(icBackground.snp.width).multipliedBy(253.0 / 365.0)
     }
     
     titleVC.snp.makeConstraints { make in
@@ -99,7 +99,7 @@ class Onboard2VC: BaseViewController {
     
     continueView.snp.makeConstraints { make in
       make.left.right.equalToSuperview().inset(20)
-      make.bottom.equalToSuperview().inset(63)
+      make.bottom.equalToSuperview().inset(68)
       make.height.equalTo(60)
     }
   }
@@ -122,6 +122,6 @@ class Onboard2VC: BaseViewController {
   }
   
   @objc private func onTapContinue() {
-    viewModel.action.send(.rating)
+    viewModel.action.send(.iap)
   }
 }
