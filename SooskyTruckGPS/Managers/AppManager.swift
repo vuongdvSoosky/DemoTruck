@@ -12,7 +12,7 @@ class AppManager {
   static let shared = AppManager()
   
   private(set) var showAds: Bool = true
-  @Published private(set) var hasSub: Bool = false
+  @Published private(set) var hasSub: Bool = true
   
   private(set) var shouldShowOpenAds: Bool = true
   private(set) var spacingBottomCollectionView: CGFloat = 0
